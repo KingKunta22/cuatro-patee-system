@@ -1,0 +1,46 @@
+<div>
+    <!-- SIDE NAVIGATION BAR -->
+    <div class="container flex flex-col content-start items-center w-64 bg-main h-screen fixed text-white">
+        <img src="{{ asset('assets/imgs/logowhite.png')}}" class="h-auto w-16 m-6">
+        <div class="container flex flex-col ">
+            <!--the nav-link component is made inside the nav-link.blade to avoid repeating the same code and to make it cleaner -->
+            <x-nav-link href="/main" :active="request()->is('main')">
+                <img src="{{ asset('assets/imgs/icons/dashboard.png')}}" class="w-10 pr-2">Dashboard</x-nav-link>
+            <x-nav-link href="/sales" :active="request()->is('sales')">
+                <img src="{{ asset('assets/imgs/icons/sales.png')}}" class="w-10 pr-2">Sales</x-nav-link>
+            <x-nav-link href="/inventory" :active="request()->is('inventory')">
+                <img src="{{ asset('assets/imgs/icons/inventory.png')}}" class="w-10 pr-2">Inventory</x-nav-link>
+            <x-nav-link href="/purchase-order" :active="request()->is('purchase-order')">
+                <img src="{{ asset('assets/imgs/icons/purchaseorders.png')}}" class="w-10 pr-2">Purchase Order</x-nav-link>
+            <x-nav-link href="/reports" :active="request()->is('reports')">
+                <img src="{{ asset('assets/imgs/icons/reports.png')}}" class="w-10 pr-2">Reports</x-nav-link>
+                <x-nav-link href="/product-classification" :active="request()->is('product-classification')">
+                <img src="{{ asset('assets/imgs/icons/pclassification.png')}}" class="w-10 pr-2">Product Classification</x-nav-link>
+                <x-nav-link href="/supplier" :active="request()->is('supplier')">
+                <img src="{{ asset('assets/imgs/icons/supplier.png')}}" class="w-10 pr-2">Supplier</x-nav-link>
+        </div>
+        <div class="flex flex-col content-start items-start mt-auto mb-6 mx-6 w-64">
+            <x-nav-link href="/manage-account" :active="request()->is('manage-account')">Manage Account</x-nav-link>
+            <form action="/logout" method="POST" class="hover:bg-main-light px-6 py-4 rounded-xl transition-all duration-200 ease-in-out w-full">
+                @csrf
+                <button class="size-full text-start">Log out</button>
+        </form>
+        </div>
+    </div>
+
+    <!-- TOP NAVIGATION BAR -->
+    <div class="h-20 w-auto px-10 flex content-between items-center ml-64 shadow-md">
+        <div class='container'>
+            <h1 class="text-lg font-semibold">Welcome back, Admin!</h1>
+            <p class="text-gray-400 text-sm">Here is the summary..</p>
+        </div>
+        <div class='container place-items-end'>
+            <!-- NOTIFICATION BAR -->
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+            </svg>
+            <!-- DROPDOWN PROFILE -->
+
+        </div>
+    </div>
+</div>
