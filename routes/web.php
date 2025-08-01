@@ -3,6 +3,7 @@
 // Allows UserController to be referenced from this Route
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\SupplierController;
 
 Route::get('/', function() {
     return view('login');
@@ -38,10 +39,15 @@ Route::get('/product-classification', function() {
     return view('product-classification');
 });
 
-Route::get('/supplier', function() {
-    return view('supplier');
+Route::get('/suppliers', function() {
+    return view('suppliers');
 });
 
 Route::get('/manage-account', function() {
     return view('manage-account');
 });
+
+// This resource route doesn't route the user to the /suppliers. 
+// This only allows us to use suppliers.store so that we can put it--
+// inside the action attribute inside the form
+Route::resource('suppliers', SupplierController::class);
