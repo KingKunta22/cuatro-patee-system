@@ -4,16 +4,8 @@
         <div x-data="{ close() { $refs.dialogRef.close() } }" class="container">
             <!-- SEARCH BAR AND CREATE BUTTON -->
             <div class="container flex items-center place-content-between">
-                    <div class="relative w-64">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <!-- Search SVG Icon from Heroicons -->
-                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <input type="text" placeholder="Search suppliers..." class="pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent w-full" id="searchInput">
-                </div>
-                    <x-createBtn @click="$refs.dialogRef.showModal()">Create New</x-createBtn>
+                <x-searchBar placeholder="Search suppliers..." />
+                <x-createBtn @click="$refs.dialogRef.showModal()">Create New</x-createBtn>
             </div>
             <!--Modal Form -->
             <dialog x-ref="dialogRef" class="w-1/2 my-auto shadow-2xl rounded-md">
@@ -23,10 +15,10 @@
                     this will call the store method inside the controller-->
                     <form action="{{ route('suppliers.store') }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6">
                         @csrf
-                        <x-form-input label="Supplier Name" name="supplierName" type="text" />
-                        <x-form-input label="Address" name="supplierAddress" type="text" />
-                        <x-form-input label="Contact Number" name="supplierContactNumber" type="number" class=""/>
-                        <x-form-input label="Email Address" name="supplierEmailAddress" type="email" />
+                        <x-form-input label="Supplier Name" name="supplierName" type="text" value="" />
+                        <x-form-input label="Address" name="supplierAddress" type="text" value="" />
+                        <x-form-input label="Contact Number" name="supplierContactNumber" type="number" value="" />
+                        <x-form-input label="Email Address" name="supplierEmailAddress" type="email" value="" />
                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
                             <x-closeBtn @click="close()">Cancel</x-closeBtn>
                             <x-saveBtn>Save</x-saveBtn>
@@ -39,7 +31,7 @@
         <div class="border w-full rounded-md border-solid border-black p-3 my-8">
             <table class="w-full">
             <thead class="rounded-lg bg-main text-white px-4 py-2">
-                <tr clsas="rounded-lg">
+                <tr class="rounded-lg">
                     <th class=" bg-main px-4 py-2">Supplier Name</th>
                     <th class=" bg-main px-4 py-2">Address</th>
                     <th class=" bg-main px-4 py-2">Contact Number</th>
@@ -48,47 +40,66 @@
                     <th class=" bg-main px-4 py-2">Action</th>
                 </tr>
             </thead>
-            <tbody class="text-center">
+            <tbody>
+                <!-- FOR EACH LOOP TO LOOP THROUGH SUPPLIERS FROM INDEX -->
                 @foreach($suppliers as $supplier)
-                    <tr class="border-b-2">
+                    <tr class=" text-center border-b-2" x-data="{ 
+                        closeEdit() { $refs['editDialog{{ $supplier->id }}'].close() }, 
+                        closeDelete() { $refs['deleteDialog{{ $supplier->id }}'].close() } }">
                         <td class="truncate py-3 max-w-32 px-2" title="{{ $supplier->supplierName }}">{{ $supplier->supplierName }}</td>
                         <td class="truncate py-3 max-w-32 px-2" title="{{ $supplier->supplierAddress }}">{{ $supplier->supplierAddress }}</td>
                         <td class="truncate py-3 max-w-32 px-2" title="{{ $supplier->supplierContactNumber }}">{{ $supplier->supplierContactNumber }}</td>
                         <td class="truncate py-3 max-w-32 px-2" title="{{ $supplier->supplierEmailAddress }}">{{ $supplier->supplierEmailAddress }}</td>
                         <td class="truncate py-3 max-w-32 px-2">
-                            {{ $supplier->supplierStatus ?? 'Unset' }}
+                            <span class="{{ $supplier->supplierStatus === 'Active' ? 'text-green-500 bg-green-100 px-2 py-1 rounded-full text-sm font-semibold' : 'text-red-500 bg-red-100 px-2 py-1 rounded-full text-sm font-semibold' }}">
+                                {{ $supplier->supplierStatus ?? 'Unset' }}
+                            </span>
                         </td>
                         <!-- UPDATE FORM -->
-                        <td class="truncate py-3 max-w-32 px-2 flex place-content-center" x-data="{ close() { $refs.dialogRef.close() } }">
-                            <x-editBtn @click="$refs.dialogRef.showModal()" />
-                            <dialog x-ref="dialogRef" class="w-1/2 my-auto shadow-2xl rounded-md">
+                        <td class="truncate py-3 max-w-32 px-2 flex place-content-center">
+                            <x-editBtn @click="$refs['editDialog{{ $supplier->id }}'].showModal()" />
+                            <dialog x-ref="editDialog{{ $supplier->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
                                 <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Update Supplier</h1>
                                 <div class="container px-3 py-4">
-                                    <!-- This will not route us into /suppliers, instead, 
-                                    this will call the store method inside the controller-->
                                     <form action="{{ route('suppliers.update', $supplier->id) }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6">
                                         @csrf
                                         @method('PUT')
-                                        <x-form-input label="Supplier Name" name="supplierName" type="text" value="{{ $supplier->supplierName }}"/>
-                                        <x-form-input label="Address" name="supplierAddress" type="text" value="{{ $supplier->supplierAddress }}"/>
-                                        <x-form-input label="Contact Number" name="supplierContactNumber" type="number" value="{{ $supplier->supplierContactNumber }}"/>
-                                        <x-form-input label="Email Address" name="supplierEmailAddress" type="email" value="{{ $supplier->supplierEmailAddress }}"/>
+                                        <x-form-input label="Supplier Name" name="supplierName" type="text" value="{{ old('supplierName',  $supplier->supplierName) }}"/>
+                                        <x-form-input label="Address" name="supplierAddress" type="text" value="{{ old('supplierAddress', $supplier->supplierAddress) }}"/>
+                                        <x-form-input label="Contact Number" name="supplierContactNumber" type="number" value="{{ old('supplierContactNumber', $supplier->supplierContactNumber) }}"/>
+                                        <x-form-input label="Email Address" name="supplierEmailAddress" type="email" value="{{ old('supplierEmailAddress', $supplier->supplierEmailAddress) }}"/>
                                         <div class="container text-start flex col-span-2 flex-col">
-                                            <label for="status">Choose status:</label>
-                                            <select name="supplierStatus" id="status" class="px-3 py-2 border rounded-sm border-black">
-                                                <option value="active" {{ $supplier->supplierStatus === 'active' ? 'selected' : '' }}>Active</option>
-                                                <option value="inactive" {{ $supplier->supplierStatus === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                            <label for="supplierStatus">Choose status:</label>
+                                            <select name="supplierStatus" id="supplierStatus" class="px-3 py-2 border rounded-sm border-black">
+                                                <option value="Active" {{ $supplier->supplierStatus === 'Active' ? 'Selected' : '' }}>Active</option>
+                                                <option value="Inactive" {{ $supplier->supplierStatus === 'Inactive' ? 'Selected' : '' }}>Inactive</option>
                                             </select>
                                         </div>
                                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
-                                            <x-closeBtn @click="close()">Cancel</x-closeBtn>
+                                            <x-closeBtn @click="closeEdit()">Cancel</x-closeBtn>
                                             <x-saveBtn>Update</x-saveBtn>
                                         </div>
                                     </form>
                                 </div>
                             </dialog>
                             <!-- DELETE FORM -->
-                            <x-deleteBtn></x-deleteBtn>
+                            <x-deleteBtn @click="$refs['deleteDialog{{ $supplier->id }}'].showModal()" />
+                            <dialog x-ref="deleteDialog{{ $supplier->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
+                                <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Delete Supplier?</h1>
+                                <div class="container px-3 py-4">
+                                    <form action="{{ route('suppliers.destroy', $supplier->id) }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6">
+                                        @csrf
+                                        @method('DELETE')
+                                        <div>
+                                            <h1>Are you sure you want to delete this supplier?</h1>
+                                        </div>
+                                        <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
+                                            <x-closeBtn type="button" @click="closeDelete()">Cancel</x-closeBtn>
+                                            <x-saveBtn>Delete</x-saveBtn>
+                                        </div>
+                                    </form>
+                                </div>
+                            </dialog>
                         </td>
                     </tr>
                 @endforeach

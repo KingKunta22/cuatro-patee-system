@@ -3,11 +3,12 @@
 // Allows UserController to be referenced from this Route
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SupplierController;
 
 Route::get('/', function() {
     return view('login');
-});
+})->name('login');
 
 Route::post('/login', [UserController::class, 'login']);
 
@@ -21,33 +22,26 @@ Route::post('/logout', [UserController::class, 'logout']);
 
 Route::get('/sales', function() {
     return view('sales');
-});
+})->middleware('auth');
 
 Route::get('/inventory', function() {
     return view('inventory');
-});
+})->middleware('auth');
 
 Route::get('/purchase-order', function() {
     return view('purchase-order');
-});
+})->middleware('auth');
 
 Route::get('/reports', function() {
     return view('reports');
-});
+})->middleware('auth');
 
 Route::get('/product-classification', function() {
     return view('product-classification');
-});
-
-Route::get('/suppliers', function() {
-    return view('suppliers');
-});
-
-Route::get('/manage-account', function() {
-    return view('manage-account');
-});
+})->middleware('auth');
 
 // This resource route doesn't route the user to the /suppliers. 
 // This only allows us to use suppliers.store so that we can put it--
 // inside the action attribute inside the form
-Route::resource('suppliers', SupplierController::class);
+Route::resource('suppliers', SupplierController::class)->middleware('auth');
+Route::resource('customers', CustomerController::class)->middleware('auth');

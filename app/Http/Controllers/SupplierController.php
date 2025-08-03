@@ -12,18 +12,22 @@ class SupplierController extends Controller
             'supplierName'=>'required',
             'supplierAddress'=>'required',
             'supplierContactNumber'=>'required',
-            'supplierEmailAddress'=>'required'
+            'supplierEmailAddress'=>'required',
         ]);
 
+        // Set default status
+        $supplierFields['supplierStatus'] = 'Active';
+        
         // Saves the inputted fields inside the Supplier model
         Supplier::create($supplierFields);
 
-        // Will run index method which also closes the modal after saving
+        // Runs index method which also closes the modal after saving
         return redirect()->route('suppliers.index');
     }
     
-    // This method will run after every store()
+    // This method will run after every method call
     public function index(){
+        
         // Gets all the suppliers in the database
         $suppliers = Supplier::all();
 
@@ -38,10 +42,17 @@ class SupplierController extends Controller
             'supplierAddress' => 'required',
             'supplierContactNumber' => 'required',
             'supplierEmailAddress' => 'required|email',
-            'supplierStatus' => 'required|in:active,inactive'
+            'supplierStatus' => 'required|in:Active,Inactive',
         ]);
 
         $supplier->update($updatedFields);
+
+        return redirect()->route('suppliers.index');
+    }
+
+    public function destroy(Supplier $supplier){
+
+        $supplier->delete();
 
         return redirect()->route('suppliers.index');
     }
