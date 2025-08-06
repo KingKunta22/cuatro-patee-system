@@ -14,4 +14,8 @@ class Supplier extends Model
         'supplierEmailAddress',
         'supplierStatus',
     ];
+
+    public function purchaseOrder(){
+        return $this->hasMany(PurchaseOrder::class, 'supplierId');
+    }
 }

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\PurchaseOrderController;
 
 Route::get('/', function() {
     return view('login');
@@ -45,3 +46,4 @@ Route::get('/product-classification', function() {
 // inside the action attribute inside the form
 Route::resource('suppliers', SupplierController::class)->middleware('auth');
 Route::resource('customers', CustomerController::class)->middleware('auth');
+Route::resource('purchase-orders', PurchaseOrderController::class)->middleware('auth');

@@ -10,7 +10,7 @@
                 <img src="{{ asset('assets/imgs/icons/sales.png')}}" class="w-10 pr-2">Sales</x-nav-link>
             <x-nav-link href="/inventory" :active="request()->is('inventory')">
                 <img src="{{ asset('assets/imgs/icons/inventory.png')}}" class="w-10 pr-2">Inventory</x-nav-link>
-            <x-nav-link href="/purchase-order" :active="request()->is('purchase-order')">
+            <x-nav-link href="/purchase-orders" :active="request()->is('purchase-orders')">
                 <img src="{{ asset('assets/imgs/icons/purchaseorders.png')}}" class="w-10 pr-2">Purchase Orders</x-nav-link>
             <x-nav-link href="/reports" :active="request()->is('reports')">
                 <img src="{{ asset('assets/imgs/icons/reports.png')}}" class="w-10 pr-2">Reports</x-nav-link>
