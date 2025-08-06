@@ -46,4 +46,12 @@ Route::get('/product-classification', function() {
 // inside the action attribute inside the form
 Route::resource('suppliers', SupplierController::class)->middleware('auth');
 Route::resource('customers', CustomerController::class)->middleware('auth');
+
+// Resource route for purchase orders
 Route::resource('purchase-orders', PurchaseOrderController::class)->middleware('auth');
+
+// Custom routes for purchase order session management
+Route::post('purchase-orders/add-item', [PurchaseOrderController::class, 'addItem'])
+    ->name('purchase-orders.add-item')->middleware('auth');
+Route::delete('purchase-orders/remove-item/{index}', [PurchaseOrderController::class, 'removeItem'])
+    ->name('purchase-orders.remove-item')->middleware('auth');
