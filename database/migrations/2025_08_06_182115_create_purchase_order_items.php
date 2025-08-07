@@ -13,12 +13,12 @@ return new class extends Migration
     {
         Schema::create('purchase_order_items', function (Blueprint $table) {
             $table->id();
+            $table->timestamps();
             $table->foreignId('purchase_order_id')->constrained()->onDelete('cascade');
             $table->string('productName');
             $table->integer('quantity');
             $table->decimal('unitPrice', 8, 2);
             $table->decimal('totalAmount', 10, 2);
-            $table->timestamps();
         });
     }
 

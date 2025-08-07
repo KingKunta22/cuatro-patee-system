@@ -48,6 +48,8 @@ public function index() {
         return redirect()->back()->with('keep_modal_open', true);
     }
 
+
+
     // SAVE ALL ITEMS TO DATABASE
     public function store(Request $request) {
         $items = session('purchase_order_items', []);
@@ -83,6 +85,8 @@ public function index() {
         return redirect()->route('purchase-orders.index');
     }
 
+
+
     private function generateOrderNumber() {
         $year = date('Y');
         $lastOrder = PurchaseOrder::where('orderNumber', 'like', "PO-{$year}-%")->orderBy('orderNumber', 'desc')->first();
@@ -112,6 +116,8 @@ public function index() {
         return back();
     }
 
+
+
     // Clear session or clears the temporary added items
     public function clearSession(){
         session()->forget('purchase_order_items');
@@ -124,4 +130,8 @@ public function index() {
         return redirect()->back();
     }
 
+
+    public function updatePurchaseOrder(Request $request, PurchaseOrder $purchaseOrder){
+
+    }
 }
