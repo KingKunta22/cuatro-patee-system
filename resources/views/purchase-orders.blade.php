@@ -150,7 +150,7 @@
                 <tbody>
                     @foreach($purchaseOrders as $purchaseOrder)
                         <tr class="border-b" x-data="{ closeEdit() { $refs['editDialog{{ $supplier->id }}'].close() }, 
-                            closeDelete() { $refs['deleteDialog{{ $supplier->id }}'].close() } }">
+                            closeDelete() { $refs['deleteDialog{{ $purchaseOrder->id }}'].close() } }">
                             <td class="truncate px-2 py-2 text-center" title="{{ $purchaseOrder->orderNumber }}">{{ $purchaseOrder->orderNumber }}</td>
                             <td class="truncate px-2 py-2 text-center" title="{{ $purchaseOrder->supplier->supplierName }}">
                                 <!-- Accesses the supplier name -->
@@ -173,7 +173,11 @@
                                     {{ $purchaseOrder->orderStatus }}
                                 </span>
                             </td>
-                            <td class="truncate py-3 max-w-32 px-2 flex place-content-center">
+                            
+                            <!-- VIEW DETAILS ACTIONS -->
+                            <td class="truncate py-3 max-w-32 px-2 text-center flex place-content-center">
+                                <a href="">View Details</a>
+                                <!-- EDIT FORM -->
                                 <x-editBtn @click="$refs['editDialog{{ $purchaseOrder->id }}'].showModal()"/>
                                 <dialog x-ref="editDialog{{ $purchaseOrder->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
                                     <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Update Order</h1>

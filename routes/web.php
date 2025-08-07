@@ -54,3 +54,4 @@ Route::resource('purchase-orders', PurchaseOrderController::class)->middleware('
 Route::post('purchase-orders/add-item', [PurchaseOrderController::class, 'addItem'])->name('purchase-orders.add-item')->middleware('auth');
 Route::delete('purchase-orders/remove-item/{index}', [PurchaseOrderController::class, 'removeItem'])->name('purchase-orders.remove-item')->middleware('auth');
 Route::post('purchase_orders/clearSession', [PurchaseOrderController::class, 'clearSession'])->name('purchase-orders.clearSession')->middleware('auth');
+Route::put('purchase-orders/update-item/{item}', [PurchaseOrderController::class, 'updateItem'])->name('purchase-orders.update-item')->middleware('auth');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
 
 class PurchaseOrderController extends Controller
 {
