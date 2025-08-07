@@ -11,7 +11,7 @@ class CustomerController extends Controller
         $customerFields = $request->validate([
             'customerName' => 'required',
             'customerAddress' => 'required',
-            'customerContactNumber' => 'required',
+            'customerContactNumber' => 'required', 'size:11',
             'customerEmailAddress' => 'required',
         ]);
 

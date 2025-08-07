@@ -6,19 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 
 class PurchaseOrder extends Model
 {
+    
     protected $fillable = [
-            'orderNumber',
-            'supplierId',
-            'productName',
-            'paymentTerms',
-            'unitPrice',
-            'quantity',
-            'deliveryDate',
-            'totalAmount',
-            'orderStatus',
+        'orderNumber',
+        'supplierId',
+        'paymentTerms',
+        'deliveryDate',
+        'totalAmount',
+        'orderStatus',
     ];
 
     public function supplier(){
         return $this->belongsTo(Supplier::class, 'supplierId');
+    }
+
+    public function items(){
+        return $this->hasMany(PurchaseOrderItem::class);
     }
 }

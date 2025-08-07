@@ -11,7 +11,7 @@ class SupplierController extends Controller
         $supplierFields = $request->validate([
             'supplierName'=>'required',
             'supplierAddress'=>'required',
-            'supplierContactNumber'=>'required',
+            'supplierContactNumber'=>'required', 'size:11',
             'supplierEmailAddress'=>'required',
         ]);
 

@@ -8,7 +8,16 @@
                     <x-searchBar placeholder="Search purchase orders..." />
                     <select name="status" class="truncate w-36 px-3 py-2 border ml-4 mr-auto rounded-md border-black">
                             <option class="truncate w-36" value="">
-                                Status
+                                All
+                            </option>
+                            <option class="truncate w-36" value="">
+                                Pending
+                            </option>
+                            <option class="truncate w-36" value="">
+                                Delivered
+                            </option>
+                            <option class="truncate w-36" value="">
+                                Cancelled
                             </option>
                     </select> 
                    <x-createBtn @click="$refs.dialogRef.showModal()">Add New Order</x-createBtn>
@@ -19,18 +28,30 @@
                 <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Add Order</h1>
                 <div class="container px-3 py-4">
                     <!-- ADD ORDER FORM -->
+                    @if(session('keep_modal_open'))
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            document.querySelector('[x-ref="dialogRef"]').showModal();
+                        });
+                    </script>
+                    @endif
                     <form action="{{ route('purchase-orders.add-item') }}" method="POST" class="px-6 py-4 container grid grid-cols-4 gap-x-8 gap-y-6">
                         @csrf
                         <div class="container text-start flex col-span-2 flex-col">
                             <label for="supplierId">Supplier</label>
-                            <select name="supplierId" class="w-full px-3 py-2 border mr-auto rounded-sm border-black" required>
-                                <option value="" disabled selected>Choose Supplier</option>
-                                @foreach($supplierNames as $supplierName)
-                                    <option value="{{ $supplierName->id }}">
-                                        {{ $supplierName->supplierName }}
+                            <select name="supplierId" class="w-full px-3 py-2 border rounded-sm" required @if($lockedSupplierId) disabled @endif>
+                            <option value="" disabled selected>Choose Supplier</option>
+                                @foreach($supplierNames as $supplier)
+                                    <option value="{{ $supplier->id }}" @selected($lockedSupplierId == $supplier->id)>
+                                        {{ $supplier->supplierName }}
                                     </option>
                                 @endforeach
-                            </select> 
+                            </select>
+
+                            <!-- Hidden field ensures value submits when disabled -->
+                            @if($lockedSupplierId)
+                                <input type="hidden" name="supplierId" value="{{ $lockedSupplierId }}">
+                            @endif
                         </div>
                         <x-form-input label="Product Name" name="productName" type="text" class="col-span-2" value="" required/>
                         <div class="container text-start flex col-span-2 w-full flex-col">
@@ -38,10 +59,10 @@
                             <select name="paymentTerms" class="px-3 py-2 border rounded-sm border-black" required>
                                 <option value="" disabled selected>Select Payment Terms</option>
                                 <option value="Online">Online</option>
-                                <option value="Cash on Delivery">Cash on Delivery</option>
+                                <option value="COD">COD</option>
                             </select>
                         </div>
-                        <x-form-input label="Unit Price" name="unitPrice" type="number" step="0.01" value="" required/>
+                        <x-form-input label="Unit Price" name="unitPrice" type="number" step="0.01" value="" required />
                         <x-form-input label="Quantity" name="quantity" type="number" value="" required/>
                         <x-form-input label="Expected Delivery Date" name="deliveryDate" type="date" value="" class="col-span-2" required/>
                         <x-form-input label="Total" name="totalAmount" type="number" disabled value=""/>
@@ -70,34 +91,24 @@
                                 </thead>
                                 <tbody>
                                     @foreach(session('purchase_order_items') as $index => $item)
-                                        <tr class="border-b">
-                                            <td class="px-2 py-2 text-center">{{ $item['productName'] }}</td>
-                                            <td class="px-2 py-2 text-center">{{ $item['quantity'] }}</td>
-                                            <td class="px-2 py-2 text-center">₱{{ number_format($item['unitPrice'], 2) }}</td>
-                                            <td class="px-2 py-2 text-center">₱{{ number_format($item['totalAmount'], 2) }}</td>
-                                            <td class="px-2 py-2 text-center">
-                                                <form action="{{ route('purchase-orders.remove-item', $index) }}" method="POST" style="display: inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-800 px-2 py-1 rounded">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-7.82 0c-1.18.037-2.09 1.022-2.09 2.201v.916m15.5 0a48.108 48.108 0 00-3.478-.397m-7.5 0c-.41 0-.806.018-1.186.052" />
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
+                                    <tr class="border-b">
+                                        <td class="px-2 py-2 text-center">{{ $item['productName'] }}</td>
+                                        <td class="px-2 py-2 text-center">{{ $item['quantity'] }}</td>
+                                        <td class="px-2 py-2 text-center">₱{{ number_format($item['unitPrice'], 2) }}</td>
+                                        <td class="px-2 py-2 text-center">₱{{ number_format($item['totalAmount'], 2) }}</td>
+                                        <td class="px-2 py-2 text-center">
+                                            <form action="{{ route('purchase-orders.remove-item', $index) }}" method="POST" class="flex place-content-center">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button>
+                                                    <x-deleteBtn />
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
                                     @endforeach
                                 </tbody>
                             </table>
-                            
-                            <!-- SAVE BUTTON FOR COMPLETE ORDER -->
-                            <div class="mt-4 flex justify-end">
-                                <form action="{{ route('purchase-orders.store') }}" method="POST">
-                                    @csrf
-                                    <x-saveBtn>Save Complete Order</x-saveBtn>
-                                </form>
-                            </div>
                         </div>
                     @else
                         <!-- EMPTY STATE -->
@@ -107,10 +118,16 @@
                             </div>
                         </div>
                     @endif
-
                     <!-- FORM BUTTONS -->
                     <div class="container col-span-4 gap-x-4 place-content-end w-full flex items-end content-center px-6">
-                        <x-closeBtn @click="close()">Cancel</x-closeBtn>
+                        <form action="{{ route('purchase-orders.clearSession') }}" method="POST">
+                            @csrf
+                            <x-closeBtn @click="close()">Cancel</x-closeBtn>
+                        </form>
+                         <form action="{{ route('purchase-orders.store') }}" method="POST">
+                            @csrf
+                             <x-saveBtn>Save</x-saveBtn>
+                        </form>
                     </div>
                 </div>
             </dialog>
@@ -130,6 +147,163 @@
                         <th class=" bg-main px-4 py-2">Action</th>
                     </tr>
                 </thead>
+                <tbody>
+                    @foreach($purchaseOrders as $purchaseOrder)
+                        <tr class="border-b" x-data="{ closeEdit() { $refs['editDialog{{ $supplier->id }}'].close() }, 
+                            closeDelete() { $refs['deleteDialog{{ $supplier->id }}'].close() } }">
+                            <td class="truncate px-2 py-2 text-center" title="{{ $purchaseOrder->orderNumber }}">{{ $purchaseOrder->orderNumber }}</td>
+                            <td class="truncate px-2 py-2 text-center" title="{{ $purchaseOrder->supplier->supplierName }}">
+                                <!-- Accesses the supplier name -->
+                                {{ $purchaseOrder->supplier->supplierName}} 
+                            </td>
+                            <td class="truncate px-2 py-2 text-center">{{ $purchaseOrder->created_at->format('m-d-Y') }}</td>
+                            <td class="truncate px-2 py-2 text-center">
+                                @foreach($purchaseOrder->items as $item)
+                                    {{ $item->productName }} ({{ $item->quantity }})
+                                    @if(!$loop->last)<br>@endif
+                                @endforeach
+                            </td>
+                            <td class="truncate px-2 py-2 text-center">₱{{ number_format($purchaseOrder->totalAmount, 2) }}</td>
+                            <td class="truncate px-2 py-2 text-center">{{ $purchaseOrder->deliveryDate }}</td>
+                            <td class="truncate px-2 py-2 text-center">
+                                <span class="px-2 py-1 text-sm font-semibold rounded-full 
+                                    @if($purchaseOrder->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/30
+                                    @elseif($purchaseOrder->orderStatus === 'Completed') text-button-save bg-button-save/30
+                                    @else text-button-delete bg-button-delete/30  @endif">
+                                    {{ $purchaseOrder->orderStatus }}
+                                </span>
+                            </td>
+                            <td class="truncate py-3 max-w-32 px-2 flex place-content-center">
+                                <x-editBtn @click="$refs['editDialog{{ $purchaseOrder->id }}'].showModal()"/>
+                                <dialog x-ref="editDialog{{ $purchaseOrder->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
+                                    <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Update Order</h1>
+                                    <div class="container px-3 py-4">
+                                        <!-- ADD ORDER FORM -->
+                                        @if(session('keep_modal_open'))
+                                        <script>
+                                            document.addEventListener('DOMContentLoaded', function() {
+                                                document.querySelector('[x-ref="dialogRef"]').showModal();
+                                            });
+                                        </script>
+                                        @endif
+                                        <form action="{{ route('purchase-orders.add-item') }}" method="POST" class="px-6 py-4 container grid grid-cols-4 gap-x-8 gap-y-6">
+                                            @csrf
+                                            <div class="container text-start flex col-span-2 flex-col">
+                                                <label for="supplierId">Supplier</label>
+                                                <select name="supplierId" class="w-full px-3 py-2 border rounded-sm" required @if($lockedSupplierId) disabled @endif>
+                                                <option value="" disabled selected>Choose Supplier</option>
+                                                    @foreach($supplierNames as $supplier)
+                                                        <option value="{{ $supplier->id }}" @selected($lockedSupplierId == $supplier->id)>
+                                                            {{ $supplier->supplierName }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+
+                                                <!-- Hidden field ensures value submits when disabled -->
+                                                @if($lockedSupplierId)
+                                                    <input type="hidden" name="supplierId" value="{{ $lockedSupplierId }}">
+                                                @endif
+                                            </div>
+                                            <x-form-input label="Product Name" name="productName" type="text" class="col-span-2" value="" required/>
+                                            <div class="container text-start flex col-span-2 w-full flex-col">
+                                                <label for="paymentTerms">Payment Terms</label>
+                                                <select name="paymentTerms" class="px-3 py-2 border rounded-sm border-black" required>
+                                                    <option value="" disabled selected>Select Payment Terms</option>
+                                                    <option value="Online">Online</option>
+                                                    <option value="COD">COD</option>
+                                                </select>
+                                            </div>
+                                            <x-form-input label="Unit Price" name="unitPrice" type="number" step="0.01" value="" required />
+                                            <x-form-input label="Quantity" name="quantity" type="number" value="" required/>
+                                            <x-form-input label="Expected Delivery Date" name="deliveryDate" type="date" value="" class="col-span-2" required/>
+                                            <x-form-input label="Total" name="totalAmount" type="number" disabled value=""/>
+                                            <div class="flex content-between items-end w-full ">
+                                                <button type="submit" class='bg-button-delete/70 px-4 py-2 rounded text-white hover:bg-button-delete'>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 pr-2 inline">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                    </svg>
+                                                    Add
+                                                </button>
+                                            </div>
+                                        </form>
+
+                                        <!-- PREVIEW TABLE FOR ADDED ORDERS -->
+                                        @if(session('purchase_order_items'))
+                                            <div class="border w-auto rounded-md border-solid border-black p-3 my-4 mx-6">
+                                                <table class="w-full">
+                                                    <thead class="rounded-lg bg-main text-white px-4 py-2">
+                                                        <tr class="rounded-lg">
+                                                            <th class="bg-main px-2 py-2 text-sm">Items</th>
+                                                            <th class="bg-main px-2 py-2 text-sm">Quantity</th>
+                                                            <th class="bg-main px-2 py-2 text-sm">Unit Price</th>
+                                                            <th class="bg-main px-2 py-2 text-sm">Total</th>
+                                                            <th class="bg-main px-2 py-2 text-sm">Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach(session('purchase_order_items') as $index => $item)
+                                                        <tr class="border-b">
+                                                            <td class="px-2 py-2 text-center">{{ $item['productName'] }}</td>
+                                                            <td class="px-2 py-2 text-center">{{ $item['quantity'] }}</td>
+                                                            <td class="px-2 py-2 text-center">₱{{ number_format($item['unitPrice'], 2) }}</td>
+                                                            <td class="px-2 py-2 text-center">₱{{ number_format($item['totalAmount'], 2) }}</td>
+                                                            <td class="px-2 py-2 text-center">
+                                                                <form action="{{ route('purchase-orders.remove-item', $index) }}" method="POST" class="flex place-content-center">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button>
+                                                                        <x-deleteBtn />
+                                                                    </button>
+                                                                </form>
+                                                            </td>
+                                                        </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @else
+                                            <!-- EMPTY STATE -->
+                                            <div class="border w-auto rounded-md border-solid border-black p-3 my-4 mx-6">
+                                                <div class="text-center py-8 text-gray-500">
+                                                    <p>No items added yet. Add items above to preview your order.</p>
+                                                </div>
+                                            </div>
+                                        @endif
+                                        <!-- FORM BUTTONS -->
+                                        <div class="container col-span-4 gap-x-4 place-content-end w-full flex items-end content-center px-6">
+                                            <form action="{{ route('purchase-orders.clearSession') }}" method="POST">
+                                                @csrf
+                                                <x-closeBtn @click="close()">Cancel</x-closeBtn>
+                                            </form>
+                                            <form action="{{ route('purchase-orders.store') }}" method="POST">
+                                                @csrf
+                                                <x-saveBtn>Save</x-saveBtn>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </dialog>
+                                <!-- DELETE FORM -->
+                                <x-deleteBtn @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].showModal()" />
+                                <dialog x-ref="deleteDialog{{ $purchaseOrder->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
+                                    <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Delete Supplier?</h1>
+                                    <div class="container px-3 py-4">
+                                        <form action="{{ route('purchase-orders.destroy', $purchaseOrder->id) }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6">
+                                            @csrf
+                                            @method('DELETE')
+                                            <div>
+                                                <h1>Are you sure you want to delete this purchase order?</h1>
+                                            </div>
+                                            <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
+                                                <x-closeBtn type="button" @click="closeDelete()">Cancel</x-closeBtn>
+                                                <x-saveBtn>Delete</x-saveBtn>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </dialog>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
             </table>
         </div>
     </div>

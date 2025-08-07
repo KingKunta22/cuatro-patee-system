@@ -17,7 +17,7 @@
                         @csrf
                         <x-form-input label="Supplier Name" name="supplierName" type="text" value="" />
                         <x-form-input label="Address" name="supplierAddress" type="text" value="" />
-                        <x-form-input label="Contact Number" name="supplierContactNumber" type="number" value="" />
+                        <x-form-input label="Contact Number" name="supplierContactNumber" type="number" value="" maxlength="11" type="tel" pattern="[0-9]{11}"/>
                         <x-form-input label="Email Address" name="supplierEmailAddress" type="email" value="" />
                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
                             <x-closeBtn @click="close()">Cancel</x-closeBtn>
@@ -66,7 +66,7 @@
                                         @method('PUT')
                                         <x-form-input label="Supplier Name" name="supplierName" type="text" value="{{ old('supplierName',  $supplier->supplierName) }}"/>
                                         <x-form-input label="Address" name="supplierAddress" type="text" value="{{ old('supplierAddress', $supplier->supplierAddress) }}"/>
-                                        <x-form-input label="Contact Number" name="supplierContactNumber" type="number" value="{{ old('supplierContactNumber', $supplier->supplierContactNumber) }}"/>
+                                        <x-form-input label="Contact Number" name="supplierContactNumber" type="number" value="{{ old('supplierContactNumber', $supplier->supplierContactNumber) }}" maxlength="11" type="tel" pattern="[0-9]{11}"/>
                                         <x-form-input label="Email Address" name="supplierEmailAddress" type="email" value="{{ old('supplierEmailAddress', $supplier->supplierEmailAddress) }}"/>
                                         <div class="container text-start flex col-span-2 flex-col">
                                             <label for="supplierStatus">Choose status:</label>

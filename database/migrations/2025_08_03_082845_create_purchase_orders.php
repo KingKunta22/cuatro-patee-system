@@ -16,10 +16,7 @@ return new class extends Migration
             $table->timestamps();
             $table->string('orderNumber')->unique();
             $table->foreignId('supplierId')->constrained('suppliers');
-            $table->string('productName');
-            $table->enum('paymentTerms', ['Online', 'Cash on Delivery']);
-            $table->decimal('unitPrice', 8 ,2);
-            $table->integer('quantity');
+            $table->enum('paymentTerms', ['Online', 'COD']);
             $table->date('deliveryDate');
             $table->decimal('totalAmount', 10, 2);
             $table->enum('orderStatus', ['Pending', 'Confirmed', 'Delivered', 'Cancelled'])->default('Pending');

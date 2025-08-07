@@ -16,9 +16,9 @@ return new class extends Migration
             $table->timestamps();
             $table->string('supplierName');
             $table->string('supplierAddress');
-            $table->string('supplierContactNumber');
+            $table->string('supplierContactNumber', 11);
             $table->string('supplierEmailAddress');
-            $table->string('supplierStatus')->default('Active')->after('supplierEmailAddress');
+            $table->string('supplierStatus')->default('Active');
         });
     }
 

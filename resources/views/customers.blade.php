@@ -15,7 +15,7 @@
                         @csrf
                         <x-form-input label="Customer Name" name="customerName" type="text" value="" />
                         <x-form-input label="Address" name="customerAddress" type="text" value="" />
-                        <x-form-input label="Contact Number" name="customerContactNumber" type="number" value="" />
+                        <x-form-input label="Contact Number" name="customerContactNumber" type="number" value="" maxlength="11" type="tel" pattern="[0-9]{11}" />
                         <x-form-input label="Email Address" name="customerEmailAddress" type="email" value="" />
                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
                             <x-closeBtn @click="close()">Cancel</x-closeBtn>
@@ -63,7 +63,7 @@
                                             @method('PUT')
                                             <x-form-input label="Customer Name" name="customerName" type="text" value="{{ old('customerName',  $customer->customerName) }}"/>
                                             <x-form-input label="Address" name="customerAddress" type="text" value="{{ old('customerAddress', $customer->customerAddress) }}"/>
-                                            <x-form-input label="Contact Number" name="customerContactNumber" type="number" value="{{ old('customerContactNumber', $customer->customerContactNumber) }}"/>
+                                            <x-form-input label="Contact Number" name="customerContactNumber" type="number" value="{{ old('customerContactNumber', $customer->customerContactNumber) }}" maxlength="11" type="tel" pattern="[0-9]{11}"/>
                                             <x-form-input label="Email Address" name="customerEmailAddress" type="email" value="{{ old('customerEmailAddress', $customer->customerEmailAddress) }}"/>
                                             <div class="container text-start flex col-span-2 flex-col">
                                                 <label for="customerStatus">Choose status:</label>
