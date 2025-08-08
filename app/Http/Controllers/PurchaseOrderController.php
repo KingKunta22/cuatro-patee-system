@@ -131,7 +131,10 @@ public function index() {
     }
 
 
-    public function updatePurchaseOrder(Request $request, PurchaseOrder $purchaseOrder){
+    public function updatePurchaseOrder(Request $request, PurchaseOrder $purchaseOrder)
+    {
+
 
     }
+
 }

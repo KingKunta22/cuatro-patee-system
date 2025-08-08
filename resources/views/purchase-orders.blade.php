@@ -190,55 +190,66 @@
                                     <div class="container px-3 py-4">
 
                                         <!-- ADD ORDER FORM -->
-                                        <form action="{{ route('purchase-orders.add-item') }}" method="POST" class="px-6 py-4 container grid grid-cols-4 gap-x-8 gap-y-6">
-                                            @csrf
-                                            <div class="container text-start flex col-span-2 flex-col">
-                                                <label for="supplierId">Supplier</label>
-                                                <select name="supplierId" class="w-full px-3 py-2 border rounded-sm" required @if($lockedSupplierId) disabled @endif>
-                                                <option value="" disabled selected>Choose Supplier</option>
-                                                    @foreach($supplierNames as $supplier)
-                                                        <option value="{{ $supplier->id }}" @selected($lockedSupplierId == $supplier->id)>
-                                                            {{ $supplier->supplierName }}
-                                                        </option>
-                                                    @endforeach
-                                                </select>
+                                        {{-- Purchase Order Details --}}
+                                        <div class="px-6 py-4 container grid grid-cols-4 gap-x-8 gap-y-6">
+                                            <div class="col-span-2">
+                                                <label class="font-semibold">Order Number</label>
+                                                <p>{{ $purchaseOrder->orderNumber }}</p>
                                             </div>
-                                            <x-form-input label="Product Name" name="productName" type="text" class="col-span-2" value="" required/>
-                                            <div class="container text-start flex col-span-2 w-full flex-col">
-                                                <label for="paymentTerms">Payment Terms</label>
-                                                <select name="paymentTerms" class="px-3 py-2 border rounded-sm border-black" required>
-                                                    <option value="" disabled selected>Select Payment Terms</option>
-                                                    <option value="Online">Online</option>
-                                                    <option value="COD">COD</option>
-                                                </select>
+                                            <div class="col-span-2">
+                                                <label class="font-semibold">Supplier Name</label>
+                                                <p>{{ $purchaseOrder->supplier->supplierName }}</p>
                                             </div>
-                                            <x-form-input label="Unit Price" name="unitPrice" type="number" step="0.01" value="" required />
-                                            <x-form-input label="Quantity" name="quantity" type="number" value="" required/>
-                                            <x-form-input label="Expected Delivery Date" name="deliveryDate" type="date" value="" class="col-span-2" required/>
-                                            <x-form-input label="Total" name="totalAmount" type="number" disabled value=""/>
-                                        </form>
+                                            <div class="col-span-2">
+                                                <label class="font-semibold">Payment Terms</label>
+                                                <p>{{ ucfirst($purchaseOrder->paymentTerms) }}</p>
+                                            </div>
+                                            <div class="col-span-2">
+                                                <label class="font-semibold">Expected Delivery Date</label>
+                                                <p>{{ \Carbon\Carbon::parse($purchaseOrder->deliveryDate)->format('F d, Y') }}</p>
+                                            </div>
+                                            <div class="col-span-2">
+                                                <label class="font-semibold">Grand Total</label>
+                                                <p>₱{{ number_format($purchaseOrder->totalAmount, 2) }}</p>
+                                            </div>
+                                            <div class="col-span-2">
+                                                <label class="font-semibold">Status</label>
+                                                <div class="truncate px-2 py-2 text-center">
+                                                    <span class="px-2 py-1 text-sm font-semibold rounded-full 
+                                                        @if($purchaseOrder->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/30
+                                                        @elseif($purchaseOrder->orderStatus === 'Completed') text-button-save bg-button-save/30
+                                                        @else text-button-delete bg-button-delete/30  @endif">
+                                                        {{ $purchaseOrder->orderStatus }}
+                                                    </span>
+                                                </div>
+                                            </div>
 
-                                        <!-- PREVIEW TABLE FOR ADDED ORDERS -->
+                                        </div>
+
+                                        {{-- Items Table --}}
                                         <div class="border w-auto rounded-md border-solid border-black p-3 my-4 mx-6">
                                             <table class="w-full">
-                                                <thead class="rounded-lg bg-main text-white px-4 py-2">
-                                                    <tr class="rounded-lg">
-                                                        <th class="bg-main px-2 py-2 text-sm">Items</th>
-                                                        <th class="bg-main px-2 py-2 text-sm">Quantity</th>
-                                                        <th class="bg-main px-2 py-2 text-sm">Unit Price</th>
-                                                        <th class="bg-main px-2 py-2 text-sm">Total</th>
+                                                <thead class="bg-main text-white">
+                                                    <tr>
+                                                        <th class="px-2 py-2 text-sm">Items</th>
+                                                        <th class="px-2 py-2 text-sm">Quantity</th>
+                                                        <th class="px-2 py-2 text-sm">Unit Price</th>
+                                                        <th class="px-2 py-2 text-sm">Total</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    <tr class="border-b">
-                                                        <td class="px-2 py-2 text-center">productName</td>
-                                                        <td class="px-2 py-2 text-center">quantity</td>
-                                                        <td class="px-2 py-2 text-center">unitPrice</td>
-                                                        <td class="px-2 py-2 text-center">totalAmount</td>
-                                                    </tr>
+                                                    @foreach($purchaseOrder->items as $item)
+                                                        <tr class="border-b text-center">
+                                                            <td class="px-2 py-2">{{ $item->productName }}</td>
+                                                            <td class="px-2 py-2">{{ $item->quantity }}</td>
+                                                            <td class="px-2 py-2">{{ number_format($item->unitPrice, 2) }}</td>
+                                                            <td class="px-2 py-2">{{ number_format($item->totalAmount, 2) }}</td>
+                                                        </tr>
+                                                    @endforeach
                                                 </tbody>
                                             </table>
                                         </div>
+
                                         
                                         <!-- FORM BUTTONS -->
                                         <div class="container col-span-4 gap-x-4 place-content-start w-full flex items-start content-center px-6">
