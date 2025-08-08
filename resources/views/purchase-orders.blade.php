@@ -250,12 +250,21 @@
                                             </table>
                                         </div>
 
-                                        
                                         <!-- FORM BUTTONS -->
                                         <div class="container col-span-4 gap-x-4 place-content-start w-full flex items-start content-center px-6">
                                             
+                                            <!-- DIRI KO GAREFERENCE FOR BUTTONS AND THEN NAAS UBOS ANG ILANG DESIGNATED MODALS/FORMS -->
+
                                             <!-- EDIT BUTTON FOR EDIT FORM -->
                                             <button @click="$refs['editDialog{{ $purchaseOrder->id }}'].showModal()" class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold 0 items-center content-center hover:bg-button-create/70 transition:all duration-100 ease-in">Edit</button>
+                                            <!--DELETE BUTTON FOR DELETE FORM -->
+                                            <x-closeBtn @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].showModal()">Delete</x-closeBtn>
+                                            <!-- CLOSE BUTTON -->
+                                            <button @click="$refs['viewDetailsDialog{{ $purchaseOrder->id }}'].close()" class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in">Close</button>
+
+
+                                            <!-- DIALOGS AND FORMS FOR EDIT AND DELETE -->
+
                                             <!-- EDIT FORM -->
                                             <dialog x-ref="editDialog{{ $purchaseOrder->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
                                                 <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Update Purchase Order</h1>
@@ -364,11 +373,9 @@
                                                     </div>
                                                 </div>
                                             </dialog>
-                                                                                
 
-                                            <!--DELETE BUTTON FOR DELETE FORM -->
-                                            <x-closeBtn @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].showModal()">Delete</x-closeBtn>
-                                            <!-- DELETE FORM -->
+
+                                             <!-- DELETE FORM -->
                                             <dialog x-ref="deleteDialog{{ $purchaseOrder->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
                                                 <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Delete Supplier?</h1>
                                                 <div class="container px-3 py-4">
@@ -387,9 +394,7 @@
                                             </dialog>
 
 
-                                            <!-- CLOSE BUTTON -->
-                                            <button @click="$refs['viewDetailsDialog{{ $purchaseOrder->id }}'].close()" class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in">Close</button>
-
+                                            
 
                                         </div>
                                     </div>
