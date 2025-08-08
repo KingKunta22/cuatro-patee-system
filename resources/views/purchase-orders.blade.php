@@ -236,8 +236,8 @@
                                                         <tr class="border-b text-center">
                                                             <td class="px-2 py-2">{{ $item->productName }}</td>
                                                             <td class="px-2 py-2">{{ $item->quantity }}</td>
-                                                            <td class="px-2 py-2">{{ number_format($item->unitPrice, 2) }}</td>
-                                                            <td class="px-2 py-2">{{ number_format($item->totalAmount, 2) }}</td>
+                                                            <td class="px-2 py-2">₱{{ number_format($item->unitPrice, 2) }}</td>
+                                                            <td class="px-2 py-2">₱{{ number_format($item->totalAmount, 2) }}</td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
@@ -310,7 +310,7 @@
 
                                                         <!-- Items Table -->
                                                         <table class="col-span-4 w-full text-sm text-left p-2 my-3 text-gray-500">
-                                                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                                            <thead class="text-xs uppercase rounded-lg bg-main text-white px-4 py-2">
                                                                 <tr>
                                                                     <th class="px-4 py-2">#</th>
                                                                     <th class="px-4 py-2">Product Name</th>
@@ -393,6 +393,9 @@
                     @endforeach
                 </tbody>
             </table>
+            <div class="mt-4 px-4 py-2 bg-gray-50 ">
+                {{ $purchaseOrders->links() }}
+            </div>
         </div>
     </div>
 </x-layout>

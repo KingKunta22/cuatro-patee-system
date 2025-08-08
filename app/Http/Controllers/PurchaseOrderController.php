@@ -12,26 +12,20 @@ class PurchaseOrderController extends Controller
     public function index(Request $request) {
         $status = $request->input('status', 'all');
 
-        // Start building the query
-        $query = PurchaseOrder::with(['items', 'supplier']);
+        $query = PurchaseOrder::with(['items', 'supplier'])->orderBy('id', 'DESC')->when($status !== 'all', fn($q) => $q->where('orderStatus', $status));
 
-        // Apply filter if status is not 'all'
-        if ($status !== 'all') {
-            $query->where('orderStatus', $status);
-        }
+        // Add this line to preserve filters in pagination links
+        $purchaseOrders = $query->paginate(6)->withQueryString();
 
-        // Execute the query ONCE
-        $purchaseOrders = $query->get();
-
-        // Other data
+        // Rest remains the same
         $supplierNames = Supplier::where('supplierStatus', 'Active')->get();
         $items = session('purchase_order_items', []);
         $lockedSupplierId = $items[0]['supplierId'] ?? null;
 
         return view('purchase-orders', compact(
-            'supplierNames', 
-            'lockedSupplierId', 
-            'items', 
+            'supplierNames',
+            'lockedSupplierId',
+            'items',
             'purchaseOrders'
         ));
     }
