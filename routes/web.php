@@ -48,11 +48,19 @@ Route::resource('suppliers', SupplierController::class)->middleware('auth');
 Route::resource('customers', CustomerController::class)->middleware('auth');
 
 // Resource route for purchase orders
-Route::resource('purchase-orders', PurchaseOrderController::class)->middleware('auth');
+Route::resource('purchase-orders', PurchaseOrderController::class)->except(['update'])->middleware('auth');
 
-// Custom routes for purchase order session management
+// ============== Custom routes for purchase order session management ==========
+
+// For adding items to the session
 Route::post('purchase-orders/add-item', [PurchaseOrderController::class, 'addItem'])->name('purchase-orders.add-item')->middleware('auth');
+// For removing items from the session
 Route::delete('purchase-orders/remove-item/{index}', [PurchaseOrderController::class, 'removeItem'])->name('purchase-orders.remove-item')->middleware('auth');
+// For clearing the session
 Route::post('purchase_orders/clearSession', [PurchaseOrderController::class, 'clearSession'])->name('purchase-orders.clearSession')->middleware('auth');
-Route::put('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'updatePurchaseOrder'])->name('purchase-orders.update')->middleware('auth');
-Route::delete('/purchase-order-items/{item}', [PurchaseOrderController::class, 'destroyItem'])->name('purchase-order-items.destroy')->middleware('auth');
+// To update session and the existing values
+Route::put('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase-orders.update')->middleware('auth');
+// To delete existing items
+Route::delete('/purchase-orders/{purchaseOrder}/items/{item}', [App\Http\Controllers\PurchaseOrderController::class, 'destroyItem'])->name('purchase-orders.items.destroy');
+
+

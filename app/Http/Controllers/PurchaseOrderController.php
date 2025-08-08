@@ -9,21 +9,40 @@ use App\Models\PurchaseOrderItem;
 
 class PurchaseOrderController extends Controller
 {
-public function index() {
-    $supplierNames = Supplier::where('supplierStatus', 'Active')->get();
-    $items = session('purchase_order_items', []);
-    $lockedSupplierId = $items[0]['supplierId'] ?? null;
-    $purchaseOrders = PurchaseOrder::with(['items', 'supplier'])->get();
-    
-    return view('purchase-orders', compact('supplierNames', 'lockedSupplierId', 'items', 'purchaseOrders'));
-}
+    public function index(Request $request) {
+        $status = $request->input('status', 'all');
+
+        // Start building the query
+        $query = PurchaseOrder::with(['items', 'supplier']);
+
+        // Apply filter if status is not 'all'
+        if ($status !== 'all') {
+            $query->where('orderStatus', $status);
+        }
+
+        // Execute the query ONCE
+        $purchaseOrders = $query->get();
+
+        // Other data
+        $supplierNames = Supplier::where('supplierStatus', 'Active')->get();
+        $items = session('purchase_order_items', []);
+        $lockedSupplierId = $items[0]['supplierId'] ?? null;
+
+        return view('purchase-orders', compact(
+            'supplierNames', 
+            'lockedSupplierId', 
+            'items', 
+            'purchaseOrders'
+        ));
+    }
+
 
     // ADD ITEM TO SESSION (temporary storage)
     public function addItem(Request $request) {
         $validated = $request->validate([
             'supplierId' => 'required|exists:suppliers,id',
             'productName' => 'required|string',
-            'paymentTerms' => 'required|in:Online,COD',
+            'paymentTerms' => 'required|in:Online,Cash on Delivery',
             'unitPrice' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
             'deliveryDate' => 'required|date',
@@ -47,6 +66,7 @@ public function index() {
 
         return redirect()->back()->with('keep_modal_open', true);
     }
+
 
 
 
@@ -87,6 +107,7 @@ public function index() {
 
 
 
+
     private function generateOrderNumber() {
         $year = date('Y');
         $lastOrder = PurchaseOrder::where('orderNumber', 'like', "PO-{$year}-%")->orderBy('orderNumber', 'desc')->first();
@@ -101,6 +122,9 @@ public function index() {
         // Format: PO-2025-0001
         return "PO-{$year}-" . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
+
+
+
 
     public function removeItem($index) {
         $items = session('purchase_order_items', []);
@@ -131,10 +155,56 @@ public function index() {
     }
 
 
-    public function updatePurchaseOrder(Request $request, PurchaseOrder $purchaseOrder)
+
+    public function destroyItem($purchaseOrderId, $itemId)
     {
+        $item = PurchaseOrderItem::where('purchase_order_id', $purchaseOrderId)->where('id', $itemId)->firstOrFail();
 
+        $item->delete();
 
+        return redirect()->back();
     }
 
+
+
+    public function update(Request $request, PurchaseOrder $purchaseOrder)
+    {
+        // Validate the request
+        $validated = $request->validate([
+            'paymentTerms' => 'required|in:Online,Cash on Delivery',
+            'orderStatus' => 'required|in:Pending,Delivered,Cancelled',
+            'deliveryDate' => 'required|date',
+            'items' => 'required|array',
+            'items.*.productName' => 'required|string',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unitPrice' => 'required|numeric|min:0',
+        ]);
+
+        // Update the main order
+        $purchaseOrder->update([
+            'paymentTerms' => $validated['paymentTerms'],
+            'orderStatus' => $validated['orderStatus'],
+            'deliveryDate' => $validated['deliveryDate']
+        ]);
+
+        $totalAmount = 0;
+
+        // Update items
+        foreach ($validated['items'] as $itemId => $itemData) {
+            $item = PurchaseOrderItem::findOrFail($itemId);
+            $item->update([
+                'productName' => $itemData['productName'],
+                'quantity' => $itemData['quantity'],
+                'unitPrice' => $itemData['unitPrice'],
+                'totalAmount' => $itemData['quantity'] * $itemData['unitPrice']
+            ]);
+            $totalAmount += $item->totalAmount;
+        }
+
+        // Update total amount
+        $purchaseOrder->update(['totalAmount' => $totalAmount]);
+
+        return redirect()->route('purchase-orders.index')
+            ->with('success', 'Order updated successfully');
+    }
 }
