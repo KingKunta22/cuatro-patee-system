@@ -41,6 +41,10 @@ Route::get('/product-classification', function() {
     return view('product-classification');
 })->middleware('auth');
 
+Route::get('/delivery-management', function() {
+    return view('delivery-management');
+})->middleware('auth');
+
 // This resource route doesn't route the user to the /suppliers. 
 // This only allows us to use suppliers.store so that we can put it--
 // inside the action attribute inside the form

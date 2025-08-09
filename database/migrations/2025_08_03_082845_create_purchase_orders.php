@@ -19,7 +19,7 @@ return new class extends Migration
             $table->enum('paymentTerms', ['Online', 'Cash on Delivery']);
             $table->date('deliveryDate');
             $table->decimal('totalAmount', 10, 2);
-            $table->enum('orderStatus', ['Pending', 'Delivered', 'Cancelled'])->default('Pending');
+            $table->enum('orderStatus', ['Pending', 'Delivered', 'Cancelled', 'Confirmed'])->default('Pending');
         });
     }
 

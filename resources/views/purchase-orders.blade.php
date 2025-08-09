@@ -163,8 +163,9 @@
                             <td class="truncate px-2 py-2 text-center">{{ $purchaseOrder->deliveryDate }}</td>
                             <td class="truncate px-2 py-2 text-center">
                                 <span class="px-2 py-1 text-sm font-semibold rounded-full 
-                                    @if($purchaseOrder->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/30
-                                    @elseif($purchaseOrder->orderStatus === 'Delivered') text-button-save bg-button-save/30
+                                    @if($purchaseOrder->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/40
+                                    @elseif($purchaseOrder->orderStatus === 'Confirmed') text-teal-400 bg-teal-200/40
+                                    @elseif($purchaseOrder->orderStatus === 'Delivered') text-button-save bg-button-save/40
                                     @else text-button-delete bg-button-delete/30  @endif">
                                     {{ $purchaseOrder->orderStatus }}
                                 </span>
@@ -210,8 +211,9 @@
                                                 <label class="font-semibold">Status</label>
                                                 <div class="truncate px-2 py-2 text-center">
                                                     <span class="px-2 py-1 text-sm font-semibold rounded-full 
-                                                        @if($purchaseOrder->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/30
-                                                        @elseif($purchaseOrder->orderStatus === 'Delivered') text-button-save bg-button-save/30
+                                                        @if($purchaseOrder->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/40
+                                                        @elseif($purchaseOrder->orderStatus === 'Confirmed') text-teal-400 bg-teal-200/40
+                                                        @elseif($purchaseOrder->orderStatus === 'Delivered') text-button-save bg-button-save/40
                                                         @else text-button-delete bg-button-delete/30  @endif">
                                                         {{ $purchaseOrder->orderStatus }}
                                                     </span>
@@ -298,6 +300,7 @@
                                                             <label for="orderStatus">Order Status</label>
                                                             <select name="orderStatus" class="px-3 py-2 border rounded-sm border-black" required>
                                                                 <option value="Pending" {{ $purchaseOrder->orderStatus === 'Pending' ? 'selected' : '' }}>Pending</option>
+                                                                <option value="Confirmed" {{ $purchaseOrder->orderStatus === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
                                                                 <option value="Delivered" {{ $purchaseOrder->orderStatus === 'Delivered' ? 'selected' : '' }}>Delivered</option>
                                                                 <option value="Cancelled" {{ $purchaseOrder->orderStatus === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
                                                             </select>

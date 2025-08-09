@@ -166,7 +166,7 @@ class PurchaseOrderController extends Controller
         // Validate the request
         $validated = $request->validate([
             'paymentTerms' => 'required|in:Online,Cash on Delivery',
-            'orderStatus' => 'required|in:Pending,Delivered,Cancelled',
+            'orderStatus' => 'required|in:Pending,Delivered,Cancelled,Confirmed',
             'deliveryDate' => 'required|date',
             'items' => 'required|array',
             'items.*.productName' => 'required|string',

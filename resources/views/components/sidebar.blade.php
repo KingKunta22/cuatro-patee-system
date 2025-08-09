@@ -12,13 +12,15 @@
                 <img src="{{ asset('assets/imgs/icons/inventory.png')}}" class="w-10 pr-2">Inventory</x-nav-link>
             <x-nav-link href="/purchase-orders" :active="request()->is('purchase-orders')">
                 <img src="{{ asset('assets/imgs/icons/purchaseorders.png')}}" class="w-10 pr-2">Purchase Orders</x-nav-link>
+            <x-nav-link href="/delivery-management" :active="request()->is('delivery-management')">
+                <img src="{{ asset('assets/imgs/icons/customer.png')}}" class="w-10 pr-2">Delivery Management</x-nav-link>
             <x-nav-link href="/reports" :active="request()->is('reports')">
                 <img src="{{ asset('assets/imgs/icons/reports.png')}}" class="w-10 pr-2">Reports</x-nav-link>
-                <x-nav-link href="/product-classification" :active="request()->is('product-classification')">
+            <x-nav-link href="/product-classification" :active="request()->is('product-classification')">
                 <img src="{{ asset('assets/imgs/icons/pclassification.png')}}" class="w-10 pr-2">Product Classification</x-nav-link>
-                <x-nav-link href="/suppliers" :active="request()->is('suppliers')">
+            <x-nav-link href="/suppliers" :active="request()->is('suppliers')">
                 <img src="{{ asset('assets/imgs/icons/supplier.png')}}" class="w-10 pr-2">Suppliers</x-nav-link>
-                <x-nav-link href="/customers" :active="request()->is('customers')">
+            <x-nav-link href="/customers" :active="request()->is('customers')">
                 <img src="{{ asset('assets/imgs/icons/customer.png')}}" class="w-10 pr-2">Customers</x-nav-link>
         </div>
         <div class="flex flex-col content-start items-start mt-auto mb-6 mx-6 w-64">
