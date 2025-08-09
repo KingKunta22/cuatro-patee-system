@@ -353,8 +353,11 @@
                                                                         <td class="px-4 py-2">
                                                                             <input type="number" step="0.01" name="items[{{ $item->id }}][totalAmount]" value="{{ $item->totalAmount }}" readonly class="border rounded px-2 py-1 w-24 bg-gray-100 cursor-not-allowed">
                                                                         </td>
-                                                                        <td class="px-4 py-2">
-                                                                            <x-deleteBtn/>
+                                                                        <td class="px-4 py-2 flex place-content-center">
+                                                                            <button type="submit" name="remove_item" value="{{ $item->id }}" 
+                                                                                    onclick="return confirm('Are you sure you want to remove this item?')">
+                                                                                <x-deleteBtn/>
+                                                                            </button>
                                                                         </td>
                                                                     </tr>
                                                                 @empty
@@ -377,7 +380,7 @@
                                                                 Cancel
                                                             </button>
 
-                                                            <x-saveBtn>Save</x-saveBtn>
+                                                            <x-saveBtn name="action" value="update">Save</x-saveBtn>
                                                         </div>
                                                     </form>
                                                 </div>

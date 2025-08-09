@@ -119,7 +119,7 @@ class PurchaseOrderController extends Controller
 
 
 
-
+    // Removes an item inside the session that exists
     public function removeItem($index) {
         $items = session('purchase_order_items', []);
         
@@ -160,9 +160,21 @@ class PurchaseOrderController extends Controller
     }
 
 
-
+    // UPDATE EVERYTHING
     public function update(Request $request, PurchaseOrder $purchaseOrder)
     {
+
+        // If removing an item
+        // Handle item removal
+        if ($request->has('remove_item')) {
+            $itemId = $request->input('remove_item');
+            $item = PurchaseOrderItem::findOrFail($itemId);
+            $item->delete();
+            
+            return redirect()->back();
+        }
+
+
         // Validate the request
         $validated = $request->validate([
             'paymentTerms' => 'required|in:Online,Cash on Delivery',
@@ -173,6 +185,7 @@ class PurchaseOrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unitPrice' => 'required|numeric|min:0',
         ]);
+
 
         // Update the main order
         $purchaseOrder->update([
@@ -198,7 +211,6 @@ class PurchaseOrderController extends Controller
         // Update total amount
         $purchaseOrder->update(['totalAmount' => $totalAmount]);
 
-        return redirect()->route('purchase-orders.index')
-            ->with('success', 'Order updated successfully');
+        return redirect()->route('purchase-orders.index');
     }
 }
