@@ -39,7 +39,7 @@ class PurchaseOrderController extends Controller
             'paymentTerms' => 'required|in:Online,Cash on Delivery',
             'unitPrice' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
-            'deliveryDate' => 'required|date',
+            'deliveryDate' => 'required|date|after_or_equal:today',
         ]);
 
         // Calculate total amount

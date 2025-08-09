@@ -10,6 +10,7 @@
                         <select name="status" class="truncate w-36 px-3 py-2 border rounded-md border-black" onchange="document.getElementById('statusFilterForm').submit()">
                             <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>All</option>
                             <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                            <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
                             <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
                             <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
                         </select> 
@@ -160,7 +161,12 @@
                                 @endforeach
                             </td>
                             <td class="truncate px-2 py-2 text-center">₱{{ number_format($purchaseOrder->totalAmount, 2) }}</td>
-                            <td class="truncate px-2 py-2 text-center">{{ $purchaseOrder->deliveryDate }}</td>
+                            <td class="truncate px-2 py-2 text-center">{{ $purchaseOrder->deliveryDate }}
+                                <br>
+                                <a href="/delivery-management" class="text-xs text-gray-500 underline uppercase rounded my-2 py-1 px-2 transition-all ease-in-out duration-100">
+                                    Manage Delivery
+                                </a>
+                            </td>
                             <td class="truncate px-2 py-2 text-center">
                                 <span class="px-2 py-1 text-sm font-semibold rounded-full 
                                     @if($purchaseOrder->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/40
@@ -309,6 +315,7 @@
                                                         <!-- Delivery Date -->
                                                         <x-form-input label="Expected Delivery Date" name="deliveryDate" type="date"
                                                             value="{{ \Carbon\Carbon::parse($purchaseOrder->deliveryDate)->format('Y-m-d') }}" 
+                                                            min="{{ date('Y-m-d') }}"
                                                             class="col-span-2" required />
 
                                                         <!-- Items Table -->
