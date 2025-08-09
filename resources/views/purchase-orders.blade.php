@@ -59,8 +59,14 @@
                         </div>
                         <x-form-input label="Unit Price" name="unitPrice" type="number" step="0.01" value="" required />
                         <x-form-input label="Quantity" name="quantity" type="number" value="" required/>
-                        <x-form-input label="Expected Delivery Date" name="deliveryDate" type="date" value="" class="col-span-2" required/>
-                        <x-form-input label="Total" name="totalAmount" type="number" disabled value=""/>
+                        <x-form-input label="Expected Delivery Date" name="deliveryDate" type="date" value="" class="col-span-2" required min="{{ date('Y-m-d') }}" />
+
+                        <!-- Gets the total amount automatically from added items inside the session -->
+                        @php
+                            $totalAmount = collect(session('purchase_order_items', []))->sum('totalAmount');
+                        @endphp
+                        <x-form-input label="Total" name="totalAmount" type="text" readonly value="₱{{ number_format($totalAmount, 2) }}"/>
+
                         <div class="flex content-between items-end w-full ">
                             <button type="submit" class='bg-button-delete/70 px-4 py-2 rounded text-white hover:bg-button-delete'>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 pr-2 inline">
@@ -172,7 +178,8 @@
                                     @if($purchaseOrder->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/40
                                     @elseif($purchaseOrder->orderStatus === 'Confirmed') text-teal-400 bg-teal-200/40
                                     @elseif($purchaseOrder->orderStatus === 'Delivered') text-button-save bg-button-save/40
-                                    @else text-button-delete bg-button-delete/30  @endif">
+                                    @else text-button-delete bg-button-delete/30  @endif"
+                                    title="This order is {{ $purchaseOrder->orderStatus }}">
                                     {{ $purchaseOrder->orderStatus }}
                                 </span>
                             </td>
