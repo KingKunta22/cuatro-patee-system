@@ -11,7 +11,7 @@ class SupplierController extends Controller
         $supplierFields = $request->validate([
             'supplierName'=>'required',
             'supplierAddress'=>'required',
-            'supplierContactNumber'=>'required', 'size:11',
+            'supplierContactNumber'=>'required|size:11',
             'supplierEmailAddress'=>'required',
         ]);
 
@@ -29,7 +29,10 @@ class SupplierController extends Controller
     public function index(){
         
         // Gets all the suppliers in the database
-        $suppliers = Supplier::all();
+        $suppliers = Supplier::orderBy('id', 'DESC')
+                            ->paginate(8)
+                            ->withQueryString();
+
 
         // Routes back() to the same current route
         // This also means 'suppliers' => $supplers

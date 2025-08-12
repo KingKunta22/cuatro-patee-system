@@ -12,12 +12,15 @@ class PurchaseOrderController extends Controller
     public function index(Request $request) {
         $status = $request->input('status', 'all');
 
-        $query = PurchaseOrder::with(['items', 'supplier'])->orderBy('id', 'DESC')->when($status !== 'all', fn($q) => $q->where('orderStatus', $status));
+        $query = PurchaseOrder::with(['items', 'supplier']) // Eager load relationships
+        ->orderBy('id', 'DESC')                             // Sort by newest first
+        ->when($status !== 'all',                           // Conditional filter for status
+            fn($q) => $q->where('orderStatus', $status)
+        );
 
-        // Add this line to preserve filters in pagination links
+        // Preserve filters in pagination links
         $purchaseOrders = $query->paginate(6)->withQueryString();
 
-        // Rest remains the same
         $supplierNames = Supplier::where('supplierStatus', 'Active')->get();
         $items = session('purchase_order_items', []);
         $lockedSupplierId = $items[0]['supplierId'] ?? null;
@@ -40,7 +43,13 @@ class PurchaseOrderController extends Controller
             'unitPrice' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
             'deliveryDate' => 'required|date|after_or_equal:today',
+            'sendEmail' => 'nullable|boolean',
+            'savePDF' => 'nullable|boolean',
         ]);
+
+        // Check if checked/unchecked checkboxes
+        $validated['sendEmail'] = $request->has('sendEmail');
+        $validated['savePDF'] = $request->has('savePDF');
 
         // Calculate total amount
         $validated['totalAmount'] = $validated['unitPrice'] * $validated['quantity'];
@@ -136,12 +145,14 @@ class PurchaseOrderController extends Controller
 
 
 
-    // Clear session or clears the temporary added items
+    // CLEAR SESSION | CLEARS THE TEMPORARY ADDED ITEMS
     public function clearSession(){
         session()->forget('purchase_order_items');
         return back();
     }
 
+
+    // DELETE PURCHASE ORDER
     public function destroy(PurchaseOrder $purchaseOrder){
         $purchaseOrder->delete();
 
@@ -149,7 +160,7 @@ class PurchaseOrderController extends Controller
     }
 
 
-
+    // DELETE PURCHASE ORDER ITEM 
     public function destroyItem($purchaseOrderId, $itemId)
     {
         $item = PurchaseOrderItem::where('purchase_order_id', $purchaseOrderId)->where('id', $itemId)->firstOrFail();

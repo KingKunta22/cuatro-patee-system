@@ -61,7 +61,7 @@ Route::post('purchase-orders/add-item', [PurchaseOrderController::class, 'addIte
 // For removing items from the session
 Route::delete('purchase-orders/remove-item/{index}', [PurchaseOrderController::class, 'removeItem'])->name('purchase-orders.remove-item')->middleware('auth');
 // For clearing the session
-Route::post('purchase_orders/clearSession', [PurchaseOrderController::class, 'clearSession'])->name('purchase-orders.clearSession')->middleware('auth');
+Route::post('purchase-orders/clear-session', [PurchaseOrderController::class, 'clearSession'])->name('purchase-orders.clearSession')->middleware('auth');
 // To update session and the existing values
 Route::put('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase-orders.update')->middleware('auth');
 // To delete existing items

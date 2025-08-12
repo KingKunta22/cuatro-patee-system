@@ -15,13 +15,15 @@
                             <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
                         </select> 
                     </form>
-                   <x-createBtn @click="$refs.dialogRef.showModal()">Add New Order</x-createBtn>
+                   <x-form.createBtn @click="$refs.dialogRef.showModal()">Add New Order</x-form.createBtn>
                 </div>
             </div>
             <!--Modal Form -->
+ 
             <dialog x-ref="dialogRef" class="w-1/2 my-auto shadow-2xl rounded-md">
                 <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Add Order</h1>
                 <div class="container px-3 py-4">
+
                     <!-- ADD ORDER FORM -->
                     @if(session('keep_modal_open'))
                     <script>
@@ -48,24 +50,33 @@
                                 <input type="hidden" name="supplierId" value="{{ $lockedSupplierId }}">
                             @endif
                         </div>
-                        <x-form-input label="Product Name" name="productName" type="text" class="col-span-2" value="" required/>
+                        <x-form.form-input label="Product Name" name="productName" type="text" class="col-span-2" value="" required/>
                         <div class="container text-start flex col-span-2 w-full flex-col">
                             <label for="paymentTerms">Payment Terms</label>
-                            <select name="paymentTerms" class="px-3 py-2 border rounded-sm border-black" required>
+                            <select name="paymentTerms" class="px-3 py-2 border rounded-sm border-black" required @if($lockedSupplierId) disabled @endif>
                                 <option value="" disabled selected>Select Payment Terms</option>
-                                <option value="Online">Online</option>
-                                <option value="Cash on Delivery">Cash on Delivery</option>
+                                <option value="Online" @selected(session('purchase_order_items.0.paymentTerms') === 'Online')>Online</option>
+                                <option value="Cash on Delivery" @selected(session('purchase_order_items.0.paymentTerms') === 'Cash on Delivery')>Cash on Delivery</option>
                             </select>
+                            @if($lockedSupplierId)
+                                <input type="hidden" name="paymentTerms" value="{{ session('purchase_order_items.0.paymentTerms') }}">
+                            @endif
                         </div>
-                        <x-form-input label="Unit Price" name="unitPrice" type="number" step="0.01" value="" required />
-                        <x-form-input label="Quantity" name="quantity" type="number" value="" required/>
-                        <x-form-input label="Expected Delivery Date" name="deliveryDate" type="date" value="" class="col-span-2" required min="{{ date('Y-m-d') }}" />
+                        <x-form.form-input label="Unit Price" name="unitPrice" type="number" step="0.01" value="" required />
+                        <x-form.form-input label="Quantity" name="quantity" type="number" value="" required/>
+                        <div class="container text-start flex col-span-2 flex-col">
+                            <label for="deliveryDate">Expected Delivery Date</label>
+                            <input type="date" name="deliveryDate" value="{{ session('purchase_order_items.0.deliveryDate', '') }}" class="w-full px-3 py-2 border rounded-sm" required min="{{ date('Y-m-d') }}" @if($lockedSupplierId) readonly @endif />
+                            @if($lockedSupplierId)
+                                <input type="hidden" name="deliveryDate" value="{{ session('purchase_order_items.0.deliveryDate') }}">
+                            @endif
+                        </div>
 
                         <!-- Gets the total amount automatically from added items inside the session -->
                         @php
                             $totalAmount = collect(session('purchase_order_items', []))->sum('totalAmount');
                         @endphp
-                        <x-form-input label="Total" name="totalAmount" type="text" readonly value="₱{{ number_format($totalAmount, 2) }}"/>
+                        <x-form.form-input label="Total" name="totalAmount" type="text" readonly value="₱{{ number_format($totalAmount, 2) }}"/>
 
                         <div class="flex content-between items-end w-full ">
                             <button type="submit" class='bg-button-delete/70 px-4 py-2 rounded text-white hover:bg-button-delete'>
@@ -102,7 +113,7 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button>
-                                                    <x-deleteBtn />
+                                                    <x-form.deleteBtn />
                                                 </button>
                                             </form>
                                         </td>
@@ -119,15 +130,34 @@
                             </div>
                         </div>
                     @endif
+
+
+
                     <!-- FORM BUTTONS -->
                     <div class="container col-span-4 gap-x-4 place-content-end w-full flex items-end content-center px-6">
-                        <form action="{{ route('purchase-orders.clearSession') }}" method="POST">
+                        
+                        <!-- FOR CHECKBOXES -->
+                        <div class="container">
+                            <div class="">
+                                <input type="checkbox" name="sendEmail" id="sendEmail">
+                                <label for="sendEmail">Send Email</label>
+                            </div>
+                            <div class="">
+                                <input type="checkbox" name="savePDF" id="savePDF">
+                                <label for="savePDF">Save as PDF</label>
+                            </div>
+                        </div>
+
+                        <!-- BUTTONS -->
+                        <form action="{{ route('purchase-orders.clearSession') }}" method="POST" class="inline">
                             @csrf
-                            <x-closeBtn @click="close()">Cancel</x-closeBtn>
+                            <button type="submit" class='flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in'>
+                                Cancel
+                            </button>
                         </form>
                          <form action="{{ route('purchase-orders.store') }}" method="POST">
                             @csrf
-                             <x-saveBtn>Save</x-saveBtn>
+                             <x-form.saveBtn>Save</x-form.saveBtn>
                         </form>
                     </div>
                 </div>
@@ -269,7 +299,7 @@
                                             </button>
 
                                             <!-- DELETE BUTTON: Opens delete dialog -->
-                                            <x-closeBtn @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].showModal()">Delete</x-closeBtn>
+                                            <x-form.closeBtn @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].showModal()">Delete</x-form.closeBtn>
 
                                             <!-- CLOSE BUTTON: Closes view details dialog -->
                                             <button 
@@ -280,9 +310,11 @@
 
                                             <!-- EDIT DIALOG -->
                                             <dialog x-ref="editDialog{{ $purchaseOrder->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
+                                                
                                                 <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">
                                                     Update {{ $purchaseOrder->orderNumber }}
                                                 </h1>
+
                                                 <div class="container px-3 py-4">
                                                     <form action="{{ route('purchase-orders.update', $purchaseOrder->id) }}" method="POST" class="px-6 py-4 container grid grid-cols-4 gap-x-8 gap-y-6">
                                                         @csrf
@@ -320,7 +352,7 @@
                                                         </div>
 
                                                         <!-- Delivery Date -->
-                                                        <x-form-input label="Expected Delivery Date" name="deliveryDate" type="date"
+                                                        <x-form.form-input label="Expected Delivery Date" name="deliveryDate" type="date"
                                                             value="{{ \Carbon\Carbon::parse($purchaseOrder->deliveryDate)->format('Y-m-d') }}" 
                                                             min="{{ date('Y-m-d') }}"
                                                             class="col-span-2" required />
@@ -356,7 +388,7 @@
                                                                         <td class="px-4 py-2 flex place-content-center">
                                                                             <button type="submit" name="remove_item" value="{{ $item->id }}" 
                                                                                     onclick="return confirm('Are you sure you want to remove this item?')">
-                                                                                <x-deleteBtn/>
+                                                                                <x-form.deleteBtn/>
                                                                             </button>
                                                                         </td>
                                                                     </tr>
@@ -372,7 +404,7 @@
 
                                                         <!-- Footer Buttons -->
                                                         <div class="container col-span-4 gap-x-4 place-content-end w-full flex items-end content-center px-6">
-                                                            <x-form-input label="Grand Total:" name="totalAmount" type="text" disabled
+                                                            <x-form.form-input label="Grand Total:" name="totalAmount" type="text" disabled
                                                                 value="₱{{ number_format($purchaseOrder->totalAmount, 2) }}"
                                                                 class="max-w-32 mr-auto text-lg font-semibold" />
 
@@ -380,7 +412,7 @@
                                                                 Cancel
                                                             </button>
 
-                                                            <x-saveBtn name="action" value="update">Save</x-saveBtn>
+                                                            <x-form.saveBtn name="action" value="update">Save</x-form.saveBtn>
                                                         </div>
                                                     </form>
                                                 </div>
@@ -398,7 +430,7 @@
                                                         </div>
                                                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
                                                             <button type="button" @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].close()" class="mr-2 px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
-                                                            <x-closeBtn>Delete</x-closeBtn>
+                                                            <x-form.closeBtn>Delete</x-form.closeBtn>
                                                         </div>
                                                     </form>
                                                 </div>

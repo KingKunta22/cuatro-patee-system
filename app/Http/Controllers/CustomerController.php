@@ -23,7 +23,9 @@ class CustomerController extends Controller
     }
 
     public function index() {
-        $customers = Customer::all();
+        $customers = Customer::orderBy('id', 'DESC')
+                            ->paginate(8)
+                            ->withQueryString();
 
         return view('customers', compact('customers'));
     }
