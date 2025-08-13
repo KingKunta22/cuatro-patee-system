@@ -70,15 +70,57 @@
             <!----------------- MODALS SECTION ----------------->
             <!-- ============================================ -->
 
-            <!-- MODAL FOR ADD PRODUCT -->
+            <!-- ============ MODAL FOR ADD PRODUCT ==========-->
             <x-modal.createModal x-ref="addProductRef">
-
                 <x-slot:dialogTitle>Add Product</x-slot:dialogTitle>
 
-                <form action="">
- 
+                <form action="" method="" class="grid grid-cols-6 w-full gap-x-8 gap-y-6 px-6 py-4">
+                    <x-form.form-input label="Product Name" name="productName" type="text" value="" class=" col-span-3 "/>
+                    <x-form.form-input label="SKU (PK)" name="productSKU" type="text" value="" class="col-span-3 "/>
+                    <div class='container flex flex-col text-start col-span-3'>
+                        <label for="productBrand">Product Brand</label>
+                        <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" required>
+                            <option value="Pedigree">Pedigree</option>
+                            <option value="Pedigree">Pedigree</option>
+                            <option value="Pedigree">Pedigree</option>
+                            <option value="Pedigree">Pedigree</option>
+                            <option value="Pedigree">Pedigree</option>
+                        </select>
+                    </div>
+                    <div class="container flex flex-col text-start col-span-2">
+                        <label for="productCategory">Product Category</label>
+                        <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" required>
+                            <option value="Dog Food">Dog Food (Dry)</option>
+                            <option value="Dog Food">Dog Food (Wet)</option>
+                            <option value="Cat Food">Cat Food (Dry)</option>
+                            <option value="Cat Food">Cat Food (Wet)</option>
+                            <option value="Dog Toy">Dog Toy</option>
+                        </select>
+                    </div>
+                    <x-form.form-input label="Stock" name="productStock" type="number" value="" class="col-span-1/2"/>
+                    
+                    <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" step="0.01" class="col-span-2"/>
+                    <x-form.form-input label="Cost Price (₱)" name="productCostPrice" type="number" value="" step="0.01" class="col-span-2"/>
+                    <x-form.form-input label="Profit Margin" readonly name="productProfitMargin" type="text" value="(Insert PM Automated)%" class="col-span-2 "/>
+                    <x-form.form-input label="Expiration Date" min="{{ date('Y-m-d') }}" name="productExpDate" type="date" value="" class="col-span-2 "/>
+
+                    <x-form.form-input label="Upload an image from your computer" name="productImage" type="file" value="" class="col-span-4"/>
+
+                    <!-- FORM BUTTONS -->
+                    <div class="container col-span-6 gap-x-2 place-content-end w-full flex items-end content-center">
+                        <button @click='$refs.addProductRef.close()' type="button" class="flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                            Close
+                        </button>
+                        <x-form.saveBtn>Save</x-form.saveBtn>
+                    </div>
                 </form>
 
             </x-modal.createModal>
+
+
+
+
+
+
         </main>
 </x-layout>

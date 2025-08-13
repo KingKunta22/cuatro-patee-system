@@ -36,7 +36,7 @@
                         @csrf
                         <div class="container text-start flex col-span-2 flex-col">
                             <label for="supplierId">Supplier</label>
-                            <select name="supplierId" class="w-full px-3 py-2 border rounded-sm" required @if($lockedSupplierId) disabled @endif>
+                            <select name="supplierId" class="w-full px-3 py-2 border rounded-sm border-black" required @if($lockedSupplierId) disabled @endif>
                             <option value="" disabled selected>Choose Supplier</option>
                                 @foreach($supplierNames as $supplier)
                                     <option value="{{ $supplier->id }}" @selected($lockedSupplierId == $supplier->id)>
@@ -62,11 +62,11 @@
                                 <input type="hidden" name="paymentTerms" value="{{ session('purchase_order_items.0.paymentTerms') }}">
                             @endif
                         </div>
-                        <x-form.form-input label="Unit Price" name="unitPrice" type="number" step="0.01" value="" required />
+                        <x-form.form-input label="Unit Price (₱)" name="unitPrice" type="number" step="0.01" value="" required />
                         <x-form.form-input label="Quantity" name="quantity" type="number" value="" required/>
                         <div class="container text-start flex col-span-2 flex-col">
                             <label for="deliveryDate">Expected Delivery Date</label>
-                            <input type="date" name="deliveryDate" value="{{ session('purchase_order_items.0.deliveryDate', '') }}" class="w-full px-3 py-2 border rounded-sm" required min="{{ date('Y-m-d') }}" @if($lockedSupplierId) readonly @endif />
+                            <input type="date" name="deliveryDate" value="{{ session('purchase_order_items.0.deliveryDate', '') }}" class=" border-black w-full px-3 py-2 border rounded-sm" required min="{{ date('Y-m-d') }}" @if($lockedSupplierId) readonly @endif />
                             @if($lockedSupplierId)
                                 <input type="hidden" name="deliveryDate" value="{{ session('purchase_order_items.0.deliveryDate') }}">
                             @endif

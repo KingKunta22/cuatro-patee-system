@@ -7,7 +7,7 @@
             ✕
         </button>
     </div>
-    <div class="container px-3 py-4">
+    <div class="container px-3 py-4 ">
         {{ $slot }}
     </div>
 </dialog>
