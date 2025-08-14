@@ -2,6 +2,50 @@
     <x-sidebar/>
     <div class="container w-auto ml-64 px-10 py-8 flex flex-col items-center content-start">
         <div x-data="{ close() { $refs.dialogRef.close() } }" class="container">
+            <!-- SUCCESS MESSAGE POPUP -->
+            @if(session('download_pdf'))
+                <div id="pdf-success-message" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded shadow-lg">
+                    <p>Purchase order saved successfully! PDF download will start automatically.</p>
+                </div>
+            @endif
+            
+            @if(session('success'))
+                <div id="success-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded shadow-lg">
+                    <p>{{ session('success') }}</p>
+                </div>
+            @endif
+
+            <!-- AUTO-HIDE SUCCESS MESSAGES SCRIPT -->
+            <script>
+                // Hide success messages after 3 seconds
+                document.addEventListener('DOMContentLoaded', function() {
+                    const pdfMessage = document.getElementById('pdf-success-message');
+                    const successMessage = document.getElementById('success-message');
+                    
+                    if (pdfMessage) {
+                        setTimeout(() => {
+                            pdfMessage.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                            pdfMessage.style.opacity = '0';
+                            pdfMessage.style.transform = 'translate(-50%, -20px)';
+                            setTimeout(() => {
+                                pdfMessage.remove();
+                            }, 500);
+                        }, 3000);
+                    }
+                    
+                    if (successMessage) {
+                        setTimeout(() => {
+                            successMessage.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                            successMessage.style.opacity = '0';
+                            successMessage.style.transform = 'translate(-50%, -20px)';
+                            setTimeout(() => {
+                                successMessage.remove();
+                            }, 500);
+                        }, 3000);
+                    }
+                });
+            </script>
+            
             <!-- SEARCH BAR AND CREATE BUTTON -->
             <div class="container flex items-center place-content-between">
                 <div class="container flex items-center place-content-between">
@@ -98,17 +142,8 @@
                         @endphp
                         <x-form.form-input label="GRAND TOTAL:" class="font-semibold col-span-2" name="totalAmount" type="text" readonly value="₱{{ number_format($totalAmount, 2) }}"/>
 
-                        <!-- FOR CHECKBOXES -->
-                        <div class="container flex flex-col items-start content-end size-full">
-                            <div class="size-full pt-4">
-                                <input type="checkbox" name="sendEmail" id="sendEmail">
-                                <label for="sendEmail">Send Email</label>
-                            </div>
-                            <div class="size-full">
-                                <input type="checkbox" name="savePDF" id="savePDF">
-                                <label for="savePDF">Save as PDF</label>
-                            </div>
-                        </div>
+
+
 
                         <!-- ADD BUTTON FOR ADDING ITEMS TO SESSION -->
                         <div class="flex items-end content-center place-content-center w-full">
@@ -119,6 +154,16 @@
                                 Add Item
                             </button>
                         </div>
+
+                        <!-- AUTO PDF DOWNLOAD SCRIPT -->
+                        @if(session('download_pdf'))
+                        <script>
+                            window.onload = function() {
+                                // Automatically trigger PDF download
+                                window.open('{{ route("purchase-orders.download-pdf", session("download_pdf")) }}', '_blank');
+                            };
+                        </script>
+                        @endif
 
 
                     </form>
@@ -171,21 +216,36 @@
 
 
                     <!-- FORM BUTTONS (SAYOP NI KAY DI DAPAT IWRAP UG ANOTHER FORM ANG BUTTONS FOR A SPECIFIC FORM :D) -->
-                    <div class="container col-span-4 gap-x-4 place-content-end w-full flex items-end content-center px-6">
-                        
-                        <!-- BUTTONS -->
-                        <form action="{{ route('purchase-orders.clearSession') }}" method="POST" class="inline">
+                    <div class="flex justify-end items-center w-full px-6 relative">
+    
+                        <!-- Cancel button in its own form -->
+                        <form action="{{ route('purchase-orders.clearSession') }}" method="POST">
                             @csrf
-                            <button type="submit" class='flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in'>
+                            <button type="submit" class="flex place-content-center rounded-md bg-button-delete px-3 py-2 text-white hover:bg-button-delete/80 transition-all duration-100 ease-in">
                                 Cancel
                             </button>
                         </form>
-                         <form action="{{ route('purchase-orders.store') }}" method="POST">
+                    
+                        <!-- Save form -->
+                        <form action="{{ route('purchase-orders.store') }}" method="POST" class="flex items-center space-x-6">
                             @csrf
-                             <x-form.saveBtn>Save</x-form.saveBtn>
+                    
+                            <div class="absolute bottom-2 left-0 flex flex-row">
+                                <label class="flex items-center space-x-1">
+                                    <input type="checkbox" name="savePDF">
+                                    <span>Save as PDF</span>
+                                </label>
+                                <label class="flex items-center space-x-1 ml-4">
+                                    <input type="checkbox" name="sendEmail">
+                                    <span>Send Email</span>
+                                </label>
+                            </div>
+                    
+                            <x-form.saveBtn>Save</x-form.saveBtn>
                         </form>
-
                     </div>
+                    
+
                 </div>
             </dialog>
         </div>
@@ -461,7 +521,7 @@
                                                             <p>Are you sure you want to delete this purchase order?</p>
                                                         </div>
                                                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
-                                                            <button type="button" @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].close()" class="mr-2 px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">
+                                                            <button type="button" @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].close()" class="mr-2 px-4 py-2 rounded text-white bg-gray-300 hover:bg-gray-400">
                                                                 Cancel
                                                             </button>
                                                             <button type="submit" name="" value="" class="flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">

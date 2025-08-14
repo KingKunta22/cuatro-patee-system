@@ -18,3 +18,4 @@ hideValue.addEventListener('click', function() {
     showValue.classList.remove('hidden');
     passwordValue.setAttribute('type', 'password');
 })
+

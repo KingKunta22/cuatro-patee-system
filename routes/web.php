@@ -69,4 +69,4 @@ Route::delete('/purchase-orders/{purchaseOrder}/items/{item}', [App\Http\Control
 
 
 // FOR PDF
-Route::get('/generatePDF', [PurchaseOrderController::class, 'generatePDF']);
+Route::get('/download-pdf/{orderId}', [PurchaseOrderController::class, 'downloadPDF'])->name('purchase-orders.download-pdf');

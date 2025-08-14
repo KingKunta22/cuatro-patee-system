@@ -48,13 +48,7 @@ class PurchaseOrderController extends Controller
             'quantity' => 'required|integer|min:1',
             'deliveryDate' => 'required|date|after_or_equal:today',
             'itemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
-            'sendEmail' => 'nullable',
-            'savePDF' => 'nullable',
         ]);
-
-        // Check if checked/unchecked checkboxes
-        $validated['sendEmail'] = $request->has('sendEmail');
-        $validated['savePDF'] = $request->has('savePDF');
 
         // Calculate total amount
         $validated['totalAmount'] = $validated['unitPrice'] * $validated['quantity'];
@@ -113,14 +107,15 @@ class PurchaseOrderController extends Controller
 
         session()->forget('purchase_order_items');
 
-        // Generates PDF before adding it to database
-        if ($firstItem['savePDF'] ?? false) {
-            return $this->generatePDF($order->id); // Stops execution here
+        // Check PDF checkbox from FINAL form submission
+        if ($request->has('savePDF')) {
+            // Store the order ID in session for PDF download
+            session(['download_pdf' => $order->id]);
         }
 
 
         // After saving to database
-        return redirect()->route('purchase-orders.index');
+        return redirect()->route('purchase-orders.index')->with('success', 'Purchase order saved successfully!');
     }
 
 
@@ -144,7 +139,7 @@ class PurchaseOrderController extends Controller
                 'orderStatus' => $order->orderStatus
             ];
             
-            $filename = 'purchase-order-' . $order->orderNumber . '.pdf';
+            $filename = $order->orderNumber . '.pdf';
         } else {
             // Fallback demo data
             $data = [
@@ -158,6 +153,15 @@ class PurchaseOrderController extends Controller
 
         $pdf = Pdf::loadView('InvoicePDF', $data);
         return $pdf->download($filename);
+    }
+
+    // DOWNLOAD PDF AFTER SAVING ORDER
+    public function downloadPDF($orderId)
+    {
+        // Clear the download_pdf session
+        session()->forget('download_pdf');
+        
+        return $this->generatePDF($orderId);
     }
 
 
@@ -199,7 +203,8 @@ class PurchaseOrderController extends Controller
 
 
     // CLEAR SESSION | CLEARS THE TEMPORARY ADDED ITEMS
-    public function clearSession(){
+    public function clearSession()
+    {
         session()->forget('purchase_order_items');
         return back();
     }
@@ -278,7 +283,4 @@ class PurchaseOrderController extends Controller
 
         return redirect()->route('purchase-orders.index');
     }
-
-
-
 }
