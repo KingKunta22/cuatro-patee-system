@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PurchaseOrderController;
 
 Route::get('/', function() {
@@ -23,10 +24,6 @@ Route::post('/logout', [UserController::class, 'logout']);
 
 Route::get('/sales', function() {
     return view('sales');
-})->middleware('auth');
-
-Route::get('/inventory', function() {
-    return view('inventory');
 })->middleware('auth');
 
 Route::get('/purchase-order', function() {
@@ -70,3 +67,5 @@ Route::delete('/purchase-orders/{purchaseOrder}/items/{item}', [App\Http\Control
 
 // FOR PDF
 Route::get('/download-pdf/{orderId}', [PurchaseOrderController::class, 'downloadPDF'])->name('purchase-orders.download-pdf');
+
+Route::resource('inventory', InventoryController::class)->middleware('auth');

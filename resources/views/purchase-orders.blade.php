@@ -147,7 +147,7 @@
 
                         <!-- ADD BUTTON FOR ADDING ITEMS TO SESSION -->
                         <div class="flex items-end content-center place-content-center w-full">
-                            <button type="submit" class='bg-button-delete/70 px-4 py-2 rounded text-white hover:bg-button-delete w-full'>
+                            <button type="submit" class= 'bg-teal-500/70 px-4 py-2 rounded text-white hover:bg-teal-500 w-full'>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7 pr-2 inline">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                 </svg>
@@ -214,14 +214,14 @@
                     @endif
 
 
-
                     <!-- FORM BUTTONS (SAYOP NI KAY DI DAPAT IWRAP UG ANOTHER FORM ANG BUTTONS FOR A SPECIFIC FORM :D) -->
                     <div class="flex justify-end items-center w-full px-6 relative">
     
                         <!-- Cancel button in its own form -->
                         <form action="{{ route('purchase-orders.clearSession') }}" method="POST">
                             @csrf
-                            <button type="submit" class="flex place-content-center rounded-md bg-button-delete px-3 py-2 text-white hover:bg-button-delete/80 transition-all duration-100 ease-in">
+
+                            <button type="submit" class="flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
                                 Cancel
                             </button>
                         </form>
@@ -231,21 +231,24 @@
                             @csrf
                     
                             <div class="absolute bottom-2 left-0 flex flex-row">
+
                                 <label class="flex items-center space-x-1">
                                     <input type="checkbox" name="savePDF">
                                     <span>Save as PDF</span>
                                 </label>
+
                                 <label class="flex items-center space-x-1 ml-4">
                                     <input type="checkbox" name="sendEmail">
                                     <span>Send Email</span>
                                 </label>
+
                             </div>
                     
                             <x-form.saveBtn>Save</x-form.saveBtn>
-                        </form>
-                    </div>
-                    
 
+                        </form>
+
+                    </div>
                 </div>
             </dialog>
         </div>
