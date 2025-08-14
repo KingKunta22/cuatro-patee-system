@@ -62,8 +62,8 @@
                                 <input type="hidden" name="paymentTerms" value="{{ session('purchase_order_items.0.paymentTerms') }}">
                             @endif
                         </div>
-                        <x-form.form-input label="Unit Price (₱)" name="unitPrice" type="number" step="0.01" value="" required />
-                        <x-form.form-input label="Quantity" name="quantity" type="number" value="" required/>
+                        
+                        <!-- EXPECTED DELIVERY DATE (Lockable) -->
                         <div class="container text-start flex col-span-2 flex-col">
                             <label for="deliveryDate">Expected Delivery Date</label>
                             <input type="date" name="deliveryDate" value="{{ session('purchase_order_items.0.deliveryDate', '') }}" class=" border-black w-full px-3 py-2 border rounded-sm" required min="{{ date('Y-m-d') }}" @if($lockedSupplierId) readonly @endif />
@@ -72,20 +72,55 @@
                             @endif
                         </div>
 
+                        <x-form.form-input label="Unit Price (₱)" name="unitPrice" type="number" step="0.01" value="" required />
+                        <x-form.form-input label="Quantity" name="quantity" type="number" value="" required/>
+
+                        <!-- MEASUREMENT PER ITEM DROPDOWN -->
+                        <div class="container text-start flex col-span-2 w-full flex-col">
+                            <label for="itemMeasurement">Measurement per item</label>
+                            <select name="itemMeasurement" class="px-3 py-2 border rounded-sm border-black" required>
+                                <option value="" disabled selected>Select Measurement</option>
+                                <option value="kilogram">kilogram (kg)</option>
+                                <option value="gram">gram (g)</option>
+                                <option value="liter">liter (L)</option>
+                                <option value="milliliter">milliliter (mL)</option>
+                                <option value="pcs">pieces (pcs)</option>
+                                <option value="set">set</option>
+                                <option value="pair">pair</option>
+                                <option value="pack">pack</option>
+                            </select>
+                        </div>
+
+
                         <!-- Gets the total amount automatically from added items inside the session -->
                         @php
                             $totalAmount = collect(session('purchase_order_items', []))->sum('totalAmount');
                         @endphp
-                        <x-form.form-input label="Total" name="totalAmount" type="text" readonly value="₱{{ number_format($totalAmount, 2) }}"/>
+                        <x-form.form-input label="GRAND TOTAL:" class="font-semibold col-span-2" name="totalAmount" type="text" readonly value="₱{{ number_format($totalAmount, 2) }}"/>
 
-                        <div class="flex content-between items-end w-full ">
-                            <button type="submit" class='bg-button-delete/70 px-4 py-2 rounded text-white hover:bg-button-delete'>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 pr-2 inline">
+                        <!-- FOR CHECKBOXES -->
+                        <div class="container flex flex-col items-start content-end size-full">
+                            <div class="size-full pt-4">
+                                <input type="checkbox" name="sendEmail" id="sendEmail">
+                                <label for="sendEmail">Send Email</label>
+                            </div>
+                            <div class="size-full">
+                                <input type="checkbox" name="savePDF" id="savePDF">
+                                <label for="savePDF">Save as PDF</label>
+                            </div>
+                        </div>
+
+                        <!-- ADD BUTTON FOR ADDING ITEMS TO SESSION -->
+                        <div class="flex items-end content-center place-content-center w-full">
+                            <button type="submit" class='bg-button-delete/70 px-4 py-2 rounded text-white hover:bg-button-delete w-full'>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7 pr-2 inline">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                 </svg>
-                                Add
+                                Add Item
                             </button>
                         </div>
+
+
                     </form>
 
                     <!-- PREVIEW TABLE FOR ADDED ORDERS -->
@@ -97,6 +132,7 @@
                                         <th class="bg-main px-2 py-2 text-sm">Items</th>
                                         <th class="bg-main px-2 py-2 text-sm">Quantity</th>
                                         <th class="bg-main px-2 py-2 text-sm">Unit Price</th>
+                                        <th class="bg-main px-2 py-2 text-sm">Measurement</th>
                                         <th class="bg-main px-2 py-2 text-sm">Total</th>
                                         <th class="bg-main px-2 py-2 text-sm">Action</th>
                                     </tr>
@@ -107,6 +143,7 @@
                                         <td class="px-2 py-2 text-center">{{ $item['productName'] }}</td>
                                         <td class="px-2 py-2 text-center">{{ $item['quantity'] }}</td>
                                         <td class="px-2 py-2 text-center">₱{{ number_format($item['unitPrice'], 2) }}</td>
+                                        <td class="px-2 py-2 text-center">{{ $item['itemMeasurement'] }}</td>
                                         <td class="px-2 py-2 text-center">₱{{ number_format($item['totalAmount'], 2) }}</td>
                                         <td class="px-2 py-2 text-center">
                                             <form action="{{ route('purchase-orders.remove-item', $index) }}" method="POST" class="flex place-content-center">
@@ -133,21 +170,9 @@
 
 
 
-                    <!-- FORM BUTTONS -->
+                    <!-- FORM BUTTONS (SAYOP NI KAY DI DAPAT IWRAP UG ANOTHER FORM ANG BUTTONS FOR A SPECIFIC FORM :D) -->
                     <div class="container col-span-4 gap-x-4 place-content-end w-full flex items-end content-center px-6">
                         
-                        <!-- FOR CHECKBOXES -->
-                        <div class="container">
-                            <div class="">
-                                <input type="checkbox" name="sendEmail" id="sendEmail">
-                                <label for="sendEmail">Send Email</label>
-                            </div>
-                            <div class="">
-                                <input type="checkbox" name="savePDF" id="savePDF">
-                                <label for="savePDF">Save as PDF</label>
-                            </div>
-                        </div>
-
                         <!-- BUTTONS -->
                         <form action="{{ route('purchase-orders.clearSession') }}" method="POST" class="inline">
                             @csrf
@@ -159,6 +184,7 @@
                             @csrf
                              <x-form.saveBtn>Save</x-form.saveBtn>
                         </form>
+
                     </div>
                 </div>
             </dialog>
@@ -273,6 +299,7 @@
                                                         <th class="px-2 py-2 text-sm">Items</th>
                                                         <th class="px-2 py-2 text-sm">Quantity</th>
                                                         <th class="px-2 py-2 text-sm">Unit Price</th>
+                                                        <th class="px-2 py-2 text-sm">Measurement</th>
                                                         <th class="px-2 py-2 text-sm">Total</th>
                                                     </tr>
                                                 </thead>
@@ -282,6 +309,7 @@
                                                             <td class="px-2 py-2">{{ $item->productName }}</td>
                                                             <td class="px-2 py-2">{{ $item->quantity }}</td>
                                                             <td class="px-2 py-2">₱{{ number_format($item->unitPrice, 2) }}</td>
+                                                            <td class="px-2 py-2">{{ $item->itemMeasurement }}</td>
                                                             <td class="px-2 py-2">₱{{ number_format($item->totalAmount, 2) }}</td>
                                                         </tr>
                                                     @endforeach
@@ -361,31 +389,35 @@
                                                         <table class="col-span-4 w-full text-sm text-left p-2 my-3 text-gray-500">
                                                             <thead class="text-xs uppercase rounded-lg bg-main text-white px-4 py-2">
                                                                 <tr>
-                                                                    <th class="px-4 py-2">#</th>
+                                                                    <th class="px-2 py-1">#</th>
                                                                     <th class="px-4 py-2">Product Name</th>
-                                                                    <th class="px-4 py-2">Quantity</th>
-                                                                    <th class="px-4 py-2">Unit Price</th>
-                                                                    <th class="px-4 py-2">Total Amount</th>
-                                                                    <th class="px-4 py-2">Actions</th>
+                                                                    <th class="px-1 py-1">Quantity</th>
+                                                                    <th class="px-2 py-1">Unit Price (₱)</th>
+                                                                    <th class="px-4 py-2">Measurement</th>
+                                                                    <th class="px-4 py-2">Total Amount (₱)</th>
+                                                                    <th class="px-2 py-1">Actions</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
                                                                 @forelse($purchaseOrder->items as $index => $item)
                                                                     <tr class="bg-white border-b hover:bg-gray-50">
-                                                                        <td class="px-4 py-2">{{ $index + 1 }}</td>
+                                                                        <td class="px-2 py-1">{{ $index + 1 }}</td>
                                                                         <td class="px-4 py-2">
                                                                             <input type="text" name="items[{{ $item->id }}][productName]" value="{{ $item->productName }}" class="border rounded px-2 py-1 w-full">
                                                                         </td>
-                                                                        <td class="px-4 py-2">
+                                                                        <td class="px-1 py-1">
                                                                             <input type="number" name="items[{{ $item->id }}][quantity]" value="{{ $item->quantity }}" min="1" class="border rounded px-2 py-1 w-20">
                                                                         </td>
-                                                                        <td class="px-4 py-2">
+                                                                        <td class="px-2 py-1">
                                                                             <input type="number" step="0.01" name="items[{{ $item->id }}][unitPrice]" value="{{ $item->unitPrice }}" class="border rounded px-2 py-1 w-24">
+                                                                        </td>
+                                                                        <td class="px-4 py-2">
+                                                                            <input type="text" name="items[{{ $item->id }}][itemMeasurement]" value="{{ $item->itemMeasurement }}" readonly class="border rounded px-2 py-1 w-24">
                                                                         </td>
                                                                         <td class="px-4 py-2">
                                                                             <input type="number" step="0.01" name="items[{{ $item->id }}][totalAmount]" value="{{ $item->totalAmount }}" readonly class="border rounded px-2 py-1 w-24 bg-gray-100 cursor-not-allowed">
                                                                         </td>
-                                                                        <td class="px-4 py-2 flex place-content-center">
+                                                                        <td class="px-2 py-1 flex place-content-center">
                                                                             <button type="submit" name="remove_item" value="{{ $item->id }}" 
                                                                                     onclick="return confirm('Are you sure you want to remove this item?')">
                                                                                 <x-form.deleteBtn/>
@@ -429,8 +461,12 @@
                                                             <p>Are you sure you want to delete this purchase order?</p>
                                                         </div>
                                                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
-                                                            <button type="button" @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].close()" class="mr-2 px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">Cancel</button>
-                                                            <x-form.closeBtn>Delete</x-form.closeBtn>
+                                                            <button type="button" @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].close()" class="mr-2 px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">
+                                                                Cancel
+                                                            </button>
+                                                            <button type="submit" name="" value="" class="flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                                                                Delete
+                                                            </button>
                                                         </div>
                                                     </form>
                                                 </div>

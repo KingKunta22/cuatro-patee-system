@@ -68,3 +68,5 @@ Route::put('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, '
 Route::delete('/purchase-orders/{purchaseOrder}/items/{item}', [App\Http\Controllers\PurchaseOrderController::class, 'destroyItem'])->name('purchase-orders.items.destroy');
 
 
+// FOR PDF
+Route::get('/generatePDF', [PurchaseOrderController::class, 'generatePDF']);

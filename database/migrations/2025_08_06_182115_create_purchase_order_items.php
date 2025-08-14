@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('quantity');
             $table->decimal('unitPrice', 8, 2);
             $table->decimal('totalAmount', 10, 2);
+            $table->enum('itemMeasurement', ['kilogram', 'gram', 'liter', 'milliliter', 'pcs', 'set', 'pair', 'pack']);
         });
     }
 

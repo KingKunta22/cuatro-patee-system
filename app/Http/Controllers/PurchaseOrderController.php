@@ -6,10 +6,13 @@ use App\Models\Supplier;
 use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class PurchaseOrderController extends Controller
 {
-    public function index(Request $request) {
+    public function index(Request $request) 
+    {
         $status = $request->input('status', 'all');
 
         $query = PurchaseOrder::with(['items', 'supplier']) // Eager load relationships
@@ -23,7 +26,7 @@ class PurchaseOrderController extends Controller
 
         $supplierNames = Supplier::where('supplierStatus', 'Active')->get();
         $items = session('purchase_order_items', []);
-        $lockedSupplierId = $items[0]['supplierId'] ?? null;
+        $lockedSupplierId = !empty($items) ? $items[0]['supplierId'] : null;
 
         return view('purchase-orders', compact(
             'supplierNames',
@@ -35,7 +38,8 @@ class PurchaseOrderController extends Controller
 
 
     // ADD ITEM TO SESSION (temporary storage)
-    public function addItem(Request $request) {
+    public function addItem(Request $request) 
+    {
         $validated = $request->validate([
             'supplierId' => 'required|exists:suppliers,id',
             'productName' => 'required|string',
@@ -43,8 +47,9 @@ class PurchaseOrderController extends Controller
             'unitPrice' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
             'deliveryDate' => 'required|date|after_or_equal:today',
-            'sendEmail' => 'nullable|boolean',
-            'savePDF' => 'nullable|boolean',
+            'itemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
+            'sendEmail' => 'nullable',
+            'savePDF' => 'nullable',
         ]);
 
         // Check if checked/unchecked checkboxes
@@ -74,7 +79,8 @@ class PurchaseOrderController extends Controller
 
 
     // SAVE ALL ITEMS TO DATABASE
-    public function store(Request $request) {
+    public function store(Request $request) 
+    {
         $items = session('purchase_order_items', []);
 
         if (empty($items)) {
@@ -99,19 +105,65 @@ class PurchaseOrderController extends Controller
                 'productName' => $item['productName'],
                 'quantity' => $item['quantity'],
                 'unitPrice' => $item['unitPrice'],
+                'itemMeasurement' => $item['itemMeasurement'],
                 'totalAmount' => $item['totalAmount'],
             ]);
         }
 
+
         session()->forget('purchase_order_items');
 
+        // Generates PDF before adding it to database
+        if ($firstItem['savePDF'] ?? false) {
+            return $this->generatePDF($order->id); // Stops execution here
+        }
+
+
+        // After saving to database
         return redirect()->route('purchase-orders.index');
     }
 
 
+    
+    // GENERATE PDF AND OPTION TO SEND IT TO EMAIL
+    public function generatePDF($orderId = null)
+    {
+        if ($orderId) {
+            // Get the actual purchase order data
+            $order = PurchaseOrder::with(['items', 'supplier'])->findOrFail($orderId);
+            
+            $data = [
+                'title' => 'Purchase Order',
+                'orderNumber' => $order->orderNumber,
+                'date' => $order->created_at->format('m-d-Y'),
+                'supplier' => $order->supplier,
+                'paymentTerms' => $order->paymentTerms,
+                'deliveryDate' => $order->deliveryDate,
+                'items' => $order->items,
+                'totalAmount' => $order->totalAmount,
+                'orderStatus' => $order->orderStatus
+            ];
+            
+            $filename = 'purchase-order-' . $order->orderNumber . '.pdf';
+        } else {
+            // Fallback demo data
+            $data = [
+                'title' => 'This is a demo',
+                'date' => date('m-d-Y'),
+                'content' => 'Lorem Lorem Lorem'
+            ];
+            
+            $filename = 'generatePDFTest.pdf';
+        }
+
+        $pdf = Pdf::loadView('InvoicePDF', $data);
+        return $pdf->download($filename);
+    }
 
 
-    private function generateOrderNumber() {
+    // GENERATE ORDER NUMBER WITH THIS FORMAT: PO-2025-0001
+    private function generateOrderNumber() 
+    {
         $year = date('Y');
         $lastOrder = PurchaseOrder::where('orderNumber', 'like', "PO-{$year}-%")->orderBy('orderNumber', 'desc')->first();
         
@@ -129,7 +181,8 @@ class PurchaseOrderController extends Controller
 
 
     // Removes an item inside the session that exists
-    public function removeItem($index) {
+    public function removeItem($index) 
+    {
         $items = session('purchase_order_items', []);
         
         if (isset($items[$index])) {
@@ -175,7 +228,6 @@ class PurchaseOrderController extends Controller
     public function update(Request $request, PurchaseOrder $purchaseOrder)
     {
 
-        // If removing an item
         // Handle item removal
         if ($request->has('remove_item')) {
             $itemId = $request->input('remove_item');
@@ -195,6 +247,7 @@ class PurchaseOrderController extends Controller
             'items.*.productName' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unitPrice' => 'required|numeric|min:0',
+            'items.*.itemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
         ]);
 
 
@@ -214,6 +267,7 @@ class PurchaseOrderController extends Controller
                 'productName' => $itemData['productName'],
                 'quantity' => $itemData['quantity'],
                 'unitPrice' => $itemData['unitPrice'],
+                'itemMeasurement' => $itemData['itemMeasurement'],
                 'totalAmount' => $itemData['quantity'] * $itemData['unitPrice']
             ]);
             $totalAmount += $item->totalAmount;
@@ -224,4 +278,7 @@ class PurchaseOrderController extends Controller
 
         return redirect()->route('purchase-orders.index');
     }
+
+
+
 }
