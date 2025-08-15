@@ -1,4 +1,4 @@
-<dialog class="w-1/2 my-auto shadow-2xl rounded-md" {{ $attributes }}>
+<dialog class="w-1/2 my-auto shadow-2xl rounded-md" {{ $attributes }} @keydown.escape.window="$el.close()">
     <div class="container w-auto bg-main text-white flex items-center px-6 py-4">
         <h1 class="italic text-2xl font-bold mr-auto"> 
             {{ $dialogTitle }}
