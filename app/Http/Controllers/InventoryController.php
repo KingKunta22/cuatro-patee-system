@@ -16,11 +16,14 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'productName' => 'required',
+            'productSKU' => 'required',
             'productBrand' => 'required|in:Pedigree,Whiskas,Royal Canin,Cesar,Acana',
             'productCategory' => 'required|in:dogFoodDry,dogFoodWet,catFoodDry,catFoodWet,dogToy',
-            'productSellingPrice' => 'required|numeric|min:0|gte:productCostPrice',
+            'productStock' => 'required|numeric|min:0',
+            'productSellingPrice' => 'required|numeric|min:0',
             'productCostPrice' => 'required|numeric|min:0',
-            'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Validate image
+            'productExpDate' => 'required|date|after:today',
+            'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         // Calculate profit margin
@@ -33,18 +36,21 @@ class InventoryController extends Controller
         // Handle image upload
         if ($request->hasFile('productImage')) {
             $imagePath = $request->file('productImage')->store('inventory', 'public');
-            $validated['image'] = $imagePath; // Save path to DB
+            $validated['image'] = $imagePath;
         }
 
         // Save to database
         Inventory::create([
             'productName' => $validated['productName'],
+            'productSKU' => $validated['productSKU'],
             'productBrand' => $validated['productBrand'],
             'productCategory' => $validated['productCategory'],
-            'sellingPrice' => $validated['productSellingPrice'],
-            'costPrice' => $validated['productCostPrice'],
-            'profitMargin' => $profitMargin,
-            'image' => $validated['image'] ?? null,
+            'productStock' => $validated['productStock'],
+            'productSellingPrice' => $validated['productSellingPrice'],
+            'productCostPrice' => $validated['productCostPrice'],
+            'productProfitMargin' => $profitMargin,
+            'productExpirationDate' => $validated['productExpDate'],
+            'productImage' => $validated['image'] ?? null,
         ]);
 
         return redirect()->route('inventory.index')->with('success', 'Product added!');

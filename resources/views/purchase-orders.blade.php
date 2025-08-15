@@ -218,16 +218,16 @@
                     <div class="flex justify-end items-center w-full px-6 relative">
     
                         <!-- Cancel button in its own form -->
-                        <form action="{{ route('purchase-orders.clearSession') }}" method="POST">
+                        <form action="{{ route('purchase-orders.clearSession') }}" id="cancelForm" method="POST">
                             @csrf
-
-                            <button type="submit" class="flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                            <button type="button" @click="$refs.confirmCancel.showModal()" class="flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
                                 Cancel
                             </button>
+
                         </form>
                     
                         <!-- Save form -->
-                        <form action="{{ route('purchase-orders.store') }}" method="POST" class="flex items-center space-x-6">
+                        <form action="{{ route('purchase-orders.store') }}" id="saveForm" method="POST" class="flex items-center space-x-6">
                             @csrf
                     
                             <div class="absolute bottom-2 left-0 flex flex-row">
@@ -244,9 +244,40 @@
 
                             </div>
                     
-                            <x-form.saveBtn>Save</x-form.saveBtn>
+                            <x-form.saveBtn type="button" @click="$refs.confirmSubmit.showModal()">Save</x-form.saveBtn>
+
 
                         </form>
+
+
+                        <!-- CONFIRM CANCEL/SAVE MODALS -->
+                        <x-modal.createModal x-ref="confirmCancel">
+
+                            <x-slot:dialogTitle>Confirm Cancel?</x-slot:dialogTitle>
+
+                            <h1 class="text-xl px-4 py-3">Are you sure you want to cancel this purchase order?</h1>
+                            <div class="container flex w-full flex-row items-center content-end place-content-end px-4 py-3">
+                                    <button type="button" @click="$refs.confirmCancel.close()" class="mr-3 flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                                    Cancel
+                                </button>
+                                <x-form.saveBtn type="submit" form="cancelForm">Confirm</x-form.saveBtn>
+                            </div>
+
+                        </x-modal.createModal>
+
+                        <x-modal.createModal x-ref="confirmSubmit">
+
+                            <x-slot:dialogTitle>Confirm Save?</x-slot:dialogTitle>
+
+                            <h1 class="text-xl px-4 py-3">Are you sure you want to save this purchase order?</h1>
+                            <div class="container flex w-full flex-row items-center content-end place-content-end px-4 py-3">
+                                <button type="button" @click="$refs.confirmSubmit.close()" class="mr-3 flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                                    Cancel
+                                </button>
+                                <x-form.saveBtn type="submit" form="saveForm">Confirm</x-form.saveBtn>
+                            </div>
+
+                        </x-modal.createModal>
 
                     </div>
                 </div>
