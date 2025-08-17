@@ -2,6 +2,7 @@
     <x-sidebar/>
     <div class="container w-auto ml-64 px-10 py-8 flex flex-col items-center content-start">
         <div x-data="{ close() { $refs.dialogRef.close() } }" class="container">
+
             <!-- SUCCESS MESSAGE POPUP -->
             @if(session('download_pdf'))
                 <div id="pdf-success-message" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded shadow-lg">
@@ -15,7 +16,7 @@
                 </div>
             @endif
 
-            <!-- AUTO-HIDE SUCCESS MESSAGES SCRIPT -->
+            <!-- AUTO-HIDE SUCCESS MESSAGES -->
             <script>
                 // Hide success messages after 3 seconds
                 document.addEventListener('DOMContentLoaded', function() {
@@ -62,8 +63,9 @@
                    <x-form.createBtn @click="$refs.dialogRef.showModal()">Add New Order</x-form.createBtn>
                 </div>
             </div>
+
+
             <!--Modal Form -->
- 
             <dialog x-ref="dialogRef" class="w-1/2 my-auto shadow-2xl rounded-md">
                 <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Add Order</h1>
                 <div class="container px-3 py-4">
@@ -257,7 +259,7 @@
 
                             <h1 class="text-xl px-4 py-3">Are you sure you want to cancel this purchase order?</h1>
                             <div class="container flex w-full flex-row items-center content-end place-content-end px-4 py-3">
-                                    <button type="button" @click="$refs.confirmCancel.close()" class="mr-3 flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                                <button type="button" @click="$refs.confirmCancel.close()" class="mr-3 flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
                                     Cancel
                                 </button>
                                 <x-form.saveBtn type="submit" form="cancelForm">Confirm</x-form.saveBtn>

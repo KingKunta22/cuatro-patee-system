@@ -1,126 +1,184 @@
 <x-layout>
     <x-sidebar/>
-        <main x-data class="container w-auto ml-64 px-10 py-8 flex flex-col items-center content-start">
+    <main x-data class="container w-auto ml-64 px-10 py-8 flex flex-col items-center content-start">
 
-            <!-- CONTAINER OUTSIDE THE TABLE -->
-            <section class="container flex items-center place-content-start">
-                <!-- SEARCH BAR AND CREATE BUTTON -->
-                <div class="container flex items-center place-content-start">
-                    <x-searchBar placeholder="Search inventory..." />
-                    <form action="{{ route('purchase-orders.index') }}" method="GET" id="statusFilterForm" class="mr-auto ml-4">
-                        <select name="status" class="truncate w-36 px-3 py-2 border rounded-md border-black" onchange="document.getElementById('statusFilterForm').submit()">
-                            <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>Category</option>
-                            <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
-                            <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
-                            <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                        </select>
-                        <select name="status" class="truncate w-36 px-3 py-2 border rounded-md border-black" onchange="document.getElementById('statusFilterForm').submit()">
-                            <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>Brand</option>
-                            <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
-                            <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
-                            <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                        </select>
-                    </form>
-                    <x-form.createBtn @click="$refs.addProductRef.showModal()">Add New Product</x-form.createBtn>
+        <!-- CONTAINER OUTSIDE THE TABLE -->
+        <section class="container flex items-center place-content-start">
+            <!-- SEARCH BAR AND CREATE BUTTON -->
+            <div class="container flex items-center place-content-start">
+                <x-searchBar placeholder="Search inventory..." />
+                <form action="{{ route('purchase-orders.index') }}" method="GET" id="statusFilterForm" class="mr-auto ml-4">
+                    <select name="status" class="truncate w-36 px-3 py-2 border rounded-md border-black" onchange="document.getElementById('statusFilterForm').submit()">
+                        <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>Category</option>
+                        <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
+                        <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                        <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                    </select>
+                    <select name="status" class="truncate w-36 px-3 py-2 border rounded-md border-black" onchange="document.getElementById('statusFilterForm').submit()">
+                        <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>Brand</option>
+                        <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
+                        <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                        <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                    </select>
+                </form>
+                <x-form.createBtn @click="$refs.addProductRef.showModal()">Add New Product</x-form.createBtn>
+            </div>
+        </section>
+
+        <!-- CONTAINER FOR TABLE DETAILS -->
+        <section class="border w-full rounded-md border-solid border-black p-3 my-8">
+            <table class="w-full">
+                <thead class="rounded-lg bg-main text-white px-4 py-2">
+                    <tr class="rounded-lg">
+                        <th class=" bg-main px-4 py-2">Product Name</th>
+                        <th class=" bg-main px-4 py-2">Category</th>
+                        <th class=" bg-main px-4 py-2">SKU</th>
+                        <th class=" bg-main px-4 py-2">Brand</th>
+                        <th class=" bg-main px-4 py-2">Price</th>
+                        <th class=" bg-main px-4 py-2">Stock</th>
+                        <th class=" bg-main px-4 py-2">Status</th>
+                        <th class=" bg-main px-4 py-2">Expiration Date</th>
+                        <th class=" bg-main px-4 py-2">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b">
+                        <td class="truncate px-2 py-2 text-center" title="">ProductName</td>
+                        <td class="truncate px-2 py-2 text-center" title="">Category</td>
+                        <td class="truncate px-2 py-2 text-center" title="">SKU</td>
+                        <td class="truncate px-2 py-2 text-center" title="">Brand</td>
+                        <td class="truncate px-2 py-2 text-center" title="">Price</td>
+                        <td class="truncate px-2 py-2 text-center" title="">Stock</td>
+                        <td class="truncate px-2 py-2 text-center" title="">Status</td>
+                        <td class="truncate px-2 py-2 text-center" title="">ExpirationDate</td>
+                        <td class="truncate px-2 py-2 text-center" title="">Action</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- PAGINATION VIEW -->
+            {{--                 <div class="mt-4 px-4 py-2 bg-gray-50 ">
+                {{ $purchaseOrders->links() }}
+            </div> --}}
+
+        </section>
+
+
+        <!-- ============================================ -->
+        <!----------------- MODALS SECTION ----------------->
+        <!-- ============================================ -->
+
+        <!-- MODAL FOR ADDING PRODUCT -->
+        <x-modal.createModal x-ref="addProductRef">
+            <x-slot:dialogTitle>Add Product</x-slot:dialogTitle>
+
+            <!-- RADIO OPTION TO CHOOSE BETWEEN ADD MANUALLY (DEFAULT) OR REFERENCED -->
+            <div x-data="{ addMethod: 'manual' }" class="grid grid-cols-6 px-3 py-4">
+                <div class="container mb-4 col-span-6 font-semibold">
+                    <label class="cursor-pointer">
+                        <input type="radio" name="addMethod" value="manual" x-model="addMethod">
+                        Add Manually
+                    </label>
+                    <label class="ml-4 cursor-pointer">
+                        <input type="radio" name="addMethod" value="po" x-model="addMethod">
+                        Add from Purchase Order
+                    </label>
                 </div>
-            </section>
 
-            <!-- CONTAINER FOR TABLE DETAILS -->
-            <section class="border w-full rounded-md border-solid border-black p-3 my-8">
-                <table class="w-full">
-                    <thead class="rounded-lg bg-main text-white px-4 py-2">
-                        <tr class="rounded-lg">
-                            <th class=" bg-main px-4 py-2">Product Name</th>
-                            <th class=" bg-main px-4 py-2">Category</th>
-                            <th class=" bg-main px-4 py-2">SKU</th>
-                            <th class=" bg-main px-4 py-2">Brand</th>
-                            <th class=" bg-main px-4 py-2">Price</th>
-                            <th class=" bg-main px-4 py-2">Stock</th>
-                            <th class=" bg-main px-4 py-2">Status</th>
-                            <th class=" bg-main px-4 py-2">Expiration Date</th>
-                            <th class=" bg-main px-4 py-2">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr class="border-b">
-                            <td class="truncate px-2 py-2 text-center" title="">ProductName</td>
-                            <td class="truncate px-2 py-2 text-center" title="">Category</td>
-                            <td class="truncate px-2 py-2 text-center" title="">SKU</td>
-                            <td class="truncate px-2 py-2 text-center" title="">Brand</td>
-                            <td class="truncate px-2 py-2 text-center" title="">Price</td>
-                            <td class="truncate px-2 py-2 text-center" title="">Stock</td>
-                            <td class="truncate px-2 py-2 text-center" title="">Status</td>
-                            <td class="truncate px-2 py-2 text-center" title="">ExpirationDate</td>
-                            <td class="truncate px-2 py-2 text-center" title="">Action</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- FORM WRAPS EVERYTHING -->
+                <form id="addProductForm" x-ref="addProductForm" action="" method="POST" class="col-span-6 grid grid-cols-6 gap-x-8 gap-y-6">
+                    @csrf
 
-                <!-- PAGINATION VIEW -->
-                {{--                 <div class="mt-4 px-4 py-2 bg-gray-50 ">
-                    {{ $purchaseOrders->links() }}
-                </div> --}}
-
-            </section>
-
-
-            <!-- ============================================ -->
-            <!----------------- MODALS SECTION ----------------->
-            <!-- ============================================ -->
-
-            <x-modal.createModal x-ref="addProductRef">
-                <x-slot:dialogTitle >Add Product</x-slot:dialogTitle>
-
-                <!-- ============ RADIO OPTION TO CHOOSE BETWEEN ADD MANUALLY (DEFAULT) OR REFERENCED ==========-->
-                <div x-data="{ addMethod: 'manual' }">
-                    <div class="container mb-4r">
-                        <label class="cursor-pointer">
-                            <input type="radio" name="addMethod" value="manual" x-model="addMethod">
-                            Add Manually
-                        </label>
-                        <label class="ml-4 cursor-pointer">
-                            <input type="radio" name="addMethod" value="po" x-model="addMethod">
-                            Add from Purchase Order
-                        </label>
-                    </div>
-
-                    <!-- FORM WRAPS EVERYTHING -->
-                    <form action="" method="POST">
-                        @csrf
-                        <!-- MANUAL SECTION -->
-                        <section class="px-6 py-2" x-show=" addMethod === 'manual' ">
-                            <!-- Manual fields go here -->
-                            
-                        </section>
-
-                        <!-- FROM PURCHASE ORDER SECTION -->
-                        <section class="px-6 py-2" x-show=" addMethod === 'po' ">
-                            <!-- From PO fields go here -->
-                            <div class="container">
-                                Purchase Order Number
-                                <select name="" id="">
-                                    <option value=""></option>
-                                </select>
-                            </div>
-                            <div class="container">
-                                Purchase Order Item
-                                <select name="" id="">
-                                    <option value=""></option>
-                                </select>
-                            </div>
-                        </section>
-
-                        <!-- FORM BUTTONS -->
-                        <div>
-                            <x-form.closeBtn/>
-                            <x-form.saveBtn/>
+                    <!-- MANUAL SECTION -->
+                    <section class="col-span-6" x-show="addMethod === 'manual'">
+                        <x-form.form-input label="Product Name" name="productName" type="text" value="" class="col-span-3"/>
+                        <x-form.form-input label="SKU (PK)" name="productSKU" type="text" value="" class="col-span-3"/>
+                        <x-form.form-input label="SKU" name="productSKU" type="text" value="" class="col-span-3"/>
+                        <div class='container flex flex-col text-start col-span-3'>
+                            <label for="productBrand">Product Brand</label>
+                            <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" :required="false"  x-bind:required="addMethod === 'manual'">
+                                <option value="Pedigree">Pedigree</option>
+                                <option value="Whiskas">Whiskas</option>
+                                <option value="Royal Canin">Royal Canin</option>
+                                <option value="Cesar">Cesar</option>
+                                <option value="Acana">Acana</option>
+                            </select>
                         </div>
-                    </form>
+                        <div class="container flex flex-col text-start col-span-2">
+                            <label for="productCategory">Product Category</label>
+                            <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" :required="false"  x-bind:required="addMethod === 'manual'">
+                                <option value="Dog Food">Dog Food (Dry)</option>
+                                <option value="Dog Food">Dog Food (Wet)</option>
+                                <option value="Cat Food">Cat Food (Dry)</option>
+                                <option value="Cat Food">Cat Food (Wet)</option>
+                                <option value="Dog Toy">Dog Toy</option>
+                            </select>
+                        </div>
+                        <x-form.form-input label="Stock" name="productStock" type="number" value="" class="col-span-1/2"/>
+                    
+                    </section>
+
+                    <!-- PURCHASE ORDER SECTION -->
+                    <section class="col-span-6 flex justify-end gap-4" x-show="addMethod === 'po'">
+                        <div class="container text-start flex col-span-2 w-full flex-col">
+                            <label for="purchaseOrderNumber">Purchase Order Number</label>
+                            <select name="purchaseOrderNumber" class="px-3 py-2 border rounded-sm border-black" :required="false" x-bind:required="addMethod === 'po'">
+                                <option value="" disabled selected>Select PO Number</option>
+                                <option value="">Insert PO Number</option>
+                            </select>
+                        </div>
+                        <div class="container text-start flex col-span-2 w-full flex-col">
+                            <label for="purchaseOrderItem">Purchase Order Item</label>
+                            <select name="" class="px-3 py-2 border rounded-sm border-black" :required="false" x-bind:required="addMethod === 'po'">
+                                <option value="" disabled selected>Select PO Item</option>
+                                <option value="">Insert PO Item</option>
+                            </select>
+                        </div>
+                    </section>
+
+                    <!-- FORM BUTTONS -->
+                    <div class="col-span-6 place-items-end flex justify-end gap-4">
+                        <x-form.closeBtn type="button" @click="$refs.cancelAddProduct.showModal()">Cancel</x-form.closeBtn>
+                        <x-form.saveBtn 
+                            type="button" 
+                            @click="
+                                if (document.getElementById('addProductForm').reportValidity()) {
+                                    ($refs.confirmAddProduct || document.getElementById('confirmAddProduct')).showModal();
+                                }" >Add</x-form.saveBtn>
+                    </div>
+                </form>
+            </div>
+        </x-modal.createModal>
+
+        <!-- CONFIRMATION MODALS -->
+        <x-modal.createModal x-ref="cancelAddProduct" class="z-50">
+            <x-slot:dialogTitle>Confirm Cancel?</x-slot:dialogTitle>
+            <div class="container px-2 py-2">
+                <h1 class="py-6 px-5 text-xl">Are you sure you want to go back? Changes will not be saved</h1>
+                <div class="col-span-6 place-items-end flex justify-end gap-4">
+                    <x-form.closeBtn @click="$refs.cancelAddProduct.close()">Cancel</x-form.closeBtn>
+                    <x-form.saveBtn @click="
+                        // Get the form directly by ID kay lahi ang ilahang modal components
+                        document.getElementById('addProductForm').reset();
+                        // Close modals in correct order
+                        $refs.addProductRef.close();
+                        $refs.cancelAddProduct.close();
+                    " type="button">Confirm</x-form.saveBtn>
                 </div>
-            </x-modal.createModal>
+            </div>
+        </x-modal.createModal>
 
-
-        </main>
+        <x-modal.createModal x-ref="confirmAddProduct" class="z-50">
+            <x-slot:dialogTitle>Confirm Save?</x-slot:dialogTitle>
+            <div class="container px-2 py-2">
+                <h1 class="py-6 px-5 text-xl">Are you sure you want to add this item to inventory?</h1>
+                <div class="col-span-6 place-items-end flex justify-end gap-4">
+                    <x-form.closeBtn @click="$refs.confirmAddProduct.close()">Cancel</x-form.closeBtn>
+                    <x-form.saveBtn type="submit" form="addProductForm">Save</x-form.saveBtn>
+                </div>
+            </div>
+        </x-modal.createModal>
+    </main>
 </x-layout>
