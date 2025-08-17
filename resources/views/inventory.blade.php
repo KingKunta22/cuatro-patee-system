@@ -93,12 +93,12 @@
 
                     <!-- MANUAL SECTION -->
                     <section class="col-span-6" x-show="addMethod === 'manual'">
-                        <x-form.form-input label="Product Name" name="productName" type="text" value="" class="col-span-3"/>
-                        <x-form.form-input label="SKU (PK)" name="productSKU" type="text" value="" class="col-span-3"/>
-                        <x-form.form-input label="SKU" name="productSKU" type="text" value="" class="col-span-3"/>
+                        <x-form.form-input label="Product Name" name="productName" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'manual'"/>
+                        <x-form.form-input label="SKU (PK)" name="productSKU" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'manual'"/>
+                        <x-form.form-input label="SKU" name="productSKU" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'manual'"/>
                         <div class='container flex flex-col text-start col-span-3'>
                             <label for="productBrand">Product Brand</label>
-                            <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" :required="false"  x-bind:required="addMethod === 'manual'">
+                            <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
                                 <option value="Pedigree">Pedigree</option>
                                 <option value="Whiskas">Whiskas</option>
                                 <option value="Royal Canin">Royal Canin</option>
@@ -108,7 +108,7 @@
                         </div>
                         <div class="container flex flex-col text-start col-span-2">
                             <label for="productCategory">Product Category</label>
-                            <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" :required="false"  x-bind:required="addMethod === 'manual'">
+                            <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
                                 <option value="Dog Food">Dog Food (Dry)</option>
                                 <option value="Dog Food">Dog Food (Wet)</option>
                                 <option value="Cat Food">Cat Food (Dry)</option>
@@ -116,7 +116,7 @@
                                 <option value="Dog Toy">Dog Toy</option>
                             </select>
                         </div>
-                        <x-form.form-input label="Stock" name="productStock" type="number" value="" class="col-span-1/2"/>
+                        <x-form.form-input label="Stock" name="productStock" type="number" value="" class="col-span-1/2" x-bind:required="addMethod === 'manual'"/>
                     
                     </section>
 
@@ -124,14 +124,14 @@
                     <section class="col-span-6 flex justify-end gap-4" x-show="addMethod === 'po'">
                         <div class="container text-start flex col-span-2 w-full flex-col">
                             <label for="purchaseOrderNumber">Purchase Order Number</label>
-                            <select name="purchaseOrderNumber" class="px-3 py-2 border rounded-sm border-black" :required="false" x-bind:required="addMethod === 'po'">
+                            <select name="purchaseOrderNumber" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
                                 <option value="" disabled selected>Select PO Number</option>
                                 <option value="">Insert PO Number</option>
                             </select>
                         </div>
                         <div class="container text-start flex col-span-2 w-full flex-col">
                             <label for="purchaseOrderItem">Purchase Order Item</label>
-                            <select name="" class="px-3 py-2 border rounded-sm border-black" :required="false" x-bind:required="addMethod === 'po'">
+                            <select name="" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
                                 <option value="" disabled selected>Select PO Item</option>
                                 <option value="">Insert PO Item</option>
                             </select>
