@@ -31,7 +31,7 @@
         <section class="container flex flex-col items-center place-content-start">
             <div class="container flex items-start justify-start place-content-start w-auto gap-x-4 text-white mr-auto mb-4">
                 <div class="container flex flex-col px-5 py-2 w-48 text-start rounded-md bg-[#5C717B]">
-                    <span class="font-semibold text-3xl">98</span>
+                    <span class="font-semibold text-3xl">{{ count($incomingPOs) }}</span>
                     <span class="text-xs">Stock In</span>
                 </div>
                 <div class="container flex flex-col px-5 py-2 w-48 text-start rounded-md bg-[#2C3747]">
@@ -65,17 +65,17 @@
         <!-- CONTAINER FOR TABLE DETAILS -->
         <section class="border w-full rounded-md border-solid border-black p-3 my-5">
             <table class="w-full">
-                <thead class="rounded-lg bg-main text-white px-4 py-2">
+                <thead class="rounded-lg bg-main text-white px-4 py-1">
                     <tr class="rounded-lg">
-                        <th class=" bg-main px-4 py-2">Product Name</th>
-                        <th class=" bg-main px-4 py-2">Category</th>
-                        <th class=" bg-main px-4 py-2">SKU</th>
-                        <th class=" bg-main px-4 py-2">Brand</th>
-                        <th class=" bg-main px-4 py-2">Price</th>
-                        <th class=" bg-main px-4 py-2">Stock</th>
-                        <th class=" bg-main px-4 py-2">Status</th>
-                        <th class=" bg-main px-4 py-2">Expiration Date</th>
-                        <th class=" bg-main px-4 py-2">Action</th>
+                        <th class=" bg-main px-4 py-1">Product Name</th>
+                        <th class=" bg-main px-4 py-1">Category</th>
+                        <th class=" bg-main px-4 py-1">SKU</th>
+                        <th class=" bg-main px-4 py-1">Brand</th>
+                        <th class=" bg-main px-4 py-1">Price</th>
+                        <th class=" bg-main px-4 py-1">Stock</th>
+                        <th class=" bg-main px-4 py-1">Status</th>
+                        <th class=" bg-main px-4 py-1">Expiration Date</th>
+                        <th class=" bg-main px-4 py-1">Action</th>
                     </tr>
                 </thead>
                 @foreach($inventoryItems as $item)

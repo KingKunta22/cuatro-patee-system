@@ -1,6 +1,6 @@
 <x-layout>
     <x-sidebar/>
-    <div class="container w-auto ml-64 px-10 py-8 flex flex-col items-center content-start">
+    <div class="container w-auto ml-64 px-10 pt-6 pb-2 flex flex-col items-center content-start">
         <div x-data="{ close() { $refs.dialogRef.close() } }" class="container">
             <!-- SEARCH BAR AND CREATE BUTTON -->
             <div class="container flex items-center place-content-between">
@@ -25,7 +25,7 @@
                 </div>
             </dialog>
             <!-- TABLE FOR CUSTOMER DETAILS -->
-            <div class="border w-full rounded-md border-solid border-black p-3 my-8">
+            <div class="border w-full rounded-md border-solid border-black p-3 my-5">
                 <table class="w-full">
                 <thead class="rounded-lg bg-main text-white px-4 py-2">
                     <tr class="rounded-lg">

@@ -15,14 +15,18 @@ class InventoryController extends Controller
                     ->select('id', 'orderNumber')
                     ->get();
 
+        $incomingPOs = PurchaseOrder::where('orderStatus', 'Confirmed')
+                    ->select('id', 'orderNumber')
+                    ->get();
+
         // Generate a new SKU for the form
         $newSKU = $this->generateSKU();
 
         $inventoryItems = Inventory::orderBy('id', 'DESC')
-                    ->paginate(5)
+                    ->paginate(6)
                     ->withQueryString();
 
-        return view('inventory', compact('deliveredPOs', 'newSKU', 'inventoryItems'));
+        return view('inventory', compact('deliveredPOs', 'incomingPOs', 'newSKU', 'inventoryItems'));
     }
 
 
