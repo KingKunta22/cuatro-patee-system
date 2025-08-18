@@ -16,19 +16,20 @@ class Inventory extends Model
         'productSellingPrice',
         'productCostPrice',
         'productProfitMargin',
+        'productItemMeasurement',
         'productExpirationDate',
         'productImage',
         'purchase_order_id',
         'purchase_order_item_id',
     ];
 
-    public function purchaseOrder()
-    {
-        return $this->belongsTo(PurchaseOrder::class);
-    }   
+    public function purchaseOrder() {
+        return $this->belongsTo(PurchaseOrder::class); 
+        // An inventory item belongs to ONE purchase order
+    }
 
-    public function purchaseOrderItem()
-    {
-        return $this->belongsTo(PurchaseOrder::class);
+    public function purchaseOrderItem() {
+        return $this->belongsTo(PurchaseOrderItem::class);
+        // An inventory item belongs to ONE purchase order item
     }
 }
