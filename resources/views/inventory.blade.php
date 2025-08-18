@@ -178,6 +178,8 @@
                                 sellingPrice: 0,
                                 costPrice: 0,
                                 profitMargin: '0%',
+                                productName: '',
+                                productStock: 0,
                                 selectedItemId: null,
                                 
                                 async getItems(poId) {
@@ -188,27 +190,25 @@
                                     
                                     if (!poId) return;
                                     
-                                    try {
-                                        const response = await fetch(`/get-items/${poId}`);
-                                        this.items = await response.json();
-                                        
-                                        // AUTO-SELECT if only 1 item exists
-                                        if (this.items.length === 1) {
-                                            this.selectedItemId = this.items[0].id;
-                                            this.setCostPrice(this.items[0].id);
-                                        }
-                                    } catch (error) {
-                                        console.error('Error:', error);
+                                    const response = await fetch(`/get-items/${poId}`);
+                                    this.items = await response.json();
+                                    
+                                    // AUTO-SELECT if only 1 item exists
+                                    if (this.items.length === 1) {
+                                        this.selectedItemId = this.items[0].id;
+                                        this.setCostPrice(this.items[0].id);
                                     }
                                 },
                                 
                                 setCostPrice(itemId) {
                                     this.selectedItemId = itemId;
-                                    const selectedItem = this.items.find(item => item.id == itemId);
-                                    if (selectedItem) {
-                                        this.costPrice = selectedItem.unitPrice || 0;
+                                    const item = this.items.find(i => i.id == itemId);
+                                    if (item) {
+                                        this.costPrice = item.unitPrice || 0;
                                         this.calculateProfitMargin();
-                                        console.log('Cost set to:', this.costPrice);
+                                        this.productName = item.productName;
+                                        this.productStock = item.quantity;
+                                        this.itemMeasurement = item.itemMeasurement;
                                     }
                                 },
                                 
@@ -252,7 +252,11 @@
                         </div>
 
                         <div class="container grid grid-cols-6 col-span-6 gap-4">
-                             <x-form.form-input label="Product Name" name="productName" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'po'"/>
+                             <x-form.form-input label="Product Name" name="productName" type="text" value="" 
+                                                class="col-span-3"
+                                                name="productName" 
+                                                x-model="productName"
+                                                x-bind:required="addMethod === 'po'"/>
                             <x-form.form-input label="SKU" name="productSKU" type="text" value="{{ $newSKU }}" class="col-span-3" readonly/>
                             <div class='container flex flex-col text-start col-span-3'>
                                 <label for="productBrand">Product Brand</label>
@@ -275,7 +279,11 @@
                                 </select>
                             </div>
                             
-                            <x-form.form-input label="Stock" name="productStock" type="number" value="" class="col-span-1/2" x-bind:required="addMethod === 'po'"/>
+                            <x-form.form-input label="Stock" type="number" value="" 
+                                                class="col-span-1/2" 
+                                                name="productStock" 
+                                                x-model="productStock"
+                                                x-bind:required="addMethod === 'po'"/>
 
                             <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" class="col-span-2" 
                                                 x-bind:required="addMethod === 'po'"
@@ -292,7 +300,10 @@
                             
                             <div class="container text-start flex col-span-2 w-full flex-col">
                                 <label for="itemMeasurement">Measurement per item</label>
-                                <select name="itemMeasurement" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
+                                <select class="px-3 py-2 border rounded-sm border-black" 
+                                name="itemMeasurement" 
+                                x-model="itemMeasurement"
+                                x-bind:required="addMethod === 'po'">
                                     <option value="" disabled selected>Select Measurement</option>
                                     <option value="kilogram">kilogram (kg)</option>
                                     <option value="gram">gram (g)</option>
