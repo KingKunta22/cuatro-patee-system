@@ -46,8 +46,10 @@ class InventoryController extends Controller
         ]);
 
         // Calculate profit margin
-        $profitMargin = round(($validated['productSellingPrice'] - $validated['productCostPrice']) / $validated['productCostPrice'] * 100, 2);
-
+        $profitMargin = 0;
+        if ($validated['productCostPrice'] > 0) {
+            $profitMargin = round(($validated['productSellingPrice'] - $validated['productCostPrice']) / $validated['productCostPrice'] * 100, 2);
+        }
         // Handle image upload
         if ($request->hasFile('productImage')) {
             $imagePath = $request->file('productImage')->store('inventory', 'public');

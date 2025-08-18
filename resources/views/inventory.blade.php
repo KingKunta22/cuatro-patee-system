@@ -92,7 +92,20 @@
                     @csrf
 
                     <!-- MANUAL SECTION -->
-                    <section class="grid grid-cols-6 col-span-6 justify-end gap-4" x-show="addMethod === 'manual'">
+                    <section class="grid grid-cols-6 col-span-6 justify-end gap-4" 
+                            x-show="addMethod === 'manual'"
+                            x-data="{
+                            sellingPrice: 0,
+                            costPrice: 0,
+                            profitMargin: 0,
+                            calculateProfitMargin() {
+                                if (this.costPrice > 0 && this.sellingPrice > 0) {
+                                    this.profitMargin = ((this.sellingPrice - this.costPrice) / this.costPrice * 100).toFixed(2) + '%';
+                                } else {
+                                    this.profitMargin = 0;
+                                }
+                            },
+                        }" >
                         <x-form.form-input label="Product Name" name="productName" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'manual'"/>
                         <x-form.form-input label="SKU" name="productSKU" type="text" value="{{ $newSKU }}" class="col-span-3" readonly/>
                         <div class='container flex flex-col text-start col-span-3'>
@@ -117,9 +130,21 @@
                         </div>
                         
                         <x-form.form-input label="Stock" name="productStock" type="number" value="" class="col-span-1/2" x-bind:required="addMethod === 'manual'"/>
-                        <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" class="col-span-2" x-bind:required="addMethod === 'manual'"/>
-                        <x-form.form-input label="Cost Price (₱)" name="productCostPrice" type="number" value="" class="col-span-2" x-bind:required="addMethod === 'manual'"/>
-                        <x-form.form-input label="Profit Margin (%)" name="productProfitMargin" type="number" value="" class="col-span-2" readonly/>
+
+                        <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" class="col-span-2" 
+                                            x-bind:required="addMethod === 'manual'"
+                                            x-model="sellingPrice"
+                                            @input="calculateProfitMargin()"/>
+
+                        <x-form.form-input label="Cost Price (₱)" name="productCostPrice" type="number" value="" class="col-span-2" 
+                                            x-bind:required="addMethod === 'manual'"
+                                            x-model="costPrice"
+                                            @input="calculateProfitMargin()"/>
+
+                        <x-form.form-input label="Profit Margin (%)" name="productProfitMargin" type="text" value="" 
+                                            class="col-span-2" 
+                                            readonly
+                                            x-model="profitMargin"/>
                         
                         <div class="container text-start flex col-span-2 w-full flex-col">
                             <label for="itemMeasurement">Measurement per item</label>
@@ -150,16 +175,51 @@
                             x-data="{
                                 items: [],
                                 poId: null,
-                                async getItems(poId) {
-                                    this.poId = poId; // Store the selected PO ID
-                                    if (!poId) {
-                                        this.items = [];
-                                        return;
-                                    }
-                                    const response = await fetch(`/get-items/${poId}`);
-                                    this.items = await response.json();
-                                }
+                                sellingPrice: 0,
+                                costPrice: 0,
+                                profitMargin: '0%',
+                                selectedItemId: null,
                                 
+                                async getItems(poId) {
+                                    this.poId = poId;
+                                    this.items = [];
+                                    this.selectedItemId = null;
+                                    this.costPrice = 0;
+                                    
+                                    if (!poId) return;
+                                    
+                                    try {
+                                        const response = await fetch(`/get-items/${poId}`);
+                                        this.items = await response.json();
+                                        
+                                        // AUTO-SELECT if only 1 item exists
+                                        if (this.items.length === 1) {
+                                            this.selectedItemId = this.items[0].id;
+                                            this.setCostPrice(this.items[0].id);
+                                        }
+                                    } catch (error) {
+                                        console.error('Error:', error);
+                                    }
+                                },
+                                
+                                setCostPrice(itemId) {
+                                    this.selectedItemId = itemId;
+                                    const selectedItem = this.items.find(item => item.id == itemId);
+                                    if (selectedItem) {
+                                        this.costPrice = selectedItem.unitPrice || 0;
+                                        this.calculateProfitMargin();
+                                        console.log('Cost set to:', this.costPrice);
+                                    }
+                                },
+                                
+                                calculateProfitMargin() {
+                                    if (this.costPrice > 0 && this.sellingPrice > 0) {
+                                        const margin = ((this.sellingPrice - this.costPrice) / this.costPrice * 100);
+                                        this.profitMargin = margin.toFixed(2) + '%';
+                                    } else {
+                                        this.profitMargin = '0%';
+                                    }
+                                }
                             }">
 
                         <!-- PO Number Dropdown -->
@@ -167,8 +227,8 @@
                             <label>Purchase Order Number</label>
                             <select name="purchaseOrderNumber" 
                                     class="px-3 py-2 border rounded-sm border-black" 
-                                    :required="addMethod === 'po'" 
                                     x-model="poId" 
+                                    :required="addMethod === 'po'" 
                                     @change="getItems($event.target.value)">
                                 <option value="" disabled selected>Select PO Number</option>
                                 @foreach($deliveredPOs as $po)
@@ -180,10 +240,10 @@
                         <!-- PO Items Dropdown -->
                         <div class="container text-start flex col-span-3 w-full flex-col font-semibold">
                             <label>Purchase Order Item</label>
-                            <select name="purchase_order_item_id" 
-                                    class="px-3 py-2 border rounded-sm border-black" 
-                                    :required="addMethod === 'po'" 
-                                    :disabled="items.length === 0">
+                            <select class="px-3 py-2 border rounded-sm border-black"
+                                    x-model="selectedItemId" 
+                                    :disabled="!items.length"
+                                    @change="setCostPrice($event.target.value)">
                                 <option value="" disabled selected>Select PO Item</option>
                                 <template x-for="item in items" :key="item.id">
                                     <option :value="item.id" x-text="item.productName"></option>
@@ -216,9 +276,19 @@
                             </div>
                             
                             <x-form.form-input label="Stock" name="productStock" type="number" value="" class="col-span-1/2" x-bind:required="addMethod === 'po'"/>
-                            <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" class="col-span-2" x-bind:required="addMethod === 'po'"/>
-                            <x-form.form-input label="Cost Price (₱)" name="productCostPrice" type="number" value="" class="col-span-2" readonly/>
-                            <x-form.form-input label="Profit Margin (%)" name="productProfitMargin" type="number" value="" class="col-span-2" readonly/>
+
+                            <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" class="col-span-2" 
+                                                x-bind:required="addMethod === 'po'"
+                                                x-model="sellingPrice"
+                                                @input="calculateProfitMargin()"/>
+
+                            <x-form.form-input label="Cost Price (₱)" name="productCostPrice" type="number" value="" 
+                                                class="col-span-2" readonly
+                                                x-model="costPrice"/>
+
+                            <x-form.form-input label="Profit Margin (%)" name="productProfitMargin" type="text" value="" 
+                                                class="col-span-2" readonly
+                                                x-model="profitMargin"/>
                             
                             <div class="container text-start flex col-span-2 w-full flex-col">
                                 <label for="itemMeasurement">Measurement per item</label>
