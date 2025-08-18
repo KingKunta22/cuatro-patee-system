@@ -88,7 +88,7 @@
                 </div>
 
                 <!-- FORM WRAPS EVERYTHING -->
-                <form id="addProductForm" x-ref="addProductForm" action="" method="POST" class="grid grid-cols-6 col-span-6 gap-x-8 gap-y-6">
+                <form id="addProductForm" x-ref="addProductForm" action="{{ route('inventory.store')}}" method="POST" class="grid grid-cols-6 col-span-6 gap-x-8 gap-y-6" enctype="multipart/form-data">
                     @csrf
 
                     <!-- MANUAL SECTION -->
@@ -111,6 +111,7 @@
                         <div class='container flex flex-col text-start col-span-3'>
                             <label for="productBrand">Product Brand</label>
                             <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
+                                <option value="" disabled selected>Select Brand</option>
                                 <option value="Pedigree">Pedigree</option>
                                 <option value="Whiskas">Whiskas</option>
                                 <option value="Royal Canin">Royal Canin</option>
@@ -121,10 +122,11 @@
                         <div class="container flex flex-col text-start col-span-2">
                             <label for="productCategory">Product Category</label>
                             <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
-                                <option value="Dog Food">Dog Food (Dry)</option>
-                                <option value="Dog Food">Dog Food (Wet)</option>
-                                <option value="Cat Food">Cat Food (Dry)</option>
-                                <option value="Cat Food">Cat Food (Wet)</option>
+                                <option value="" disabled selected>Select Category</option>
+                                <option value="Dog Food (Dry)">Dog Food (Dry)</option>
+                                <option value="Dog Food (Wet)">Dog Food (Wet)</option>
+                                <option value="Cat Food (Dry)">Cat Food (Dry)</option>
+                                <option value="Cat Food (Wet)">Cat Food (Wet)</option>
                                 <option value="Dog Toy">Dog Toy</option>
                             </select>
                         </div>
@@ -180,6 +182,7 @@
                                 profitMargin: '0%',
                                 productName: '',
                                 productStock: 0,
+                                itemMeasurement: '',
                                 selectedItemId: null,
                                 
                                 async getItems(poId) {
@@ -240,7 +243,8 @@
                         <!-- PO Items Dropdown -->
                         <div class="container text-start flex col-span-3 w-full flex-col font-semibold">
                             <label>Purchase Order Item</label>
-                            <select class="px-3 py-2 border rounded-sm border-black"
+                            <select name="selectedItemId"
+                                    class="px-3 py-2 border rounded-sm border-black"
                                     x-model="selectedItemId" 
                                     :disabled="!items.length"
                                     @change="setCostPrice($event.target.value)">
@@ -254,13 +258,15 @@
                         <div class="container grid grid-cols-6 col-span-6 gap-4">
                              <x-form.form-input label="Product Name" name="productName" type="text" value="" 
                                                 class="col-span-3"
-                                                name="productName" 
                                                 x-model="productName"
                                                 x-bind:required="addMethod === 'po'"/>
+                                                
                             <x-form.form-input label="SKU" name="productSKU" type="text" value="{{ $newSKU }}" class="col-span-3" readonly/>
+
                             <div class='container flex flex-col text-start col-span-3'>
                                 <label for="productBrand">Product Brand</label>
                                 <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
+                                    <option value="" disabled selected>Select Brand</option>
                                     <option value="Pedigree">Pedigree</option>
                                     <option value="Whiskas">Whiskas</option>
                                     <option value="Royal Canin">Royal Canin</option>
@@ -271,10 +277,11 @@
                             <div class="container flex flex-col text-start col-span-2">
                                 <label for="productCategory">Product Category</label>
                                 <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
-                                    <option value="Dog Food">Dog Food (Dry)</option>
-                                    <option value="Dog Food">Dog Food (Wet)</option>
-                                    <option value="Cat Food">Cat Food (Dry)</option>
-                                    <option value="Cat Food">Cat Food (Wet)</option>
+                                    <option value="" disabled selected>Select Category</option>
+                                    <option value="Dog Food (Dry)">Dog Food (Dry)</option>
+                                    <option value="Dog Food (Wet)">Dog Food (Wet)</option>
+                                    <option value="Cat Food (Dry)">Cat Food (Dry)</option>
+                                    <option value="Cat Food (Wet)">Cat Food (Wet)</option>
                                     <option value="Dog Toy">Dog Toy</option>
                                 </select>
                             </div>

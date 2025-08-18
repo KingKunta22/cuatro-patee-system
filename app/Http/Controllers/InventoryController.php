@@ -33,16 +33,18 @@ class InventoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'productName' => 'required',
-            'productSKU' => 'required',
+            'productName' => 'required|string|max:255',
+            'productSKU' => 'required|string|max:255',
             'productBrand' => 'required|in:Pedigree,Whiskas,Royal Canin,Cesar,Acana',
-            'productCategory' => 'required|in:dogFoodDry,dogFoodWet,catFoodDry,catFoodWet,dogToy',
+            'productCategory' => 'required|string|max:255',
             'productStock' => 'required|numeric|min:0',
             'productSellingPrice' => 'required|numeric|min:0',
             'productCostPrice' => 'required|numeric|min:0',
-            'productItemMeasurement' => 'required',
+            'itemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
             'productExpDate' => 'required|date|after:today',
             'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'purchaseOrderNumber' => 'nullable|exists:purchase_orders,id',
+            'selectedItemId' => 'nullable|exists:purchase_order_items,id',
         ]);
 
         // Calculate profit margin
@@ -50,6 +52,7 @@ class InventoryController extends Controller
         if ($validated['productCostPrice'] > 0) {
             $profitMargin = round(($validated['productSellingPrice'] - $validated['productCostPrice']) / $validated['productCostPrice'] * 100, 2);
         }
+
         // Handle image upload
         if ($request->hasFile('productImage')) {
             $imagePath = $request->file('productImage')->store('inventory', 'public');
@@ -66,9 +69,11 @@ class InventoryController extends Controller
             'productSellingPrice' => $validated['productSellingPrice'],
             'productCostPrice' => $validated['productCostPrice'],
             'productProfitMargin' => $profitMargin,
-            'productItemMeasurement' => $validated['productItemMeasurement'],
+            'productItemMeasurement' => $validated['itemMeasurement'],
             'productExpirationDate' => $validated['productExpDate'],
             'productImage' => $validated['image'] ?? null,
+            'purchase_order_id' => $validated['purchaseOrderNumber'] ?? null,
+            'purchase_order_item_id' => $validated['selectedItemId'] ?? null,
         ]);
 
         return redirect()->route('inventory.index')->with('success', 'Product added!');
