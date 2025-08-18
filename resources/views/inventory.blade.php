@@ -94,7 +94,7 @@
                     <!-- MANUAL SECTION -->
                     <section class="grid grid-cols-6 col-span-6 justify-end gap-4" x-show="addMethod === 'manual'">
                         <x-form.form-input label="Product Name" name="productName" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'manual'"/>
-                        <x-form.form-input label="SKU" name="productSKU" type="text" value="" class="col-span-3" readonly/>
+                        <x-form.form-input label="SKU" name="productSKU" type="text" value="{{ $newSKU }}" class="col-span-3" readonly/>
                         <div class='container flex flex-col text-start col-span-3'>
                             <label for="productBrand">Product Brand</label>
                             <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
@@ -193,7 +193,7 @@
 
                         <div class="container grid grid-cols-6 col-span-6 gap-4">
                              <x-form.form-input label="Product Name" name="productName" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'po'"/>
-                            <x-form.form-input label="SKU" name="productSKU" type="text" value="" class="col-span-3" readonly/>
+                            <x-form.form-input label="SKU" name="productSKU" type="text" value="{{ $newSKU }}" class="col-span-3" readonly/>
                             <div class='container flex flex-col text-start col-span-3'>
                                 <label for="productBrand">Product Brand</label>
                                 <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
