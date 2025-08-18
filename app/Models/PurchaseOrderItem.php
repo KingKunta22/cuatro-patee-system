@@ -19,5 +19,10 @@ class PurchaseOrderItem extends Model
     {
         return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
+
+    public function inventory()
+    {
+        return $this->hasOne(Inventory::class, 'purchase_order_item_id');
+    }
     
 }

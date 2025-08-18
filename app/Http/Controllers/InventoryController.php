@@ -18,13 +18,18 @@ class InventoryController extends Controller
         // Generate a new SKU for the form
         $newSKU = $this->generateSKU();
 
-        return view('inventory', compact('deliveredPOs', 'newSKU'));
+        $inventoryItems = Inventory::orderBy('id', 'DESC')
+                    ->paginate(5)
+                    ->withQueryString();
+
+        return view('inventory', compact('deliveredPOs', 'newSKU', 'inventoryItems'));
     }
 
 
     public function getItems($poId)
     {
         return PurchaseOrderItem::where('purchase_order_id', $poId) // Finds items where purchase_order_id matches the selected PO
+            ->whereDoesntHave('inventory') // Excludes items that are already added/linked
             ->select('id', 'productName', 'quantity', 'unitPrice', 'itemMeasurement') // Ensures these fields exist first
             ->get();
     }
@@ -76,7 +81,7 @@ class InventoryController extends Controller
             'purchase_order_item_id' => $validated['selectedItemId'] ?? null,
         ]);
 
-        return redirect()->route('inventory.index')->with('success', 'Product added!');
+        return redirect()->route('inventory.index')->with('success', 'Product added successfully!');
     }
 
 

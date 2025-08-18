@@ -1,6 +1,6 @@
 <x-layout>
     <x-sidebar/>
-    <div class="container w-auto ml-64 px-10 py-8 flex flex-col items-center content-start">
+    <div class="container w-auto ml-64 px-10 py-6 flex flex-col items-center content-start">
         <div x-data="{ close() { $refs.dialogRef.close() } }" class="container">
 
             <!-- SUCCESS MESSAGE POPUP -->

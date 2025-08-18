@@ -29,7 +29,7 @@ class Inventory extends Model
     }
 
     public function purchaseOrderItem() {
-        return $this->belongsTo(PurchaseOrderItem::class);
+        return $this->belongsTo(PurchaseOrderItem::class, 'purchase_order_item_id');
         // An inventory item belongs to ONE purchase order item
     }
 }

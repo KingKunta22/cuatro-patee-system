@@ -1,9 +1,44 @@
 <x-layout>
     <x-sidebar/>
-    <main x-data class="container w-auto ml-64 px-10 py-8 flex flex-col items-center content-start">
+    <main x-data class="container w-auto ml-64 px-10 pt-6 pb-3 flex flex-col items-center content-start">
+
+            @if(session('success'))
+                <div id="success-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded shadow-lg">
+                    <p>{{ session('success') }}</p>
+                </div>
+            @endif
+
+            <!-- AUTO-HIDE SUCCESS MESSAGES -->
+            <script>
+                // Hide success messages after 3 seconds
+                document.addEventListener('DOMContentLoaded', function() {
+                    const successMessage = document.getElementById('success-message');
+                    
+                    if (successMessage) {
+                        setTimeout(() => {
+                            successMessage.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                            successMessage.style.opacity = '0';
+                            successMessage.style.transform = 'translate(-50%, -20px)';
+                            setTimeout(() => {
+                                successMessage.remove();
+                            }, 500);
+                        }, 3000);
+                    }
+                });
+            </script>
 
         <!-- CONTAINER OUTSIDE THE TABLE -->
-        <section class="container flex items-center place-content-start">
+        <section class="container flex flex-col items-center place-content-start">
+            <div class="container flex items-start justify-start place-content-start w-auto gap-x-4 text-white mr-auto mb-4">
+                <div class="container flex flex-col px-5 py-2 w-48 text-start rounded-md bg-[#5C717B]">
+                    <span class="font-semibold text-3xl">98</span>
+                    <span class="text-xs">Stock In</span>
+                </div>
+                <div class="container flex flex-col px-5 py-2 w-48 text-start rounded-md bg-[#2C3747]">
+                    <span class="font-semibold text-3xl">98</span>
+                    <span class="text-xs">Stock Out</span>
+                </div>
+            </div>
             <!-- SEARCH BAR AND CREATE BUTTON -->
             <div class="container flex items-center place-content-start">
                 <x-searchBar placeholder="Search inventory..." />
@@ -28,7 +63,7 @@
         </section>
 
         <!-- CONTAINER FOR TABLE DETAILS -->
-        <section class="border w-full rounded-md border-solid border-black p-3 my-8">
+        <section class="border w-full rounded-md border-solid border-black p-3 my-5">
             <table class="w-full">
                 <thead class="rounded-lg bg-main text-white px-4 py-2">
                     <tr class="rounded-lg">
@@ -43,25 +78,37 @@
                         <th class=" bg-main px-4 py-2">Action</th>
                     </tr>
                 </thead>
+                @foreach($inventoryItems as $item)
                 <tbody>
                     <tr class="border-b">
-                        <td class="truncate px-2 py-2 text-center" title="">ProductName</td>
-                        <td class="truncate px-2 py-2 text-center" title="">Category</td>
-                        <td class="truncate px-2 py-2 text-center" title="">SKU</td>
-                        <td class="truncate px-2 py-2 text-center" title="">Brand</td>
-                        <td class="truncate px-2 py-2 text-center" title="">Price</td>
-                        <td class="truncate px-2 py-2 text-center" title="">Stock</td>
-                        <td class="truncate px-2 py-2 text-center" title="">Status</td>
-                        <td class="truncate px-2 py-2 text-center" title="">ExpirationDate</td>
-                        <td class="truncate px-2 py-2 text-center" title="">Action</td>
+                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productName }}">{{ $item->productName }}</td>
+                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productCategory }}">{{ $item->productCategory }}</td>
+                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productSKU }}">{{ $item->productSKU }}</td>
+                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productBrand}}">{{ $item->productBrand}}</td>
+                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productSellingPrice }}">₱{{ $item->productSellingPrice }}</td>
+                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productStock }}">{{ $item->productStock }}</td>
+                        <td class="truncate px-2 py-2 text-center text-sm font-semibold" title="">
+                                @if ($item->productStock == 0)
+                                    <span class="text-red-600 bg-red-100 px-2 py-1 rounded-xl">Out of Stock</span>
+                                @elseif ($item->productStock <= 5)
+                                    <span class="text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl">Low Stock</span>
+                                @else
+                                    <span class="text-green-600 bg-green-100 px-2 py-1 rounded-xl">Active</span>
+                                @endif
+                        </td>
+                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productExpirationDate }}">{{ $item->productExpirationDate }}</td>
+                        <td class="truncate px-2 py-2 text-center" title="">
+                            <button class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">View Details</button>
+                        </td>
                     </tr>
                 </tbody>
+                @endforeach
             </table>
 
             <!-- PAGINATION VIEW -->
-            {{--                 <div class="mt-4 px-4 py-2 bg-gray-50 ">
-                {{ $purchaseOrders->links() }}
-            </div> --}}
+            <div class="mt-4 px-4 py-2 bg-gray-50 ">
+                {{ $inventoryItems->links() }}
+            </div>
 
         </section>
 
@@ -143,7 +190,7 @@
                                             x-model="costPrice"
                                             @input="calculateProfitMargin()"/>
 
-                        <x-form.form-input label="Profit Margin (%)" name="productProfitMargin" type="text" value="" 
+                        <x-form.form-input label="Profit Margin (%)" name="" type="text" value="" 
                                             class="col-span-2" 
                                             readonly
                                             x-model="profitMargin"/>

@@ -69,4 +69,4 @@ Route::delete('/purchase-orders/{purchaseOrder}/items/{item}', [App\Http\Control
 Route::get('/download-pdf/{orderId}', [PurchaseOrderController::class, 'downloadPDF'])->name('purchase-orders.download-pdf');
 
 Route::resource('inventory', InventoryController::class)->middleware('auth');
-Route::get('/get-items/{poId}', [InventoryController::class, 'getItems']);
+Route::get('/get-items/{poId}', [InventoryController::class, 'getItems'])->middleware('auth');
