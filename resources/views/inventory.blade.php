@@ -31,7 +31,7 @@
         <section class="container flex flex-col items-center place-content-start">
             <div class="container flex items-start justify-start place-content-start w-auto gap-x-4 text-white mr-auto mb-4">
                 <div class="container flex flex-col px-5 py-2 w-44 text-start rounded-md bg-[#5C717B]">
-                    <span class="font-semibold text-2xl">{{ count($incomingPOs) }}</span>
+                    <span class="font-semibold text-2xl">{{ $deliveredPOs->count() }}</span>
                     <span class="text-xs">Stock In</span>
                 </div>
                 <div class="container flex flex-col px-5 py-2 w-44 text-start rounded-md bg-[#2C3747]">
@@ -63,19 +63,19 @@
         </section>
 
         <!-- CONTAINER FOR TABLE DETAILS -->
-        <section class="border w-full rounded-md border-solid border-black p-3 my-3">
+        <section class="border w-full rounded-md border-solid border-black my-3">
             <table class="w-full">
-                <thead class="rounded-lg bg-main text-white px-4 py-1">
+                <thead class="rounded-lg bg-main text-white px-4 py-3">
                     <tr class="rounded-lg">
-                        <th class=" bg-main px-4 py-1">Product Name</th>
-                        <th class=" bg-main px-4 py-1">Category</th>
-                        <th class=" bg-main px-4 py-1">SKU</th>
-                        <th class=" bg-main px-4 py-1">Brand</th>
-                        <th class=" bg-main px-4 py-1">Price</th>
-                        <th class=" bg-main px-4 py-1">Stock</th>
-                        <th class=" bg-main px-4 py-1">Status</th>
-                        <th class=" bg-main px-4 py-1">Expiry Date</th>
-                        <th class=" bg-main px-4 py-1">Action</th>
+                        <th class=" bg-main px-4 py-3">Product Name</th>
+                        <th class=" bg-main px-4 py-3">Category</th>
+                        <th class=" bg-main px-4 py-3">SKU</th>
+                        <th class=" bg-main px-4 py-3">Brand</th>
+                        <th class=" bg-main px-4 py-3">Price</th>
+                        <th class=" bg-main px-4 py-3">Stock</th>
+                        <th class=" bg-main px-4 py-3">Status</th>
+                        <th class=" bg-main px-4 py-3">Expiry Date</th>
+                        <th class=" bg-main px-4 py-3">Action</th>
                     </tr>
                 </thead>
                 @foreach($inventoryItems as $item)
@@ -137,6 +137,7 @@
                 <!-- FORM WRAPS EVERYTHING -->
                 <form id="addProductForm" x-ref="addProductForm" action="{{ route('inventory.store')}}" method="POST" class="grid grid-cols-6 col-span-6 gap-x-8 gap-y-6" enctype="multipart/form-data">
                     @csrf
+                    <input type="hidden" name="add_method" x-model="addMethod">
 
                     <!-- MANUAL SECTION -->
                     <section class="grid grid-cols-6 col-span-6 justify-end gap-4" 
@@ -153,11 +154,11 @@
                                 }
                             },
                         }" >
-                        <x-form.form-input label="Product Name" name="productName" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'manual'"/>
-                        <x-form.form-input label="SKU" name="productSKU" type="text" value="{{ $newSKU }}" class="col-span-3" readonly/>
+                        <!-- ALL MANUAL FIELDS -->
+                        <x-form.form-input label="Product Name"  name="manual_productName" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'manual'"/>
                         <div class='container flex flex-col text-start col-span-3'>
                             <label for="productBrand">Product Brand</label>
-                            <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
+                            <select name="manual_productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
                                 <option value="" disabled selected>Select Brand</option>
                                 <option value="Pedigree">Pedigree</option>
                                 <option value="Whiskas">Whiskas</option>
@@ -168,7 +169,7 @@
                         </div>
                         <div class="container flex flex-col text-start col-span-2">
                             <label for="productCategory">Product Category</label>
-                            <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
+                            <select name="manual_productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
                                 <option value="" disabled selected>Select Category</option>
                                 <option value="Dog Food (Dry)">Dog Food (Dry)</option>
                                 <option value="Dog Food (Wet)">Dog Food (Wet)</option>
@@ -178,14 +179,18 @@
                             </select>
                         </div>
                         
-                        <x-form.form-input label="Stock" name="productStock" type="number" value="" class="col-span-1/2" x-bind:required="addMethod === 'manual'" step="1" min="0"/>
+                        <x-form.form-input label="Stock" name="manual_productStock" value="" class="col-span-1/2" 
+                                            type="number" step="1" min="0"
+                                            x-bind:required="addMethod === 'manual'" />
 
-                        <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" class="col-span-2" 
+                        <x-form.form-input label="Selling Price (₱)" name="manual_productSellingPrice" value="" class="col-span-2" 
+                                            type="number" step="1" min="0"
                                             x-bind:required="addMethod === 'manual'"
                                             x-model="sellingPrice"
                                             @input="calculateProfitMargin()"/>
 
-                        <x-form.form-input label="Cost Price (₱)" name="productCostPrice" type="number" value="" class="col-span-2" 
+                        <x-form.form-input label="Cost Price (₱)" name="manual_productCostPrice" value="" class="col-span-2" 
+                                            type="number" step="1" min="0"
                                             x-bind:required="addMethod === 'manual'"
                                             x-model="costPrice"
                                             @input="calculateProfitMargin()"/>
@@ -197,7 +202,7 @@
                         
                         <div class="container text-start flex col-span-2 w-full flex-col">
                             <label for="itemMeasurement">Measurement per item</label>
-                            <select name="productItemMeasurement" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
+                            <select name="manual_productItemMeasurement" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
                                 <option value="" disabled selected>Select Measurement</option>
                                 <option value="kilogram">kilogram (kg)</option>
                                 <option value="gram">gram (g)</option>
@@ -210,12 +215,12 @@
                             </select>
                         </div>
 
-                        <x-form.form-input label="Expiration Date" name="productExpirationDate" type="date"
+                        <x-form.form-input label="Expiration Date" name="manual_productExpirationDate" type="date"
                             value="" 
                             min="{{ date('Y-m-d') }}"
                             class="col-span-2" x-bind:required="addMethod === 'manual'"
                         />
-                        <x-form.form-input label="Upload an image" name="productImage" type="file" value="" class="col-span-2" :required="false"/>
+                        <x-form.form-input label="Upload an image" name="manual_productImage" type="file" value="" class="col-span-2" x-bind:required="addMethod === 'manual'"/>
                     </section>
 
                     <!-- PURCHASE ORDER SECTION -->
@@ -242,6 +247,13 @@
                                     
                                     const response = await fetch(`/get-items/${poId}`);
                                     this.items = await response.json();
+                                    
+                                    // Show message if no items available
+                                    if (this.items.length === 0) {
+                                        console.log('No items available for this PO');
+                                        // You could show a toast message here
+                                        return;
+                                    }
                                     
                                     // AUTO-SELECT if only 1 item exists
                                     if (this.items.length === 1) {
@@ -308,7 +320,6 @@
                                                 x-model="productName"
                                                 x-bind:required="addMethod === 'po'"/>
                                                 
-                            <x-form.form-input label="SKU" name="productSKU" type="text" value="{{ $newSKU }}" class="col-span-3" readonly/>
 
                             <div class='container flex flex-col text-start col-span-3'>
                                 <label for="productBrand">Product Brand</label>
@@ -375,7 +386,7 @@
                                 min="{{ date('Y-m-d') }}"
                                 class="col-span-2" x-bind:required="addMethod === 'po'"
                             />
-                            <x-form.form-input label="Upload an image" name="productImage" type="file" value="" class="col-span-2" :required="false"/>
+                            <x-form.form-input label="Upload an image" name="productImage" type="file" value="" class="col-span-2" x-bind:required="addMethod === 'po'"/>
                         </div>
                     </section>
 

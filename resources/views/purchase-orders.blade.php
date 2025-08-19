@@ -288,18 +288,18 @@
 
 
         <!-- TABLE FOR PURCHASE ORDER DETAILS -->
-        <div class="border w-full rounded-md border-solid border-black p-3 mt-6 mb-2">
+        <div class="border w-full rounded-md border-solid border-black mt-6 mb-2">
             <table class="w-full">
-                <thead class="rounded-lg bg-main text-white px-4 py-1">
+                <thead class="rounded-lg bg-main text-white px-4 py-3">
                     <tr class="rounded-lg">
-                        <th class=" bg-main px-4 py-1">Order Number</th>
-                        <th class=" bg-main px-4 py-1">Supplier Name</th>
-                        <th class=" bg-main px-4 py-1">Date</th>
-                        <th class=" bg-main px-4 py-1">Items</th>
-                        <th class=" bg-main px-4 py-1">Total</th>
-                        <th class=" bg-main px-4 py-1">Expected Delivery Date</th>
-                        <th class=" bg-main px-4 py-1">Status</th>
-                        <th class=" bg-main px-4 py-1">Action</th>
+                        <th class=" bg-main px-4 py-3">Order Number</th>
+                        <th class=" bg-main px-4 py-3">Supplier Name</th>
+                        <th class=" bg-main px-4 py-3">Date</th>
+                        <th class=" bg-main px-4 py-3">Items</th>
+                        <th class=" bg-main px-4 py-3">Total</th>
+                        <th class=" bg-main px-4 py-3">Expected Delivery Date</th>
+                        <th class=" bg-main px-4 py-3">Status</th>
+                        <th class=" bg-main px-4 py-3">Action</th>
                     </tr>
                 </thead>
                 <tbody>

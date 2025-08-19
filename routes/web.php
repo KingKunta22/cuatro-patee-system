@@ -70,3 +70,45 @@ Route::get('/download-pdf/{orderId}', [PurchaseOrderController::class, 'download
 
 Route::resource('inventory', InventoryController::class)->middleware('auth');
 Route::get('/get-items/{poId}', [InventoryController::class, 'getItems'])->middleware('auth');
+
+/*
+
+    ====MANUAL====
+    array:12 [▼ // app\Http\Controllers\InventoryController.php:45
+    "_token" => "t7mdbi4EwlnmeJCNLYUE9cena5gFqt5Tt8EBoba8"
+    "productName" => null
+        "productSKU" => "INV-202508-0011"
+        "productBrand" => "Whiskas"
+        "productCategory" => "Dog Toy"
+    "productStock" => "0"
+    "productSellingPrice" => "0"
+    "productCostPrice" => "0"
+        "productItemMeasurement" => "pcs"
+    "productExpirationDate" => null
+        "purchaseOrderNumber" => "108"
+    "productProfitMargin" => "0%"
+    ]
+    ================================================================== productName, 
+    ====PURCHASEORDER====
+    array:14 [▼ // app\Http\Controllers\InventoryController.php:45
+    "_token" => "t7mdbi4EwlnmeJCNLYUE9cena5gFqt5Tt8EBoba8"
+    "productName" => "ManualPurchaseOrder2"
+    "productSKU" => "INV-202508-0011"
+    "productStock" => "5"
+    "productSellingPrice" => "300"
+    "productCostPrice" => "200.00"
+    "productExpirationDate" => "2025-09-06"
+    "purchaseOrderNumber" => "118"
+    "selectedItemId" => "91"
+    "productBrand" => "Whiskas"
+    "productCategory" => "Dog Toy"
+    "productProfitMargin" => "50.00%"
+    "productItemMeasurement" => "liter"
+    "productImage" => 
+    Illuminate\Http
+    \
+    UploadedFile
+    {#1291 ▶}
+    ]
+
+*/

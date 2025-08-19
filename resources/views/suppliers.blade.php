@@ -28,16 +28,16 @@
             </dialog>
         </div>
         <!-- TABLE FOR SUPPLIER DETAILS -->
-        <div class="border w-full rounded-md border-solid border-black p-3 my-5">
+        <div class="border w-full rounded-md border-solid border-black my-5">
             <table class="w-full">
-            <thead class="rounded-lg bg-main text-white px-4 py-2">
+            <thead class="rounded-lg bg-main text-white px-4 py-3">
                 <tr class="rounded-lg">
-                    <th class=" bg-main px-4 py-2">Supplier Name</th>
-                    <th class=" bg-main px-4 py-2">Address</th>
-                    <th class=" bg-main px-4 py-2">Contact Number</th>
-                    <th class=" bg-main px-4 py-2">Email Address</th>
-                    <th class=" bg-main px-4 py-2">Status</th>
-                    <th class=" bg-main px-4 py-2">Action</th>
+                    <th class=" bg-main px-4 py-3">Supplier Name</th>
+                    <th class=" bg-main px-4 py-3">Address</th>
+                    <th class=" bg-main px-4 py-3">Contact Number</th>
+                    <th class=" bg-main px-4 py-3">Email Address</th>
+                    <th class=" bg-main px-4 py-3">Status</th>
+                    <th class=" bg-main px-4 py-3">Action</th>
                 </tr>
             </thead>
             <tbody>
