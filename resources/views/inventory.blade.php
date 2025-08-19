@@ -132,10 +132,6 @@
                                     <p>{{ $item->productBrand }}</p>
                                 </div>
                                 <div>
-                                    <p class="font-semibold">Category</p>
-                                    <p>{{ $item->productCategory }}</p>
-                                </div>
-                                <div>
                                     <p class="font-semibold">Stock</p>
                                     <p>{{ $item->productStock }}</p>
                                 </div>
@@ -144,8 +140,8 @@
                                     <p>({{ $item->productStock }}) {{ $item->productItemMeasurement }}</p>
                                 </div>
                                 <div>
-                                    <p class="font-semibold">Expiry Date</p>
-                                    <p>{{ $item->productExpirationDate }}</p>
+                                    <p class="font-semibold">Category</p>
+                                    <p>{{ $item->productCategory }}</p>
                                 </div>
                                 <div>
                                     <p class="font-semibold">Selling Price</p>
@@ -155,6 +151,17 @@
                                     <p class="font-semibold">Cost Price</p>
                                     <p>₱{{ number_format($item->productCostPrice, 2) }}</p>
                                 </div>
+                                <div>
+                                    <p class="font-semibold">Profit Margin</p>
+                                    <p>{{ $item->productProfitMargin }}%</p>
+                                </div>
+                                <div class="col-span-2 text-center">
+                                    <p class="font-semibold">Item Expiration Date</p>
+                                    <p>
+                                        {{ \Carbon\Carbon::parse($item->productExpirationDate)->format('M d, Y') }}
+                                        ({{ \Carbon\Carbon::parse($item->productExpirationDate)->diffForHumans() }})
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -163,7 +170,7 @@
                     <div class="flex justify-between items-center gap-x-4 px-6 pb-4 mt-4 border-t pt-4">
                         <!-- EDIT BUTTON: Opens edit dialog -->
                         <button 
-                            @click="" 
+                            @click="$refs['editProductDetails{{ $item->id }}'].showModal()" 
                             class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/60 transition-all duration-100 ease-in">
                             Edit
                         </button>
@@ -372,7 +379,7 @@
                                     :required="addMethod === 'po'" 
                                     @change="getItems($event.target.value)">
                                 <option value="" disabled selected>Select PO Number</option>
-                                @foreach($deliveredPOs as $po)
+                                @foreach($unaddedPOs as $po)
                                     <option value="{{ $po->id }}">{{ $po->orderNumber }}</option>
                                 @endforeach
                             </select>
@@ -516,7 +523,152 @@
         <!-- VIEW INVENTORY MODAL IS INLINE PARA WAY HASOL ALPINE JS -->
         <!-- ======================================================= -->
 
-        <!-- DELETE CONFIRMATION MODALS -->
+        <!-- UPDATE MODAL -->
+        @foreach($inventoryItems as $item)
+            <x-modal.createModal x-ref="editProductDetails{{ $item->id }}">
+                <x-slot:dialogTitle>Update {{ $item->productName }}</x-slot:dialogTitle>
+
+                <div class="container px-3 py-4">
+                    <form id="updateInventoryForm" action="{{ route('inventory.update', $item->id) }}" method="POST" enctype="multipart/form-data"
+                        class="px-6 py-4 container grid grid-cols-6 gap-x-8 gap-y-6"
+                        x-data="{
+                            sellingPrice: {{ $item->productSellingPrice }},
+                            costPrice: {{ $item->productCostPrice }},
+                            profitMargin: '{{ $item->productProfitMargin }}%',
+                            calculateProfitMargin() {
+                                if (this.costPrice > 0 && this.sellingPrice > 0) {
+                                    this.profitMargin = ((this.sellingPrice - this.costPrice) / this.costPrice * 100).toFixed(2) + '%';
+                                } else {
+                                    this.profitMargin = '0%';
+                                }
+                            }
+                        }">
+                        @csrf
+                        @method('PUT')
+
+                        <!-- Left Side (Image + Upload) -->
+                        <div class="col-span-2 flex flex-col items-center gap-3">
+                            @if($item->productImage)
+                                <img src="{{ asset('storage/' . $item->productImage) }}" 
+                                    alt="{{ $item->productName }}" 
+                                    class="size-44 object-contain border rounded shadow-sm">
+                            @endif
+                            <div class="w-full">
+                                <!-- REMOVE manual_ prefix -->
+                                <x-form.form-input label="Update image (optional)" name="productImage" type="file" :required="false" />
+                            </div>
+                        </div>
+
+                        <!-- Right Side (Main Info) -->
+                        <div class="col-span-4 grid grid-cols-4 gap-6">
+                            
+                            <!-- Product Name (full width) - REMOVE manual_ prefix -->
+                            <x-form.form-input label="Product Name" name="productName" type="text" 
+                                value="{{ $item->productName }}" class="col-span-4" required />
+
+                            <!-- Product Brand (full width) - REMOVE manual_ prefix -->
+                            <div class="col-span-4 flex flex-col text-start">
+                                <label for="productBrand" class="font-medium">Product Brand</label>
+                                <select name="productBrand" id="productBrand" 
+                                    class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
+                                    <option value="" disabled>Select Brand</option>
+                                    <option value="Pedigree" {{ $item->productBrand == 'Pedigree' ? 'selected' : '' }}>Pedigree</option>
+                                    <option value="Whiskas" {{ $item->productBrand == 'Whiskas' ? 'selected' : '' }}>Whiskas</option>
+                                    <option value="Royal Canin" {{ $item->productBrand == 'Royal Canin' ? 'selected' : '' }}>Royal Canin</option>
+                                    <option value="Cesar" {{ $item->productBrand == 'Cesar' ? 'selected' : '' }}>Cesar</option>
+                                    <option value="Acana" {{ $item->productBrand == 'Acana' ? 'selected' : '' }}>Acana</option>
+                                </select>
+                            </div>
+
+                            <!-- Category (half) - REMOVE manual_ prefix -->
+                            <div class="col-span-2 flex flex-col text-start">
+                                <label for="productCategory" class="font-medium">Product Category</label>
+                                <select name="productCategory" id="productCategory" 
+                                    class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
+                                    <option value="" disabled>Select Category</option>
+                                    <option value="Dog Food (Dry)" {{ $item->productCategory == 'Dog Food (Dry)' ? 'selected' : '' }}>Dog Food (Dry)</option>
+                                    <option value="Dog Food (Wet)" {{ $item->productCategory == 'Dog Food (Wet)' ? 'selected' : '' }}>Dog Food (Wet)</option>
+                                    <option value="Cat Food (Dry)" {{ $item->productCategory == 'Cat Food (Dry)' ? 'selected' : '' }}>Cat Food (Dry)</option>
+                                    <option value="Cat Food (Wet)" {{ $item->productCategory == 'Cat Food (Wet)' ? 'selected' : '' }}>Cat Food (Wet)</option>
+                                    <option value="Dog Toy" {{ $item->productCategory == 'Dog Toy' ? 'selected' : '' }}>Dog Toy</option>
+                                </select>
+                            </div>
+
+                            <!-- Stock (half) - REMOVE manual_ prefix -->
+                            <x-form.form-input label="Stock" name="productStock" value="{{ $item->productStock }}" 
+                                class="col-span-2" type="number" step="1" min="0" required />
+                        </div>
+
+                        <!-- Rest of fields below (full-width layout) - REMOVE manual_ prefix -->
+                        <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" 
+                            value="{{ $item->productSellingPrice }}" class="col-span-2" 
+                            type="number" step="0.01" min="0" required
+                            x-model="sellingPrice"
+                            @input="calculateProfitMargin()"/>
+
+                        <x-form.form-input label="Cost Price (₱)" name="productCostPrice" 
+                            value="{{ $item->productCostPrice }}" class="col-span-2" 
+                            type="number" step="0.01" min="0" required
+                            x-model="costPrice"
+                            @input="calculateProfitMargin()"/>
+
+                        <x-form.form-input label="Profit Margin (%)" name="productProfitMargin" 
+                            :value="$item->productProfitMargin . '%'" class="col-span-2" 
+                            type="text" readonly
+                            x-model="profitMargin"/>
+
+                        <div class="flex flex-col text-start col-span-3">
+                            <label for="itemMeasurement" class="font-medium">Measurement per item</label>
+                            <!-- REMOVE manual_ prefix -->
+                            <select name="productItemMeasurement" 
+                                class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
+                                <option value="" disabled>Select Measurement</option>
+                                <option value="kilogram" {{ $item->productItemMeasurement == 'kilogram' ? 'selected' : '' }}>kilogram (kg)</option>
+                                <option value="gram" {{ $item->productItemMeasurement == 'gram' ? 'selected' : '' }}>gram (g)</option>
+                                <option value="liter" {{ $item->productItemMeasurement == 'liter' ? 'selected' : '' }}>liter (L)</option>
+                                <option value="milliliter" {{ $item->productItemMeasurement == 'milliliter' ? 'selected' : '' }}>milliliter (mL)</option>
+                                <option value="pcs" {{ $item->productItemMeasurement == 'pcs' ? 'selected' : '' }}>pieces (pcs)</option>
+                                <option value="set" {{ $item->productItemMeasurement == 'set' ? 'selected' : '' }}>set</option>
+                                <option value="pair" {{ $item->productItemMeasurement == 'pair' ? 'selected' : '' }}>pair</option>
+                                <option value="pack" {{ $item->productItemMeasurement == 'pack' ? 'selected' : '' }}>pack</option>
+                            </select>
+                        </div>
+
+                        <!-- REMOVE manual_ prefix -->
+                        <x-form.form-input label="Expiration Date" name="productExpirationDate" type="date"
+                            value="{{ $item->productExpirationDate }}" 
+                            min="{{ date('Y-m-d') }}"
+                            class="col-span-3" required
+                        />
+
+                        <!-- Footer Buttons -->
+                        <div class="container col-span-6 gap-x-4 place-content-end w-full flex items-end content-center px-6 mt-4">
+                            <button type="button" 
+                                    @click="$refs['editProductDetails{{ $item->id }}'].close()" 
+                                    class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out">
+                                Cancel
+                            </button>
+                            <x-form.saveBtn @click="$refs['confirmEditProduct{{ $item->id }}'].showModal()" type="button">Update</x-form.saveBtn>
+                        </div>
+                    </form>
+                </div>
+            </x-modal.createModal>
+
+            <!-- UPDATE CONFIRMATION MODAL -->
+            <x-modal.createModal x-ref="confirmEditProduct{{ $item->id }}">
+                <x-slot:dialogTitle>Confirm Changes?</x-slot:dialogTitle>
+                <div class="container px-2 py-2">
+                    <h1 class="py-6 px-5 text-xl">Are you sure you want to save these changes?</h1>
+                    <div class="col-span-6 place-items-end flex justify-end gap-4">
+                        <x-form.closeBtn @click="$refs.confirmEditProduct{{ $item->id }}.close()">Cancel</x-form.closeBtn>
+                        <x-form.saveBtn type="submit" form="updateInventoryForm">Save</x-form.saveBtn>
+                    </div>
+                </div>
+            </x-modal.createModal>
+
+        @endforeach
+
+        <!-- DELETE CONFIRMATION MODAL -->
         @foreach ($inventoryItems as $item)
             <x-modal.createModal x-ref="confirmDeleteModal{{ $item->id }}" class="z-50">
                 <x-slot:dialogTitle>Are you sure?</x-slot:dialogTitle>

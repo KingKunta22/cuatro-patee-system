@@ -6,24 +6,30 @@ use App\Models\Inventory;
 use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use Illuminate\Support\Facades\Storage;
 
 class InventoryController extends Controller
 {
     public function index()
     {
         // Get delivered POs that haven't been added to inventory yet
-        $deliveredPOs = PurchaseOrder::where('orderStatus', 'Delivered')
+        $unaddedPOs = PurchaseOrder::where('orderStatus', 'Delivered')
             ->whereHas('items', function($query) {
                 $query->whereDoesntHave('inventory');
             })
             ->select('id', 'orderNumber')
             ->get();
 
-        $inventoryItems = Inventory::orderBy('id', 'DESC')
+        // Get all delivered POs
+        $deliveredPOs = PurchaseOrder::where('orderStatus', 'Delivered')
+                        ->select('id', 'orderNumber')
+                        ->get();
+
+        $inventoryItems = Inventory::orderBy('created_at', 'DESC')
                     ->paginate(6)
                     ->withQueryString();
 
-        return view('inventory', compact('deliveredPOs', 'inventoryItems'));
+        return view('inventory', compact('unaddedPOs', 'inventoryItems', 'deliveredPOs'));
     }
 
 
@@ -54,7 +60,7 @@ class InventoryController extends Controller
                 'manual_productSellingPrice' => 'required|numeric|min:0',
                 'manual_productCostPrice' => 'required|numeric|min:0',
                 'manual_productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
-                'manual_productExpirationDate' => 'required|date|after:today',
+                'manual_productExpirationDate' => 'required|date|after_or_equal:today',
                 'manual_productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ]);
 
@@ -89,7 +95,7 @@ class InventoryController extends Controller
                 'productSellingPrice' => 'required|numeric|min:0',
                 'productCostPrice' => 'required|numeric|min:0',
                 'productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
-                'productExpirationDate' => 'required|date|after:today',
+                'productExpirationDate' => 'required|date|after_or_equal:today',
                 'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'purchaseOrderNumber' => 'nullable|exists:purchase_orders,id',
                 'selectedItemId' => 'nullable|exists:purchase_order_items,id',
@@ -117,7 +123,7 @@ class InventoryController extends Controller
             }
         }
 
-        // Calculate profit margin (common for both methods)
+        // Calculate profit margin
         $profitMargin = 0;
         if ($inventoryData['productCostPrice'] > 0) {
             $profitMargin = round(($inventoryData['productSellingPrice'] - $inventoryData['productCostPrice']) / $inventoryData['productCostPrice'] * 100, 2);
@@ -150,12 +156,65 @@ class InventoryController extends Controller
         return "INV-{$date}-{$sequence}";
     }
 
-    // DELETE PRODUCT FROM INVENTORY
-    public function destroy(Inventory $inventory){
-        $inventory->delete();
+    public function update(Request $request, Inventory $inventory) 
+    {
+        // Validate Requests - REMOVE manual_ prefix from validation
+        $validated = $request->validate([
+            'productName' => 'required|string|max:255',
+            'productBrand' => 'required|in:Pedigree,Whiskas,Royal Canin,Cesar,Acana',
+            'productCategory' => 'required|string|max:255',
+            'productStock' => 'required|numeric|min:0',
+            'productSellingPrice' => 'required|numeric|min:0',
+            'productCostPrice' => 'required|numeric|min:0',
+            'productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
+            'productExpirationDate' => 'required|date|after_or_equal:today',
+            'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
 
-        return redirect()->back();
+        // Recalculate Profit Margin
+        $updatedProfitMargin = 0;
+        $updatedCostPrice = $validated['productCostPrice'];
+        $updatedSellingPrice = $validated['productSellingPrice'];
+
+        if ($updatedCostPrice > 0) {
+            $updatedProfitMargin = round((($updatedSellingPrice - $updatedCostPrice) / $updatedCostPrice) * 100, 2);
+        }
+
+        // Update the fields from validated requests - REMOVE manual_ prefix
+        $inventory->update([
+            'productName' => $validated['productName'],
+            'productBrand' => $validated['productBrand'],
+            'productCategory' => $validated['productCategory'],
+            'productStock' => $validated['productStock'],
+            'productSellingPrice' => $validated['productSellingPrice'],
+            'productCostPrice' => $validated['productCostPrice'],
+            'productItemMeasurement' => $validated['productItemMeasurement'],
+            'productExpirationDate' => $validated['productExpirationDate'],
+            'productProfitMargin' => $updatedProfitMargin,
+        ]);
+
+        // ✅ Handle new file uploads properly - REMOVE manual_ prefix
+        if ($request->hasFile('productImage')) {
+            if ($inventory->productImage) {
+                Storage::disk('public')->delete($inventory->productImage); // delete old image
+            }
+
+            $newImagePath = $request->file('productImage')->store('inventory', 'public');
+            $inventory->update(['productImage' => $newImagePath]); // persist new image
+        }
+
+        return redirect()->route('inventory.index')->with('success', 'Product updated successfully!');
     }
 
+    public function destroy(Inventory $inventory)
+    {
+        if ($inventory->productImage) {
+            Storage::disk('public')->delete($inventory->productImage);
+        }
+
+        $inventory->delete();
+
+        return redirect()->route('inventory.index')->with('success', 'Inventory product deleted successfully!');
+    }
 
 }
