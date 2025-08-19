@@ -149,4 +149,13 @@ class InventoryController extends Controller
         
         return "INV-{$date}-{$sequence}";
     }
+
+    // DELETE PRODUCT FROM INVENTORY
+    public function destroy(Inventory $inventory){
+        $inventory->delete();
+
+        return redirect()->back();
+    }
+
+
 }

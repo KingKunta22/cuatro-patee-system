@@ -93,15 +93,94 @@
                                 @elseif ($item->productStock <= 5)
                                     <span class="text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl">Low Stock</span>
                                 @else
-                                    <span class="text-green-600 bg-green-100 px-2 py-1 rounded-xl">Active</span>
+                                    <span class="text-green-600 bg-green-100 px-2 py-1 rounded-xl">Active Stock</span>
                                 @endif
                         </td>
                         <td class="truncate px-2 py-2 text-center" title="{{ $item->productExpirationDate }}">{{ $item->productExpirationDate }}</td>
                         <td class="truncate px-2 py-2 text-center" title="">
-                            <button class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">View Details</button>
+                            <button @click="$refs['viewInventoryDetails{{ $item->id }}'].showModal()" class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">View Details</button>
                         </td>
                     </tr>
                 </tbody>
+
+                <!-- VIEW INVENTORY DETAILS MODAL PER PRODUCT-->
+                <x-modal.createModal x-ref="viewInventoryDetails{{ $item->id }}">
+                    <x-slot:dialogTitle>Product Details</x-slot:dialogTitle>
+                    
+                    <div class="grid grid-cols-2 gap-6 p-6">
+
+                        <!-- LEFT: IMAGE -->
+                        <div class="flex flex-col items-center justify-center">
+                            <img src="{{ asset('storage/' . $item->productImage) }}" 
+                                alt="{{ $item->productName }}" 
+                                class="w-full max-h-80 object-contain rounded-xl shadow-lg border">
+                        </div>
+
+                        <!-- RIGHT: DETAILS -->
+                        <div class="flex flex-col space-y-4">
+                            <!-- Product name bigger -->
+                            <h2 class="text-2xl font-bold text-gray-800">{{ $item->productName }}</h2>
+
+                            <!-- Info grid -->
+                            <div class="grid grid-cols-2 gap-4 text-gray-700">
+                                <div>
+                                    <p class="font-semibold">SKU</p>
+                                    <p>{{ $item->productSKU }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Brand</p>
+                                    <p>{{ $item->productBrand }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Category</p>
+                                    <p>{{ $item->productCategory }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Stock</p>
+                                    <p>{{ $item->productStock }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Item Measurement</p>
+                                    <p>({{ $item->productStock }}) {{ $item->productItemMeasurement }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Expiry Date</p>
+                                    <p>{{ $item->productExpirationDate }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Selling Price</p>
+                                    <p>₱{{ number_format($item->productSellingPrice, 2) }}</p>
+                                </div>
+                                <div>
+                                    <p class="font-semibold">Cost Price</p>
+                                    <p>₱{{ number_format($item->productCostPrice, 2) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ACTION BUTTONS -->
+                    <div class="flex justify-between items-center gap-x-4 px-6 pb-4 mt-4 border-t pt-4">
+                        <!-- EDIT BUTTON: Opens edit dialog -->
+                        <button 
+                            @click="" 
+                            class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/60 transition-all duration-100 ease-in">
+                            Edit
+                        </button>
+
+                        <!-- DELETE BUTTON: Opens delete dialog -->
+                        <x-form.closeBtn @click="$refs['confirmDeleteModal{{ $item->id }}'].showModal()">Delete</x-form.closeBtn>
+
+                        <!-- CLOSE BUTTON: Closes view details dialog -->
+                        <button 
+                            @click="$refs[viewInventoryDetails{{ $item-> id}}.close()]" 
+                            class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
+                            Close
+                        </button>
+
+                    </div>
+                </x-modal.createModal>
+
                 @endforeach
             </table>
 
@@ -432,5 +511,39 @@
                 </div>
             </div>
         </x-modal.createModal>
+
+        <!-- ======================================================= -->
+        <!-- VIEW INVENTORY MODAL IS INLINE PARA WAY HASOL ALPINE JS -->
+        <!-- ======================================================= -->
+
+        <!-- DELETE CONFIRMATION MODALS -->
+        @foreach ($inventoryItems as $item)
+            <x-modal.createModal x-ref="confirmDeleteModal{{ $item->id }}" class="z-50">
+                <x-slot:dialogTitle>Are you sure?</x-slot:dialogTitle>
+                
+                <div class="container px-2 py-2">
+                    <h1 class="py-6 px-5 text-xl">
+                        Are you sure you want to delete <span class="font-bold">{{ $item->productName }}</span>?
+                    </h1>
+                    
+                    <div class="flex justify-end gap-4">
+                        <!-- CANCEL -->
+                        <x-form.closeBtn 
+                            @click="$refs['confirmDeleteModal{{ $item->id }}'].close()" 
+                            type="button">
+                            Cancel
+                        </x-form.closeBtn>
+
+                        <!-- DELETE FORM -->
+                        <form action="{{ route('inventory.destroy', $item->id) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <x-form.saveBtn type="submit">Delete</x-form.saveBtn>
+                        </form>
+                    </div>
+                </div>
+            </x-modal.createModal>
+        @endforeach
+
     </main>
 </x-layout>
