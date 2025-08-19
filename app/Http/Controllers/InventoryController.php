@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class InventoryController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Get delivered POs that haven't been added to inventory yet
         $unaddedPOs = PurchaseOrder::where('orderStatus', 'Delivered')
@@ -22,14 +22,40 @@ class InventoryController extends Controller
 
         // Get all delivered POs
         $deliveredPOs = PurchaseOrder::where('orderStatus', 'Delivered')
-                        ->select('id', 'orderNumber')
-                        ->get();
+            ->select('id', 'orderNumber')
+            ->get();
 
-        $inventoryItems = Inventory::orderBy('created_at', 'DESC')
-                    ->paginate(6)
-                    ->withQueryString();
+        // Start query
+        $query = Inventory::query();
 
-        return view('inventory', compact('unaddedPOs', 'inventoryItems', 'deliveredPOs'));
+        // Apply category filter
+        if ($request->category && $request->category != 'all') {
+            $query->where('productCategory', $request->category);
+        }
+
+        // Apply brand filter
+        if ($request->brand && $request->brand != 'all') {
+            $query->where('productBrand', $request->brand);
+        }
+
+        // Apply search filter
+        if ($request->search) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('productName', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('productSKU', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+
+        $inventoryItems = $query->orderBy('created_at', 'DESC')
+            ->paginate(6)
+            ->withQueryString();
+
+        // Get unique categories and brands for dropdowns
+        $categories = Inventory::distinct()->pluck('productCategory')->filter();
+        $brands = Inventory::distinct()->pluck('productBrand')->filter();
+
+        return view('inventory', compact('unaddedPOs', 'inventoryItems', 'deliveredPOs', 'categories', 'brands'));
     }
 
 
@@ -193,7 +219,7 @@ class InventoryController extends Controller
             'productProfitMargin' => $updatedProfitMargin,
         ]);
 
-        // ✅ Handle new file uploads properly - REMOVE manual_ prefix
+        // Handle new file uploads properly - REMOVE manual_ prefix
         if ($request->hasFile('productImage')) {
             if ($inventory->productImage) {
                 Storage::disk('public')->delete($inventory->productImage); // delete old image

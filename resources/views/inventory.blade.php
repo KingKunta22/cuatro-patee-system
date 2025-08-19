@@ -40,24 +40,60 @@
                 </div>
             </div>
             <!-- SEARCH BAR AND CREATE BUTTON -->
-            <div class="container flex items-center place-content-start">
-                <x-searchBar placeholder="Search inventory..." />
-                <form action="{{ route('purchase-orders.index') }}" method="GET" id="statusFilterForm" class="mr-auto ml-4">
-                    <select name="status" class="truncate w-36 px-3 py-2 border rounded-md border-black" onchange="document.getElementById('statusFilterForm').submit()">
-                        <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>Category</option>
-                        <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
-                        <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
-                        <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+            <!-- SEARCH BAR AND FILTERS - SEPARATE FORM TO AVOID CONFLICTS -->
+            <div class="container flex items-center place-content-start gap-4 mb-4">
+                <!-- SEPARATE SEARCH/FILTER FORM - WON'T AFFECT OTHER FORMS -->
+                <form action="{{ route('inventory.index') }}" method="GET" class="flex items-center gap-4 mr-auto">
+                    <!-- Simple Search Input -->
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            name="search" 
+                            value="{{ request('search') }}"
+                            placeholder="Search inventory..." 
+                            class="pl-10 pr-4 py-2 border border-black rounded-md w-64"
+                        >
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <select name="category" class="px-3 py-2 border rounded-md border-black w-48" onchange="this.form.submit()">
+                        <option value="all" {{ request('category') == 'all' || !request('category') ? 'selected' : '' }}>All Categories</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category }}" {{ request('category') == $category ? 'selected' : '' }}>
+                                {{ $category }}
+                            </option>
+                        @endforeach
                     </select>
-                    <select name="status" class="truncate w-36 px-3 py-2 border rounded-md border-black" onchange="document.getElementById('statusFilterForm').submit()">
-                        <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>Brand</option>
-                        <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
-                        <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
-                        <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
-                        <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+
+                    <!-- Brand Filter -->
+                    <select name="brand" class="px-3 py-2 border rounded-md border-black w-40" onchange="this.form.submit()">
+                        <option value="all" {{ request('brand') == 'all' || !request('brand') ? 'selected' : '' }}>All Brands</option>
+                        @foreach($brands as $brand)
+                            <option value="{{ $brand }}" {{ request('brand') == $brand ? 'selected' : '' }}>
+                                {{ $brand }}
+                            </option>
+                        @endforeach
                     </select>
+
+                    <!-- Search Button -->
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                        Search
+                    </button>
+
+                    <!-- Clear Button (only show when filters are active) -->
+                    @if(request('search') || (request('category') && request('category') != 'all') || (request('brand') && request('brand') != 'all'))
+                        <a href="{{ route('inventory.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            Clear
+                        </a>
+                    @endif
                 </form>
+
+                <!-- Your existing create button - SEPARATE FROM THE FILTER FORM -->
                 <x-form.createBtn @click="$refs.addProductRef.showModal()">Add New Product</x-form.createBtn>
             </div>
         </section>
@@ -192,8 +228,8 @@
             </table>
 
             <!-- PAGINATION VIEW -->
-            <div class="mt-4 px-4 py-2 bg-gray-50 ">
-                {{ $inventoryItems->links() }}
+            <div class="mt-4 px-4 py-2 bg-gray-50">
+                {{ $inventoryItems->appends(request()->except('page'))->links() }}
             </div>
 
         </section>
@@ -529,7 +565,7 @@
                 <x-slot:dialogTitle>Update {{ $item->productName }}</x-slot:dialogTitle>
 
                 <div class="container px-3 py-4">
-                    <form id="updateInventoryForm" action="{{ route('inventory.update', $item->id) }}" method="POST" enctype="multipart/form-data"
+                    <form id="updateInventoryForm{{ $item->id }}" action="{{ route('inventory.update', $item->id) }}" method="POST" enctype="multipart/form-data"
                         class="px-6 py-4 container grid grid-cols-6 gap-x-8 gap-y-6"
                         x-data="{
                             sellingPrice: {{ $item->productSellingPrice }},
@@ -661,7 +697,7 @@
                     <h1 class="py-6 px-5 text-xl">Are you sure you want to save these changes?</h1>
                     <div class="col-span-6 place-items-end flex justify-end gap-4">
                         <x-form.closeBtn @click="$refs.confirmEditProduct{{ $item->id }}.close()">Cancel</x-form.closeBtn>
-                        <x-form.saveBtn type="submit" form="updateInventoryForm">Save</x-form.saveBtn>
+                        <x-form.saveBtn type="submit" form="updateInventoryForm{{ $item->id }}">Save</x-form.saveBtn>
                     </div>
                 </div>
             </x-modal.createModal>
