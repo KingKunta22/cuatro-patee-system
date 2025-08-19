@@ -92,8 +92,10 @@ class InventoryController extends Controller
     private function generateSKU()
     {
         // Generate a unique SKU with format: INV-YYYYMMDD-XXXX
-        $date = now()->format('Ymd'); // Gets current date in YYYYMMDD format
-        $lastInventory = Inventory::whereDate('created_at', today())->count(); // Count how many items were created today
+        $date = now()->format('Ym'); // Gets current date in YYYYMMDD format
+        $lastInventory = Inventory::whereYear('created_at', now()->year)
+                                ->whereMonth('created_at', now()->month)
+                                ->count(); // Counts items created this MONTH
         $sequence = str_pad($lastInventory + 1, 4, '0', STR_PAD_LEFT); // Creates a 4-digit sequence number (0001, 0002, etc.)
         
         return "INV-{$date}-{$sequence}"; // INV-20241220-0001

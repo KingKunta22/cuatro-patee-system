@@ -30,12 +30,12 @@
         <!-- CONTAINER OUTSIDE THE TABLE -->
         <section class="container flex flex-col items-center place-content-start">
             <div class="container flex items-start justify-start place-content-start w-auto gap-x-4 text-white mr-auto mb-4">
-                <div class="container flex flex-col px-5 py-2 w-48 text-start rounded-md bg-[#5C717B]">
-                    <span class="font-semibold text-3xl">{{ count($incomingPOs) }}</span>
+                <div class="container flex flex-col px-5 py-2 w-44 text-start rounded-md bg-[#5C717B]">
+                    <span class="font-semibold text-2xl">{{ count($incomingPOs) }}</span>
                     <span class="text-xs">Stock In</span>
                 </div>
-                <div class="container flex flex-col px-5 py-2 w-48 text-start rounded-md bg-[#2C3747]">
-                    <span class="font-semibold text-3xl">98</span>
+                <div class="container flex flex-col px-5 py-2 w-44 text-start rounded-md bg-[#2C3747]">
+                    <span class="font-semibold text-2xl">98</span>
                     <span class="text-xs">Stock Out</span>
                 </div>
             </div>
@@ -63,7 +63,7 @@
         </section>
 
         <!-- CONTAINER FOR TABLE DETAILS -->
-        <section class="border w-full rounded-md border-solid border-black p-3 my-5">
+        <section class="border w-full rounded-md border-solid border-black p-3 my-3">
             <table class="w-full">
                 <thead class="rounded-lg bg-main text-white px-4 py-1">
                     <tr class="rounded-lg">
@@ -74,7 +74,7 @@
                         <th class=" bg-main px-4 py-1">Price</th>
                         <th class=" bg-main px-4 py-1">Stock</th>
                         <th class=" bg-main px-4 py-1">Status</th>
-                        <th class=" bg-main px-4 py-1">Expiration Date</th>
+                        <th class=" bg-main px-4 py-1">Expiry Date</th>
                         <th class=" bg-main px-4 py-1">Action</th>
                     </tr>
                 </thead>
@@ -197,7 +197,7 @@
                         
                         <div class="container text-start flex col-span-2 w-full flex-col">
                             <label for="itemMeasurement">Measurement per item</label>
-                            <select name="itemMeasurement" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
+                            <select name="productItemMeasurement" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
                                 <option value="" disabled selected>Select Measurement</option>
                                 <option value="kilogram">kilogram (kg)</option>
                                 <option value="gram">gram (g)</option>
@@ -210,7 +210,7 @@
                             </select>
                         </div>
 
-                        <x-form.form-input label="Expiration Date" name="productExpDate" type="date"
+                        <x-form.form-input label="Expiration Date" name="productExpirationDate" type="date"
                             value="" 
                             min="{{ date('Y-m-d') }}"
                             class="col-span-2" x-bind:required="addMethod === 'manual'"
@@ -355,7 +355,7 @@
                             <div class="container text-start flex col-span-2 w-full flex-col">
                                 <label for="itemMeasurement">Measurement per item</label>
                                 <select class="px-3 py-2 border rounded-sm border-black" 
-                                name="itemMeasurement" 
+                                name="productItemMeasurement" 
                                 x-model="itemMeasurement"
                                 x-bind:required="addMethod === 'po'">
                                     <option value="" disabled selected>Select Measurement</option>
@@ -370,7 +370,7 @@
                                 </select>
                             </div>
 
-                            <x-form.form-input label="Expiration Date" name="productExpDate" type="date"
+                            <x-form.form-input label="Expiration Date" name="productExpirationDate" type="date"
                                 value="" 
                                 min="{{ date('Y-m-d') }}"
                                 class="col-span-2" x-bind:required="addMethod === 'po'"
