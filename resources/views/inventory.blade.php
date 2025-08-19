@@ -178,7 +178,7 @@
                             </select>
                         </div>
                         
-                        <x-form.form-input label="Stock" name="productStock" type="number" value="" class="col-span-1/2" x-bind:required="addMethod === 'manual'"/>
+                        <x-form.form-input label="Stock" name="productStock" type="number" value="" class="col-span-1/2" x-bind:required="addMethod === 'manual'" step="1" min="0"/>
 
                         <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" class="col-span-2" 
                                             x-bind:required="addMethod === 'manual'"

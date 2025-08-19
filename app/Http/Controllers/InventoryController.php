@@ -41,6 +41,8 @@ class InventoryController extends Controller
 
     public function store(Request $request)
     {
+        dd($request->all()); // Debug the incoming request
+        
         $validated = $request->validate([
             'productName' => 'required|string|max:255',
             'productSKU' => 'required|string|max:255',
@@ -49,8 +51,8 @@ class InventoryController extends Controller
             'productStock' => 'required|numeric|min:0',
             'productSellingPrice' => 'required|numeric|min:0',
             'productCostPrice' => 'required|numeric|min:0',
-            'itemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
-            'productExpDate' => 'required|date|after:today',
+            'productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
+            'productExpirationDate' => 'required|date|after:today',
             'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'purchaseOrderNumber' => 'nullable|exists:purchase_orders,id',
             'selectedItemId' => 'nullable|exists:purchase_order_items,id',
@@ -78,8 +80,8 @@ class InventoryController extends Controller
             'productSellingPrice' => $validated['productSellingPrice'],
             'productCostPrice' => $validated['productCostPrice'],
             'productProfitMargin' => $profitMargin,
-            'productItemMeasurement' => $validated['itemMeasurement'],
-            'productExpirationDate' => $validated['productExpDate'],
+            'productItemMeasurement' => $validated['productItemMeasurement'],
+            'productExpirationDate' => $validated['productExpirationDate'],
             'productImage' => $validated['image'] ?? null,
             'purchase_order_id' => $validated['purchaseOrderNumber'] ?? null,
             'purchase_order_item_id' => $validated['selectedItemId'] ?? null,
