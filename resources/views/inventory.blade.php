@@ -39,7 +39,7 @@
                     <span class="text-xs">Stock Out</span>
                 </div>
             </div>
-            <!-- SEARCH BAR AND CREATE BUTTON -->
+
             <!-- SEARCH BAR AND FILTERS - SEPARATE FORM TO AVOID CONFLICTS -->
             <div class="container flex items-center place-content-start gap-4 mb-4">
                 <!-- SEPARATE SEARCH/FILTER FORM - WON'T AFFECT OTHER FORMS -->
@@ -87,7 +87,7 @@
 
                     <!-- Clear Button (only show when filters are active) -->
                     @if(request('search') || (request('category') && request('category') != 'all') || (request('brand') && request('brand') != 'all'))
-                        <a href="{{ route('inventory.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                        <a href="{{ route('inventory.index') }}" class="text-white px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
                             Clear
                         </a>
                     @endif

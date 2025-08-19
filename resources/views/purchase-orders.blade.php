@@ -50,17 +50,49 @@
             <!-- SEARCH BAR AND CREATE BUTTON -->
             <div class="container flex items-center place-content-between">
                 <div class="container flex items-center place-content-between">
-                    <x-searchBar placeholder="Search purchase orders..." />
-                    <form action="{{ route('purchase-orders.index') }}" method="GET" id="statusFilterForm" class="mr-auto ml-4">
-                        <select name="status" class="truncate w-36 px-3 py-2 border rounded-md border-black" onchange="document.getElementById('statusFilterForm').submit()">
+
+                    <!-- SEPARATE SEARCH/FILTER FORM - WON'T AFFECT OTHER FORMS -->
+                    <form action="{{ route('purchase-orders.index') }}" method="GET" id="statusFilterForm" class="mr-auto flex">
+
+                        <!-- Simple Search Input -->
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                name="search" 
+                                value="{{ request('search') }}"
+                                placeholder="Search orders..." 
+                                class="pl-10 pr-4 py-2 border border-black rounded-md w-64">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <select name="status" class="truncate w-36 px-3 py-2 border rounded-md border-black mx-4" onchange="document.getElementById('statusFilterForm').submit()">
                             <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>All</option>
                             <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
                             <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
                             <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
                             <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
                         </select> 
+
+                        <!-- Search Button -->
+                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                            Search
+                        </button>
+
+                        <!-- Clear Button (only show when filters are active) -->
+                        @if(request('search') )
+                            <a href="{{ route('purchase-orders.index') }}" class="text-white px-4 mx-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                                Clear
+                            </a>
+                        @endif
                     </form>
+
+                    <!-- ADD NEW ORDER BUTTON -->
                    <x-form.createBtn @click="$refs.dialogRef.showModal()">Add New Order</x-form.createBtn>
+
                 </div>
             </div>
 

@@ -22,10 +22,25 @@ class CustomerController extends Controller
         return redirect()->route('customers.index');
     }
 
-    public function index() {
-        $customers = Customer::orderBy('id', 'DESC')
-                            ->paginate(8)
-                            ->withQueryString();
+    public function index(Request $request) {
+
+
+        // Start query
+        $query = Customer::query();
+
+        // Apply search filter
+        if ($request->search) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('customerName', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('customerEmailAddress', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+
+        // Apply ordering and pagination on the query you built
+        $customers = $query->orderBy('id', 'DESC')
+                        ->paginate(8)
+                        ->withQueryString();
 
         return view('customers', compact('customers'));
     }

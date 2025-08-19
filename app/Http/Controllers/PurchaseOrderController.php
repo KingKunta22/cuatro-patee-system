@@ -15,14 +15,32 @@ class PurchaseOrderController extends Controller
     {
         $status = $request->input('status', 'all');
 
-        $query = PurchaseOrder::with(['items', 'supplier']) // Eager load relationships
-        ->orderBy('id', 'DESC')                             // Sort by newest first
-        ->when($status !== 'all',                           // Conditional filter for status
-            fn($q) => $q->where('orderStatus', $status)
-        );
+        // Start with base query
+        $query = PurchaseOrder::with(['items', 'supplier']);
 
-        // Preserve filters in pagination links
-        $purchaseOrders = $query->paginate(6)->withQueryString();
+        // Apply status filter
+        if ($status !== 'all') {
+            $query->where('orderStatus', $status);
+        }
+
+        // Apply search filter - ADD TO EXISTING QUERY
+        if ($request->search) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('orderNumber', 'LIKE', "%{$searchTerm}%")
+                ->orWhereHas('supplier', function($q) use ($searchTerm) {
+                    $q->where('supplierName', 'LIKE', "%{$searchTerm}%");
+                })
+                ->orWhereHas('items', function($q) use ($searchTerm) {
+                    $q->where('productName', 'LIKE', "%{$searchTerm}%");
+                });
+            });
+        }
+
+        // Order and paginate
+        $purchaseOrders = $query->orderBy('id', 'DESC')
+            ->paginate(6)
+            ->withQueryString();
 
         $supplierNames = Supplier::where('supplierStatus', 'Active')->get();
         $items = session('purchase_order_items', []);

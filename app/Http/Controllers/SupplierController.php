@@ -26,16 +26,25 @@ class SupplierController extends Controller
     }
     
     // This method will run after every method call
-    public function index(){
-        
-        // Gets all the suppliers in the database
-        $suppliers = Supplier::orderBy('id', 'DESC')
-                            ->paginate(8)
-                            ->withQueryString();
+    public function index(Request $request)
+    {
+        // Start query
+        $query = Supplier::query();
 
+        // Apply search filter
+        if ($request->search) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('supplierName', 'LIKE', "%{$searchTerm}%")
+                ->orWhere('supplierEmailAddress', 'LIKE', "%{$searchTerm}%");
+            });
+        }
 
-        // Routes back() to the same current route
-        // This also means 'suppliers' => $supplers
+        // Apply ordering and pagination on the query you built
+        $suppliers = $query->orderBy('id', 'DESC')
+                        ->paginate(8)
+                        ->withQueryString();
+
         return view('suppliers', compact('suppliers'));
     }
 
