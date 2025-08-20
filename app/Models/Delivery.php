@@ -9,4 +9,8 @@ class Delivery extends Model
     public function purchaseOrder(){
         return $this->belongsTo(PurchaseOrder::class);
     }
+
+    public function supplier(){
+        return $this->hasMany(Supplier::class);
+    }
 }

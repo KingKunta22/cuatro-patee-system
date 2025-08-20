@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
 
@@ -33,11 +34,14 @@ class DeliveryController extends Controller
             });
         }
 
+        $suppliers = Supplier::where('supplierStatus', 'Active')
+                        ->get();
+
         // Order and paginate
         $purchaseOrder = $query->orderBy('id', 'DESC')
             ->paginate(7)
             ->withQueryString();
         
-        return view('delivery-management', compact('purchaseOrder'));
+        return view('delivery-management', compact('purchaseOrder', 'suppliers'));
     }
 }
