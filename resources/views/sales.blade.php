@@ -80,7 +80,7 @@
                 </form>
 
                 <!-- Your existing create button - SEPARATE FROM THE FILTER FORM -->
-                <x-form.createBtn @click="$refs.addSaleRef.showModal()">Add New Sale</x-form.createBtn>
+                <x-form.createBtn @click="$refs.addSalesRef.showModal()">Add New Sale</x-form.createBtn>
             </div>
         </section>
 
@@ -121,10 +121,145 @@
         <!-- ============================================ -->
 
         <!-- ADD SALES MODAL -->
-        <x-modal.createModal x-ref="addSaleRef">
+        <x-modal.createModal x-ref="addSalesRef">
             <x-slot:dialogTitle>Add Sale</x-slot:dialogTitle>
             <div class="container">
+                <!-- ADD ORDER FORM -->
+                <form action="" method="POST" class="px-6 py-4 container grid grid-cols-7 gap-x-8 gap-y-6">
+                    @csrf
+                    
+                    <x-form.form-input label="Invoice Number" name="invoiceNumber" type="text" class="col-span-3" />
+                    
+                    <x-form.form-input label="Date" name="salesDate" type="date" class="col-span-2" value="" required/>
+
+                    <x-form.form-input label="Product SKU" name="productSKU" type="text" class="col-span-2" value="" readonly/>
+
+                    <div class="container text-start flex col-span-3 w-full flex-col">
+                        <label for="productName">Product Name</label>
+                        <select name="productName" class="px-3 py-2 border rounded-sm border-black" required>
+                            <option value="" disabled selected>Select Product</option>
+                            <option value="" >Online</option>
+                        </select>
+                    </div>
+
+                    <div class="container text-start flex col-span-3 w-full flex-col">
+                        <label for="customerName">Customer Name</label>
+                        <select name="customerName" class="px-3 py-2 border rounded-sm border-black" required>
+                            <option value="" disabled selected>Select Customer</option>
+                            <option value="" >Online</option>
+                        </select>
+                    </div>
+
+                    <x-form.form-input label="Quantity" name="quantity" type="number" value="" class="col-span-1" required/>
+
+                    <x-form.form-input label="Cash on Hand (₱)" name="salesCash" type="number" step="0.01" value="" class="col-span-2" required />
+
+                    <x-form.form-input label="Change (₱)" name="salesChange" type="number" step="0.01" value="" class="col-span-2" required />
+
+                    <x-form.form-input label="Amount to Pay (₱)" name="salesAmountToPay" type="number" step="0.01" value="" class="col-span-2" readonly/>
+
+                    <!-- ADD BUTTON FOR ADDING ITEMS TO SESSION -->
+                    <div class="flex items-end content-center place-content-center w-full col-span-1">
+                        <button type="button" class= 'bg-teal-500/70 px-3 py-2 rounded text-white hover:bg-teal-500 w-full'>
+                            Add
+                        </button>
+                    </div>
+
+                    <!-- PREVIEW TABLE FOR ADDED SALES/PRODUCTS -->
+                    @if(session('purchase_order_items'))
+                        <div class="border w-auto rounded-md border-solid border-black p-3 my-4 col-span-7">
+                            <table class="w-full">
+                                <thead class="rounded-lg bg-main text-white px-4 py-2">
+                                    <tr class="rounded-lg">
+                                        <th class="bg-main px-2 py-2 text-sm">Item/s</th>
+                                        <th class="bg-main px-2 py-2 text-sm">Quantity</th>
+                                        <th class="bg-main px-2 py-2 text-sm">Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b">
+                                        <td class="px-2 py-2 text-center">{{ $item['productName'] }}</td>
+                                        <td class="px-2 py-2 text-center">{{ $item['quantity'] }}</td>
+                                        <td class="px-2 py-2 text-center">₱{{ number_format($item['unitPrice'], 2) }}</td>d>
+                                        <td class="px-2 py-2 text-center">
+                                        <form action="" method="POST" class="flex place-content-center">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button>
+                                                <x-form.deleteBtn />
+                                            </button>
+                                        </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <!-- EMPTY STATE -->
+                        <div class="border w-auto rounded-md border-solid border-black p-3 my-4 col-span-7">
+                            <div class="text-center py-8 text-gray-500">
+                                <p>No items added yet. Add items above to preview your order.</p>
+                            </div>
+                        </div>
+                    @endif
+
+
+                    <!-- FORM BUTTONS -->
+                    <div class="flex justify-end items-center w-full relative col-span-7">
+    
+                        <button type="button" @click="$refs.confirmSalesCancel.showModal()" class="flex place-content-center rounded-md bg-button-delete mr-2 px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                            Cancel
+                        </button>
+
+                        <div class="absolute bottom-2 left-0 flex flex-row">
+
+                            <label class="flex items-center space-x-1 cursor-pointer">
+                                <input type="checkbox" name="salesDownload">
+                                <span>Download</span>
+                            </label>
+
+                            <label class="flex items-center space-x-1 ml-4 cursor-pointer">
+                                <input type="checkbox" name="salesPrint">
+                                <span>Print</span>
+                            </label>
+
+                        </div>
                 
+                        <x-form.saveBtn type="button" @click="$refs.confirmSubmit.showModal()">Save</x-form.saveBtn>
+
+
+                        <!-- CONFIRM CANCEL/SAVE MODALS -->
+                        <x-modal.createModal x-ref="confirmSalesCancel">
+
+                            <x-slot:dialogTitle>Confirm Cancel?</x-slot:dialogTitle>
+
+                            <h1 class="text-xl px-4 py-3">Are you sure you want to cancel this sale?</h1>
+                            <div class="container flex w-full flex-row items-center content-end place-content-end px-4 py-3">
+                                <button type="button" @click="$refs.confirmSalesCancel.close()" class="mr-3 flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                                    Cancel
+                                </button>
+                                <x-form.saveBtn type="button" @click="$refs.confirmSalesCancel.close(); $refs.addSalesRef.resetForm()">Confirm</x-form.saveBtn>
+                            </div>
+
+                        </x-modal.createModal>
+
+                        <x-modal.createModal x-ref="confirmSubmit">
+
+                            <x-slot:dialogTitle>Confirm Save?</x-slot:dialogTitle>
+
+                            <h1 class="text-xl px-4 py-3">Are you sure you want to save this sale?</h1>
+                            <div class="container flex w-full flex-row items-center content-end place-content-end px-4 py-3">
+                                <button type="button" @click="$refs.confirmSubmit.close()" class="mr-3 flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                                    Cancel
+                                </button>
+                                <x-form.saveBtn type="submit" form="saveForm">Confirm</x-form.saveBtn>
+                            </div>
+
+                        </x-modal.createModal>
+
+                    </div>
+
+                </form>
             </div>
         </x-modal.createModal>
 
