@@ -8,6 +8,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ProductClassification;
 use App\Http\Controllers\PurchaseOrderController;
 
 Route::get('/', function() {
@@ -16,38 +17,38 @@ Route::get('/', function() {
 
 Route::post('/login', [UserController::class, 'login']);
 
+
 // The middleware method doesn't allow unlogged users to open this URL
 Route::get('/main', function() {
     return view('main');
 })->middleware('auth');
 
+
 // The function is inside the UserController.php for cleaner code
 Route::post('/logout', [UserController::class, 'logout']);
 
-Route::get('/purchase-order', function() {
-    return view('purchase-order');
-})->middleware('auth');
 
 Route::get('/reports', function() {
     return view('reports');
 })->middleware('auth');
 
-Route::get('/product-classification', function() {
-    return view('product-classification');
-})->middleware('auth');
-
-Route::get('/delivery-management', function() {
-    return view('delivery-management');
-})->middleware('auth');
 
 // This resource route doesn't route the user to the /suppliers. 
 // This only allows us to use suppliers.store so that we can put it--
 // inside the action attribute inside the form
-Route::resource('suppliers', SupplierController::class)->middleware('auth');
-Route::resource('customers', CustomerController::class)->middleware('auth');
 
-// Resource route for purchase orders
+// ROUTE FOR SALES
+Route::resource('sales', SalesController::class)->middleware('auth');
+
+
+// ROUTES FOR INVENTORY
+Route::resource('inventory', InventoryController::class)->middleware('auth');
+Route::get('/get-items/{poId}', [InventoryController::class, 'getItems'])->middleware('auth');
+
+
+// ROUTE FOR PURCHASE ORDERS
 Route::resource('purchase-orders', PurchaseOrderController::class)->except(['update'])->middleware('auth');
+
 
 // ============== Custom routes for purchase order session management ==========
 
@@ -62,16 +63,26 @@ Route::put('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, '
 // To delete existing items
 Route::delete('/purchase-orders/{purchaseOrder}/items/{item}', [App\Http\Controllers\PurchaseOrderController::class, 'destroyItem'])->name('purchase-orders.items.destroy');
 
-
 // FOR PDF
 Route::get('/download-pdf/{orderId}', [PurchaseOrderController::class, 'downloadPDF'])->name('purchase-orders.download-pdf');
 
-Route::resource('inventory', InventoryController::class)->middleware('auth');
-Route::get('/get-items/{poId}', [InventoryController::class, 'getItems'])->middleware('auth');
 
-Route::resource('sales', SalesController::class)->middleware('auth');
-
+// ROUTE FOR DELIVERY MANAGEMENT
 Route::resource('delivery-management', DeliveryController::class)->middleware('auth');
+
+
+// ROUTE FOR PRODUCT CLASSIFICATION
+Route::resource('product-classification', ProductClassification::class)->middleware('auth');
+
+
+// ROUTE FOR SUPPLIERS
+Route::resource('suppliers', SupplierController::class)->middleware('auth');
+
+
+// ROUTE FOR CUSTOMERS
+Route::resource('customers', CustomerController::class)->middleware('auth');
+
+
 
 /*
 

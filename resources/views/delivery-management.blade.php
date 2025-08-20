@@ -167,7 +167,7 @@
             <div class="container">
 
                 <!-- MAIN INFORMATION -->
-                <div class="container grid grid-cols-6">
+                <div class="container grid grid-cols-6 p-4">
                     <div class="container col-span-2 px-6 py-1">
                         <h1 class="flex items-start font-semibold">
                             <span>
@@ -275,27 +275,6 @@
                                 Please treat the progress indicators as a guideline rather than a confirmed status.
                             </p>
                     </div>
-                </div>
-
-                <!-- ACTION BUTTONS -->
-                <div class="flex justify-between items-center gap-x-4 px-6 pb-4 mt-4 border-t pt-4">
-                    <!-- EDIT BUTTON: Opens edit dialog -->
-                    <button 
-                        @click=""
-                        class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/60 transition-all duration-100 ease-in">
-                        Edit
-                    </button>
-
-                    <!-- DELETE BUTTON: Opens delete dialog -->
-                    <x-form.closeBtn @click="">Delete</x-form.closeBtn>
-
-                    <!-- CLOSE BUTTON: Closes view details dialog -->
-                    <button 
-                        @click="$refs[viewOrderDetails{{ $order-> id}}.close()]" 
-                        class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
-                        Close
-                    </button>
-
                 </div>
             </div>
         </x-modal.createModal>

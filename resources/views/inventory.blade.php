@@ -290,7 +290,7 @@
                                 <option value="Acana">Acana</option>
                             </select>
                         </div>
-                        <div class="container flex flex-col text-start col-span-2">
+                        <div class="container flex flex-col text-start col-span-4">
                             <label for="productCategory">Product Category</label>
                             <select name="manual_productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
                                 <option value="" disabled selected>Select Category</option>
@@ -302,7 +302,7 @@
                             </select>
                         </div>
                         
-                        <x-form.form-input label="Stock" name="manual_productStock" value="" class="col-span-1/2" 
+                        <x-form.form-input label="Stock" name="manual_productStock" value="" class="col-span-2" 
                                             type="number" step="1" min="0"
                                             x-bind:required="addMethod === 'manual'" />
 
@@ -455,7 +455,7 @@
                                     <option value="Acana">Acana</option>
                                 </select>
                             </div>
-                            <div class="container flex flex-col text-start col-span-2">
+                            <div class="container flex flex-col text-start col-span-4">
                                 <label for="productCategory">Product Category</label>
                                 <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
                                     <option value="" disabled selected>Select Category</option>
@@ -468,7 +468,7 @@
                             </div>
                             
                             <x-form.form-input label="Stock" type="number" value="" 
-                                                class="col-span-1/2" 
+                                                class="col-span-2" 
                                                 name="productStock" 
                                                 x-model="productStock"
                                                 x-bind:required="addMethod === 'po'"/>
