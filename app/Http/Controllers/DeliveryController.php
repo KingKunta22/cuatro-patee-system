@@ -35,7 +35,7 @@ class DeliveryController extends Controller
 
         // Order and paginate
         $purchaseOrder = $query->orderBy('id', 'DESC')
-            ->paginate(9)
+            ->paginate(7)
             ->withQueryString();
         
         return view('delivery-management', compact('purchaseOrder'));

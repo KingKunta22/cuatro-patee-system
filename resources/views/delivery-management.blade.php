@@ -29,12 +29,12 @@
         </script>
 
         <!-- CONTAINER OUTSIDE THE TABLE -->
-        <section class="container flex flex-col items-center place-content-start">
+        <section class="container flex flex-col items-center place-content-start mt-2">
 
             <!-- SEARCH BAR AND FILTERS - SEPARATE FORM TO AVOID CONFLICTS -->
             <div class="container flex items-center place-content-start gap-4 mb-1">
                 <!-- SEPARATE SEARCH/FILTER FORM - WON'T AFFECT OTHER FORMS -->
-                <form action="{{ route('delivery-management.index') }}" method="GET" class="flex items-center gap-4 mr-auto">
+                <form action="{{ route('delivery-management.index') }}" method="GET" id="statusFilterForm" class="flex items-center gap-4 mr-auto">
                     <!-- Simple Search Input -->
                     <div class="relative">
                         <input 
@@ -77,7 +77,7 @@
         </section>
 
         <!-- CONTAINER FOR TABLE DETAILS -->
-        <section class="border w-full rounded-md border-solid border-black my-3">
+        <section class="border w-full rounded-md border-solid border-black my-6">
             <table class="w-full">
                 <thead class="rounded-lg bg-main text-white px-4 py-3">
                     <tr class="rounded-lg">
@@ -85,6 +85,7 @@
                         <th class=" bg-main px-4 py-3">Order Date</th>
                         <th class=" bg-main px-4 py-3">Expected Date</th>
                         <th class=" bg-main px-4 py-3">Lead Time</th>
+                        <th class=" bg-main px-4 py-3">ETA</th>
                         <th class=" bg-main px-4 py-3">Status</th>
                         <th class=" bg-main px-4 py-3">Action</th>
                     </tr>
@@ -101,20 +102,34 @@
                             title="{{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}">
                             {{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}
                         </td>
+
+                        {{-- Lead Time Column --}}
                         <td class="truncate px-2 py-3 text-center">
                             @php
                                 $orderDate = \Carbon\Carbon::parse($order->created_at)->startOfDay();
                                 $deliveryDate = \Carbon\Carbon::parse($order->deliveryDate)->startOfDay();
-                                $daysDifference = $orderDate->diffInDays($deliveryDate);
-                                $isOverdue = $deliveryDate->isPast();
+
+                                // Lead time (order placed → expected delivery)
+                                $leadTime = $orderDate->diffInDays($deliveryDate);
+
+                                // Days left/delayed (today → expected delivery)
+                                $daysLeft = now()->startOfDay()->diffInDays($deliveryDate, false);
                             @endphp
-                            
-                            {{ $daysDifference }} days
-                            ({{ $deliveryDate->diffForHumans($orderDate) }})
-                            @if($isOverdue)
-                                <span class="text-red-500 text-xs">(Overdue)</span>
+
+                            {{ $leadTime }} {{ \Illuminate\Support\Str::plural('day', $leadTime) }}
+                        </td>
+
+                        {{-- Delivery Status Column --}}
+                        <td class="truncate px-2 py-3 text-center">
+                            @if($daysLeft > 0)
+                                <span>{{ $daysLeft }} {{ \Illuminate\Support\Str::plural('day', $daysLeft) }} left</span>
+                            @elseif($daysLeft === 0)
+                                <span class="text-yellow-600 text-xs">Today</span>
+                            @else
+                                <span class="text-red-600">{{ abs($daysLeft) }} {{ \Illuminate\Support\Str::plural('day', abs($daysLeft)) }} delayed</span>
                             @endif
                         </td>
+
                         <td class="truncate px-2 py-3 text-center" title="">                                
                             <span class="px-2 py-1 text-sm font-semibold rounded-full 
                                     @if($order->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/40
@@ -124,7 +139,11 @@
                                     title="This order is {{ $order->orderStatus }}">
                                     {{ $order->orderStatus }}
                                 </span>
-                        <td class="truncate px-2 py-2 text-center" title="">ACTION</td>
+                        <td class="truncate px-2 py-2 text-center flex place-content-center" title="">
+                            <button @click="$refs['viewOrderDetails{{ $order->id }}'].showModal()" class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">
+                                View Details
+                            </button>
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -140,6 +159,40 @@
         <!-- ============================================ -->
         <!----------------- MODALS SECTION ----------------->
         <!-- ============================================ -->
+        
+        @foreach( $purchaseOrder as $order)
+        <x-modal.createModal x-ref="viewOrderDetails{{ $order->id}}">
+            <x-slot:dialogTitle>ORDER ID: {{ $order->orderNumber}}</x-slot:dialogTitle>
+            <div class="container">
+
+                <!-- MAIN INFORMATION -->
+                <div class="container">
+
+                </div>
+
+                <!-- ACTION BUTTONS -->
+                <div class="flex justify-between items-center gap-x-4 px-6 pb-4 mt-4 border-t pt-4">
+                    <!-- EDIT BUTTON: Opens edit dialog -->
+                    <button 
+                        @click=""
+                        class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/60 transition-all duration-100 ease-in">
+                        Edit
+                    </button>
+
+                    <!-- DELETE BUTTON: Opens delete dialog -->
+                    <x-form.closeBtn @click="">Delete</x-form.closeBtn>
+
+                    <!-- CLOSE BUTTON: Closes view details dialog -->
+                    <button 
+                        @click="$refs[viewOrderDetails{{ $order-> id}}.close()]" 
+                        class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
+                        Close
+                    </button>
+
+                </div>
+            </div>
+        </x-modal.createModal>
+        @endforeach
 
     </main>
 </x-layout>

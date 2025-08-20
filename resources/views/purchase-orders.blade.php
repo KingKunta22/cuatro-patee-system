@@ -330,7 +330,6 @@
                         <th class=" bg-main px-4 py-3">Date</th>
                         <th class=" bg-main px-4 py-3">Items</th>
                         <th class=" bg-main px-4 py-3">Total</th>
-                        <th class=" bg-main px-4 py-3">Expected Delivery Date</th>
                         <th class=" bg-main px-4 py-3">Status</th>
                         <th class=" bg-main px-4 py-3">Action</th>
                     </tr>
@@ -352,12 +351,6 @@
                                 @endforeach
                             </td>
                             <td class="truncate px-2 py-2 text-center">₱{{ number_format($purchaseOrder->totalAmount, 2) }}</td>
-                            <td class="truncate px-2 py-2 text-center">{{ $purchaseOrder->deliveryDate }}
-                                <br>
-                                <a href="/delivery-management" class="text-xs text-gray-500 underline uppercase rounded my-2 py-1 px-2 transition-all ease-in-out duration-100">
-                                    Manage Delivery
-                                </a>
-                            </td>
                             <td class="truncate px-2 py-2 text-center">
                                 <span class="px-2 py-1 text-sm font-semibold rounded-full 
                                     @if($purchaseOrder->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/40
