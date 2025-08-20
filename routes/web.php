@@ -3,7 +3,9 @@
 // Allows UserController to be referenced from this Route
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\SalesController;
 use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\PurchaseOrderController;
@@ -21,10 +23,6 @@ Route::get('/main', function() {
 
 // The function is inside the UserController.php for cleaner code
 Route::post('/logout', [UserController::class, 'logout']);
-
-Route::get('/sales', function() {
-    return view('sales');
-})->middleware('auth');
 
 Route::get('/purchase-order', function() {
     return view('purchase-order');
@@ -70,6 +68,10 @@ Route::get('/download-pdf/{orderId}', [PurchaseOrderController::class, 'download
 
 Route::resource('inventory', InventoryController::class)->middleware('auth');
 Route::get('/get-items/{poId}', [InventoryController::class, 'getItems'])->middleware('auth');
+
+Route::resource('sales', SalesController::class)->middleware('auth');
+
+Route::resource('delivery-management', DeliveryController::class)->middleware('auth');
 
 /*
 
