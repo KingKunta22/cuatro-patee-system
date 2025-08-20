@@ -125,23 +125,14 @@
             <x-slot:dialogTitle>Add Sale</x-slot:dialogTitle>
             <div class="container">
                 <!-- ADD ORDER FORM -->
-                <form action="" method="POST" class="px-6 py-4 container grid grid-cols-7 gap-x-8 gap-y-6">
+                <form action="" method="POST" id="addSales" class="px-6 py-4 container grid grid-cols-7 gap-x-8 gap-y-6">
                     @csrf
                     
-                    <x-form.form-input label="Invoice Number" name="invoiceNumber" type="text" class="col-span-3" />
-                    
-                    <x-form.form-input label="Date" name="salesDate" type="date" class="col-span-2" value="" required/>
-
-                    <x-form.form-input label="Product SKU" name="productSKU" type="text" class="col-span-2" value="" readonly/>
-
-                    <div class="container text-start flex col-span-3 w-full flex-col">
+                    <div class="container text-start flex col-span-4 w-full flex-col">
                         <label for="productName">Product Name</label>
-                        <select name="productName" class="px-3 py-2 border rounded-sm border-black" required>
-                            <option value="" disabled selected>Select Product</option>
-                            <option value="" >Online</option>
-                        </select>
+                        <input type="text" name="productName" id="productName" class="px-3 py-2 border rounded-sm border-black">
                     </div>
-
+                    
                     <div class="container text-start flex col-span-3 w-full flex-col">
                         <label for="customerName">Customer Name</label>
                         <select name="customerName" class="px-3 py-2 border rounded-sm border-black" required>
@@ -150,13 +141,18 @@
                         </select>
                     </div>
 
-                    <x-form.form-input label="Quantity" name="quantity" type="number" value="" class="col-span-1" required/>
+                    <x-form.form-input label="Product Brand" name="productBrand" type="text" class="col-span-3" readonly/>
+
+                    <x-form.form-input label="Quantity" name="quantity" type="number" value="" class="col-span-2" required/>
+                    
+                    <x-form.form-input label="Measurement" name="itemMeasurement" type="text" value="" class="col-span-2" readonly/>
 
                     <x-form.form-input label="Cash on Hand (₱)" name="salesCash" type="number" step="0.01" value="" class="col-span-2" required />
 
-                    <x-form.form-input label="Change (₱)" name="salesChange" type="number" step="0.01" value="" class="col-span-2" required />
-
                     <x-form.form-input label="Amount to Pay (₱)" name="salesAmountToPay" type="number" step="0.01" value="" class="col-span-2" readonly/>
+
+                    <x-form.form-input label="Change (₱)" name="salesChange" type="number" step="0.01" value="" class="col-span-2" readonly/>
+
 
                     <!-- ADD BUTTON FOR ADDING ITEMS TO SESSION -->
                     <div class="flex items-end content-center place-content-center w-full col-span-1">
@@ -227,41 +223,45 @@
                 
                         <x-form.saveBtn type="button" @click="$refs.confirmSubmit.showModal()">Save</x-form.saveBtn>
 
-
-                        <!-- CONFIRM CANCEL/SAVE MODALS -->
-                        <x-modal.createModal x-ref="confirmSalesCancel">
-
-                            <x-slot:dialogTitle>Confirm Cancel?</x-slot:dialogTitle>
-
-                            <h1 class="text-xl px-4 py-3">Are you sure you want to cancel this sale?</h1>
-                            <div class="container flex w-full flex-row items-center content-end place-content-end px-4 py-3">
-                                <button type="button" @click="$refs.confirmSalesCancel.close()" class="mr-3 flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
-                                    Cancel
-                                </button>
-                                <x-form.saveBtn type="button" @click="$refs.confirmSalesCancel.close(); $refs.addSalesRef.resetForm()">Confirm</x-form.saveBtn>
-                            </div>
-
-                        </x-modal.createModal>
-
-                        <x-modal.createModal x-ref="confirmSubmit">
-
-                            <x-slot:dialogTitle>Confirm Save?</x-slot:dialogTitle>
-
-                            <h1 class="text-xl px-4 py-3">Are you sure you want to save this sale?</h1>
-                            <div class="container flex w-full flex-row items-center content-end place-content-end px-4 py-3">
-                                <button type="button" @click="$refs.confirmSubmit.close()" class="mr-3 flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
-                                    Cancel
-                                </button>
-                                <x-form.saveBtn type="submit" form="saveForm">Confirm</x-form.saveBtn>
-                            </div>
-
-                        </x-modal.createModal>
-
                     </div>
 
                 </form>
             </div>
         </x-modal.createModal>
 
+
+        <!-- CONFIRM CANCEL/SAVE MODALS -->
+        <x-modal.createModal x-ref="confirmSalesCancel">
+            <x-slot:dialogTitle>Confirm Cancel?</x-slot:dialogTitle>
+            <h1 class="text-xl px-4 py-3">Are you sure you want to cancel this sale?</h1>
+            <div class="container flex w-full flex-row items-center content-end place-content-end px-4 py-3">
+                <button type="button" @click="$refs.confirmSalesCancel.close()" class="mr-3 flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                    Cancel
+                </button>
+                <x-form.saveBtn type="button" 
+                        @click="$refs.addSalesRef.close(); 
+                        $refs.confirmSalesCancel.close(); 
+                        document.getElementById('addSales').reset()">
+                        Confirm
+                </x-form.saveBtn>
+            </div>
+        </x-modal.createModal>
+
+        <x-modal.createModal x-ref="confirmSubmit">
+            <x-slot:dialogTitle>Confirm Save?</x-slot:dialogTitle>
+            <h1 class="text-xl px-4 py-3">Are you sure you want to save this sale?</h1>
+            <div class="container flex w-full flex-row items-center content-end place-content-end px-4 py-3">
+                <button type="button" @click="$refs.confirmSubmit.close()" class="mr-3 flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                    Cancel
+                </button>
+                <x-form.saveBtn type="submit"  form="addSales">Confirm</x-form.saveBtn>
+            </div>
+        </x-modal.createModal>
+
+
     </main>
+
+
+
+
 </x-layout>
