@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
-use App\Models\PurchaseOrderItem;
+use App\Mail\PurchaseOrderMail;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\PurchaseOrderItem;
+use Illuminate\Support\Facades\Mail;
 
 
 class PurchaseOrderController extends Controller
@@ -129,6 +131,19 @@ class PurchaseOrderController extends Controller
         if ($request->has('savePDF')) {
             // Store the order ID in session for PDF download
             session(['download_pdf' => $order->id]);
+        }
+
+
+        // If "sendEmail" checkbox is checked
+        if ($request->has('sendEmail')) {
+            $orderData = PurchaseOrder::with(['items', 'supplier'])->findOrFail($order->id);
+
+            // Generate PDF from your blade view
+            $pdf = Pdf::loadView('InvoicePDF', ['order' => $orderData]);
+
+            // Send email with attachment
+            Mail::to($orderData->supplier->supplierEmailAddress) // Sends to supplier's supplierEmailAddress column
+                ->send(new PurchaseOrderMail($orderData, $pdf->output()));
         }
 
 

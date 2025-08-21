@@ -130,26 +130,30 @@
                     
                     <div class="container text-start flex col-span-4 w-full flex-col">
                         <label for="productName">Product Name</label>
-                        <input type="text" name="productName" id="productName" class="px-3 py-2 border rounded-sm border-black">
+                        <input type="text" name="productName" id="productName" class="px-3 py-2 border rounded-sm border-black" placeholder="Add a product..." required>
                     </div>
                     
                     <div class="container text-start flex col-span-3 w-full flex-col">
                         <label for="customerName">Customer Name</label>
                         <select name="customerName" class="px-3 py-2 border rounded-sm border-black" required>
                             <option value="" disabled selected>Select Customer</option>
-                            <option value="" >Online</option>
+                            @foreach($customers as $customer)
+                                <option value="" >{{ $customer->customerName }}</option>
+                            @endforeach
                         </select>
                     </div>
 
-                    <x-form.form-input label="Product Brand" name="productBrand" type="text" class="col-span-3" readonly/>
+                    <x-form.form-input label="Product SKU" name="productSKU" type="text" class="col-span-2" readonly/>
 
-                    <x-form.form-input label="Quantity" name="quantity" type="number" value="" class="col-span-2" required/>
+                    <x-form.form-input label="Product Brand" name="productBrand" type="text" class="col-span-2" readonly/>
                     
                     <x-form.form-input label="Measurement" name="itemMeasurement" type="text" value="" class="col-span-2" readonly/>
 
-                    <x-form.form-input label="Cash on Hand (₱)" name="salesCash" type="number" step="0.01" value="" class="col-span-2" required />
+                    <x-form.form-input label="Quantity" name="quantity" type="number" value="" class="col-span-1" required/>
 
                     <x-form.form-input label="Amount to Pay (₱)" name="salesAmountToPay" type="number" step="0.01" value="" class="col-span-2" readonly/>
+
+                    <x-form.form-input label="Cash on Hand (₱)" name="salesCash" type="number" step="0.01" value="" class="col-span-2" required />
 
                     <x-form.form-input label="Change (₱)" name="salesChange" type="number" step="0.01" value="" class="col-span-2" readonly/>
 
@@ -162,21 +166,35 @@
                     </div>
 
                     <!-- PREVIEW TABLE FOR ADDED SALES/PRODUCTS -->
-                    @if(session('purchase_order_items'))
-                        <div class="border w-auto rounded-md border-solid border-black p-3 my-4 col-span-7">
+                        <div class="border w-auto rounded-md border-solid border-black my-4 col-span-7">
                             <table class="w-full">
                                 <thead class="rounded-lg bg-main text-white px-4 py-2">
-                                    <tr class="rounded-lg">
-                                        <th class="bg-main px-2 py-2 text-sm">Item/s</th>
-                                        <th class="bg-main px-2 py-2 text-sm">Quantity</th>
-                                        <th class="bg-main px-2 py-2 text-sm">Price</th>
+                                    <tr class="rounded-lg text-md">
+                                        <th class="bg-main px-2 py-2">Item/s</th>
+                                        <th class="bg-main px-2 py-2">Quantity</th>
+                                        <th class="bg-main px-2 py-2">Price</th>
+                                        <th class="bg-main px-2 py-2">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr class="border-b">
-                                        <td class="px-2 py-2 text-center">{{ $item['productName'] }}</td>
-                                        <td class="px-2 py-2 text-center">{{ $item['quantity'] }}</td>
-                                        <td class="px-2 py-2 text-center">₱{{ number_format($item['unitPrice'], 2) }}</td>d>
+                                        <td class="px-2 py-2 text-center">ITEM</td>
+                                        <td class="px-2 py-2 text-center">QUANTITY</td>
+                                        <td class="px-2 py-2 text-center">₱ItemPrice</td>
+                                        <td class="px-2 py-2 text-center">
+                                        <form action="" method="POST" class="flex place-content-center">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button>
+                                                <x-form.deleteBtn />
+                                            </button>
+                                        </form>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b">
+                                        <td class="px-2 py-2 text-center">ITEM</td>
+                                        <td class="px-2 py-2 text-center">QUANTITY</td>
+                                        <td class="px-2 py-2 text-center">₱ItemPrice</td>
                                         <td class="px-2 py-2 text-center">
                                         <form action="" method="POST" class="flex place-content-center">
                                             @csrf
@@ -188,16 +206,23 @@
                                         </td>
                                     </tr>
                                 </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="4" class="px-5 py-2 w-full text-right font-semibold text-lg uppercase">
+                                            <span>Total:</span>
+                                            <span class="ml-2">₱0.00</span>
+                                        </td>
+                                    </tr>
+                                </tfoot>
                             </table>
                         </div>
-                    @else
-                        <!-- EMPTY STATE -->
+                        
+                        <!-- EMPTY STATE (IF NO ITEMS INSIDE THE SESSION) -->
                         <div class="border w-auto rounded-md border-solid border-black p-3 my-4 col-span-7">
                             <div class="text-center py-8 text-gray-500">
                                 <p>No items added yet. Add items above to preview your order.</p>
                             </div>
                         </div>
-                    @endif
 
 
                     <!-- FORM BUTTONS -->
@@ -221,7 +246,10 @@
 
                         </div>
                 
-                        <x-form.saveBtn type="button" @click="$refs.confirmSubmit.showModal()">Save</x-form.saveBtn>
+                        <x-form.saveBtn type="button" @click="
+                            if (document.getElementById('addSales').reportValidity()) {
+                                ($refs.confirmSubmit || document.getElementById('confirmSubmit')).showModal();
+                            }">Save</x-form.saveBtn>
 
                     </div>
 

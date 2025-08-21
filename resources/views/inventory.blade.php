@@ -522,7 +522,7 @@
                                 if (document.getElementById('addProductForm').reportValidity()) {
                                     ($refs.confirmAddProduct || document.getElementById('confirmAddProduct')).showModal();
                                 }" >Add</x-form.saveBtn>
-                    </div>
+                    </div>  
                 </form>
             </div>
         </x-modal.createModal>
