@@ -112,16 +112,18 @@
                                 // Lead time (order placed → expected delivery)
                                 $leadTime = $orderDate->diffInDays($deliveryDate);
 
-                                // Days left/delayed (today → expected delivery)
+                                // Days left/delayed (today → expected delivery) - we'll store this for later use
                                 $daysLeft = now()->startOfDay()->diffInDays($deliveryDate, false);
                             @endphp
 
                             {{ $leadTime }} {{ \Illuminate\Support\Str::plural('day', $leadTime) }}
                         </td>
 
-                        {{-- Delivery Status Column --}}
+                        {{-- Estimated Time of Arrival Column --}}
                         <td class="truncate px-2 py-3 text-center">
-                            @if($daysLeft > 0)
+                            @if($order->orderStatus === 'Delivered')
+                                <span class="text-green-600">Delivered</span>
+                            @elseif($daysLeft > 0)
                                 <span>{{ $daysLeft }} {{ \Illuminate\Support\Str::plural('day', $daysLeft) }} left</span>
                             @elseif($daysLeft === 0)
                                 <span class="text-yellow-600 text-xs">Today</span>
@@ -130,6 +132,7 @@
                             @endif
                         </td>
 
+                        {{-- Delivery Status Column --}}
                         <td class="truncate px-2 py-3 text-center" title="">                                
                             <span class="px-2 py-1 text-sm font-semibold rounded-full 
                                     @if($order->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/40
