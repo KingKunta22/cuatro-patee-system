@@ -216,13 +216,13 @@
                                 </tfoot>
                             </table>
                         </div>
-                        
+{{--                         
                         <!-- EMPTY STATE (IF NO ITEMS INSIDE THE SESSION) -->
                         <div class="border w-auto rounded-md border-solid border-black p-3 my-4 col-span-7">
                             <div class="text-center py-8 text-gray-500">
                                 <p>No items added yet. Add items above to preview your order.</p>
                             </div>
-                        </div>
+                        </div> --}}
 
 
                     <!-- FORM BUTTONS -->

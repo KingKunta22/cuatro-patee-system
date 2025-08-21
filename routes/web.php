@@ -71,8 +71,14 @@ Route::get('/download-pdf/{orderId}', [PurchaseOrderController::class, 'download
 Route::resource('delivery-management', DeliveryController::class)->middleware('auth');
 
 
-// ROUTE FOR PRODUCT CLASSIFICATION
+// ROUTES FOR PRODUCTS CLASSIFICATION
 Route::resource('product-classification', ProductClassification::class)->middleware('auth');
+
+// Custom destroy routes for delete buttons
+Route::delete('brands/{id}', [ProductClassification::class, 'destroyBrand'])->name('brands.destroy')->middleware('auth');
+Route::delete('categories/{id}', [ProductClassification::class, 'destroyCategory'])->name('categories.destroy')->middleware('auth');
+Route::delete('subcategories/{id}', [ProductClassification::class, 'destroySubcategory'])->name('subcategories.destroy')->middleware('auth');
+
 
 
 // ROUTE FOR SUPPLIERS

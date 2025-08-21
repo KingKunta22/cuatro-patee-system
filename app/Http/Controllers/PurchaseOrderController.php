@@ -153,7 +153,7 @@ class PurchaseOrderController extends Controller
 
 
     
-    // GENERATE PDF AND OPTION TO SEND IT TO EMAIL
+    // GENERATE PDF 
     public function generatePDF($orderId = null)
     {
         if ($orderId) {
