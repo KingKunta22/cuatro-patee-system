@@ -6,12 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Inventory extends Model
 {
-    //
     protected $fillable = [
         'productName',
         'productSKU',
-        'productBrand',
-        'productCategory',
+        'productBrand', // Keep as text field
+        'productCategory', // Keep as text field
         'productStock',
         'productSellingPrice',
         'productCostPrice',
@@ -21,15 +20,24 @@ class Inventory extends Model
         'productImage',
         'purchase_order_id',
         'purchase_order_item_id',
+        'brand_id', // Add for relationship
+        'category_id', // Add for relationship
     ];
 
     public function purchaseOrder() {
         return $this->belongsTo(PurchaseOrder::class); 
-        // An inventory item belongs to ONE purchase order
     }
 
     public function purchaseOrderItem() {
         return $this->belongsTo(PurchaseOrderItem::class, 'purchase_order_item_id');
-        // An inventory item belongs to ONE purchase order item
+    }
+
+    // Add these relationships for dropdowns but keep text fields for data
+    public function brand() {
+        return $this->belongsTo(Brand::class, 'brand_id');
+    }
+
+    public function category() {
+        return $this->belongsTo(Category::class, 'category_id');
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
@@ -51,11 +53,15 @@ class InventoryController extends Controller
             ->paginate(6)
             ->withQueryString();
 
-        // Get unique categories and brands for dropdowns
-        $categories = Inventory::distinct()->pluck('productCategory')->filter();
-        $brands = Inventory::distinct()->pluck('productBrand')->filter();
+        // Get categories and brands from their models for dropdowns
+        $categories = Category::orderBy('productCategory')->get();
+        $brands = Brand::orderBy('productBrand')->get();
 
-        return view('inventory', compact('unaddedPOs', 'inventoryItems', 'deliveredPOs', 'categories', 'brands'));
+        // Get unique values from inventory for filters (keep your existing functionality)
+        $uniqueCategories = Inventory::distinct()->pluck('productCategory')->filter();
+        $uniqueBrands = Inventory::distinct()->pluck('productBrand')->filter();
+
+        return view('inventory', compact('unaddedPOs', 'inventoryItems', 'deliveredPOs', 'categories', 'brands', 'uniqueCategories', 'uniqueBrands'));
     }
 
 
@@ -76,77 +82,62 @@ class InventoryController extends Controller
         // Determine which method we're using
         $addMethod = $request->input('add_method');
         
+        // Define base validation rules
+        $validationRules = [];
+        $fieldPrefix = '';
+        
         if ($addMethod === 'manual') {
-            // Handle manual addition
-            $validated = $request->validate([
+            $fieldPrefix = 'manual_';
+            $validationRules = [
                 'manual_productName' => 'required|string|max:255',
-                'manual_productBrand' => 'required|in:Pedigree,Whiskas,Royal Canin,Cesar,Acana',
+                'manual_productBrand' => 'required|string|max:255',
                 'manual_productCategory' => 'required|string|max:255',
                 'manual_productStock' => 'required|numeric|min:0',
                 'manual_productSellingPrice' => 'required|numeric|min:0',
                 'manual_productCostPrice' => 'required|numeric|min:0',
-                'manual_productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
+                'manual_productItemMeasurement' => 'required|string|max:255',
                 'manual_productExpirationDate' => 'required|date|after_or_equal:today',
                 'manual_productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            ]);
-
-            // Map manual fields to database fields
-            $inventoryData = [
-                'productName' => $validated['manual_productName'],
-                'productSKU' => $newSKU, // Use the generated SKU
-                'productBrand' => $validated['manual_productBrand'],
-                'productCategory' => $validated['manual_productCategory'],
-                'productStock' => $validated['manual_productStock'],
-                'productSellingPrice' => $validated['manual_productSellingPrice'],
-                'productCostPrice' => $validated['manual_productCostPrice'],
-                'productItemMeasurement' => $validated['manual_productItemMeasurement'],
-                'productExpirationDate' => $validated['manual_productExpirationDate'],
-                'purchase_order_id' => null,
-                'purchase_order_item_id' => null,
             ];
-
-            // Handle image upload for manual
-            if ($request->hasFile('manual_productImage')) {
-                $imagePath = $request->file('manual_productImage')->store('inventory', 'public');
-                $inventoryData['productImage'] = $imagePath;
-            }
-
         } else {
-            // Handle PO addition
-            $validated = $request->validate([
+            $fieldPrefix = '';
+            $validationRules = [
                 'productName' => 'required|string|max:255',
-                'productBrand' => 'required|in:Pedigree,Whiskas,Royal Canin,Cesar,Acana',
+                'productBrand' => 'required|string|max:255',
                 'productCategory' => 'required|string|max:255',
                 'productStock' => 'required|numeric|min:0',
                 'productSellingPrice' => 'required|numeric|min:0',
                 'productCostPrice' => 'required|numeric|min:0',
-                'productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
+                'productItemMeasurement' => 'required|string|max:255',
                 'productExpirationDate' => 'required|date|after_or_equal:today',
                 'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'purchaseOrderNumber' => 'nullable|exists:purchase_orders,id',
                 'selectedItemId' => 'nullable|exists:purchase_order_items,id',
-            ]);
-
-            // Use PO fields directly
-            $inventoryData = [
-                'productName' => $validated['productName'],
-                'productSKU' => $newSKU, // Use the generated SKU
-                'productBrand' => $validated['productBrand'],
-                'productCategory' => $validated['productCategory'],
-                'productStock' => $validated['productStock'],
-                'productSellingPrice' => $validated['productSellingPrice'],
-                'productCostPrice' => $validated['productCostPrice'],
-                'productItemMeasurement' => $validated['productItemMeasurement'],
-                'productExpirationDate' => $validated['productExpirationDate'],
-                'purchase_order_id' => $validated['purchaseOrderNumber'] ?? null,
-                'purchase_order_item_id' => $validated['selectedItemId'] ?? null,
             ];
+        }
 
-            // Handle image upload for PO
-            if ($request->hasFile('productImage')) {
-                $imagePath = $request->file('productImage')->store('inventory', 'public');
-                $inventoryData['productImage'] = $imagePath;
-            }
+        $validated = $request->validate($validationRules);
+
+        // Map fields to database fields using the appropriate prefix
+        $inventoryData = [
+            'productName' => $validated[$fieldPrefix . 'productName'],
+            'productSKU' => $newSKU,
+            'productBrand' => $validated[$fieldPrefix . 'productBrand'],
+            'productCategory' => $validated[$fieldPrefix . 'productCategory'],
+            'productStock' => $validated[$fieldPrefix . 'productStock'],
+            'productSellingPrice' => $validated[$fieldPrefix . 'productSellingPrice'],
+            'productCostPrice' => $validated[$fieldPrefix . 'productCostPrice'],
+            'productItemMeasurement' => $validated[$fieldPrefix . 'productItemMeasurement'],
+            'productExpirationDate' => $validated[$fieldPrefix . 'productExpirationDate'],
+            'purchase_order_id' => ($addMethod === 'po') ? ($validated['purchaseOrderNumber'] ?? null) : null,
+            'purchase_order_item_id' => ($addMethod === 'po') ? ($validated['selectedItemId'] ?? null) : null,
+        ];
+
+        // Handle image upload
+        $imageField = $fieldPrefix . 'productImage';
+        if ($request->hasFile($imageField)) {
+            $imagePath = $request->file($imageField)->store('inventory', 'public');
+            $inventoryData['productImage'] = $imagePath;
         }
 
         // Calculate profit margin
@@ -184,11 +175,11 @@ class InventoryController extends Controller
 
     public function update(Request $request, Inventory $inventory) 
     {
-        // Validate Requests - REMOVE manual_ prefix from validation
+        // Validate Requests - Use string validation instead of hardcoded in: values
         $validated = $request->validate([
             'productName' => 'required|string|max:255',
-            'productBrand' => 'required|in:Pedigree,Whiskas,Royal Canin,Cesar,Acana',
-            'productCategory' => 'required|string|max:255',
+            'productBrand' => 'required|string|max:255', // Changed from hardcoded in: values
+            'productCategory' => 'required|string|max:255', // Changed from hardcoded in: values
             'productStock' => 'required|numeric|min:0',
             'productSellingPrice' => 'required|numeric|min:0',
             'productCostPrice' => 'required|numeric|min:0',
@@ -206,7 +197,7 @@ class InventoryController extends Controller
             $updatedProfitMargin = round((($updatedSellingPrice - $updatedCostPrice) / $updatedCostPrice) * 100, 2);
         }
 
-        // Update the fields from validated requests - REMOVE manual_ prefix
+        // Update the fields
         $inventory->update([
             'productName' => $validated['productName'],
             'productBrand' => $validated['productBrand'],
@@ -219,14 +210,14 @@ class InventoryController extends Controller
             'productProfitMargin' => $updatedProfitMargin,
         ]);
 
-        // Handle new file uploads properly - REMOVE manual_ prefix
+        // Handle new file uploads
         if ($request->hasFile('productImage')) {
             if ($inventory->productImage) {
-                Storage::disk('public')->delete($inventory->productImage); // delete old image
+                Storage::disk('public')->delete($inventory->productImage);
             }
 
             $newImagePath = $request->file('productImage')->store('inventory', 'public');
-            $inventory->update(['productImage' => $newImagePath]); // persist new image
+            $inventory->update(['productImage' => $newImagePath]);
         }
 
         return redirect()->route('inventory.index')->with('success', 'Product updated successfully!');

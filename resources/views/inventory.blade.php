@@ -62,24 +62,38 @@
                     </div>
 
                     <!-- Category Filter -->
-                    <select name="category" class="px-3 py-2 border rounded-md border-black w-48" onchange="this.form.submit()">
-                        <option value="all" {{ request('category') == 'all' || !request('category') ? 'selected' : '' }}>All Categories</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category }}" {{ request('category') == $category ? 'selected' : '' }}>
-                                {{ $category }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="relative">
+                        <select name="category" class="px-3 py-2 border rounded-md border-black w-48 appearance-none max-h-[200px] overflow-y-auto" onchange="this.form.submit()">
+                            <option value="all" {{ request('category') == 'all' || !request('category') ? 'selected' : '' }}>All Categories</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category->productCategory }}" {{ request('category') == $category->productCategory ? 'selected' : '' }}>
+                                    {{ $category->productCategory }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
 
                     <!-- Brand Filter -->
-                    <select name="brand" class="px-3 py-2 border rounded-md border-black w-40" onchange="this.form.submit()">
-                        <option value="all" {{ request('brand') == 'all' || !request('brand') ? 'selected' : '' }}>All Brands</option>
-                        @foreach($brands as $brand)
-                            <option value="{{ $brand }}" {{ request('brand') == $brand ? 'selected' : '' }}>
-                                {{ $brand }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="relative">
+                        <select name="brand" class="px-3 py-2 border rounded-md border-black w-40 appearance-none max-h-[200px] overflow-y-auto" onchange="this.form.submit()">
+                            <option value="all" {{ request('brand') == 'all' || !request('brand') ? 'selected' : '' }}>All Brands</option>
+                            @foreach($brands as $brand)
+                                <option value="{{ $brand->productBrand }}" {{ request('brand') == $brand->productBrand ? 'selected' : '' }}>
+                                    {{ $brand->productBrand }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
 
                     <!-- Search Button -->
                     <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
@@ -279,26 +293,25 @@
                         }" >
                         <!-- ALL MANUAL FIELDS -->
                         <x-form.form-input label="Product Name"  name="manual_productName" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'manual'"/>
+                        <!-- Brand Dropdown in Add Form -->
                         <div class='container flex flex-col text-start col-span-3'>
-                            <label for="productBrand">Product Brand</label>
-                            <select name="manual_productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
+                            <label for="manual_productBrand">Product Brand</label>
+                            <select name="manual_productBrand" id="manual_productBrand" class="px-3 py-2 border rounded-sm border-black max-h-[200px] overflow-y-auto" x-bind:required="addMethod === 'manual'">
                                 <option value="" disabled selected>Select Brand</option>
-                                <option value="Pedigree">Pedigree</option>
-                                <option value="Whiskas">Whiskas</option>
-                                <option value="Royal Canin">Royal Canin</option>
-                                <option value="Cesar">Cesar</option>
-                                <option value="Acana">Acana</option>
+                                @foreach($brands as $brand)
+                                    <option value="{{ $brand->productBrand }}">{{ $brand->productBrand }}</option>
+                                @endforeach
                             </select>
                         </div>
+
+                        <!-- Category Dropdown in Add Form -->
                         <div class="container flex flex-col text-start col-span-4">
-                            <label for="productCategory">Product Category</label>
-                            <select name="manual_productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
+                            <label for="manual_productCategory">Product Category</label>
+                            <select name="manual_productCategory" id="manual_productCategory" class="px-3 py-2 border rounded-sm border-black max-h-[200px] overflow-y-auto" x-bind:required="addMethod === 'manual'">
                                 <option value="" disabled selected>Select Category</option>
-                                <option value="Dog Food (Dry)">Dog Food (Dry)</option>
-                                <option value="Dog Food (Wet)">Dog Food (Wet)</option>
-                                <option value="Cat Food (Dry)">Cat Food (Dry)</option>
-                                <option value="Cat Food (Wet)">Cat Food (Wet)</option>
-                                <option value="Dog Toy">Dog Toy</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->productCategory }}">{{ $category->productCategory }}</option>
+                                @endforeach
                             </select>
                         </div>
                         
@@ -446,24 +459,20 @@
 
                             <div class='container flex flex-col text-start col-span-3'>
                                 <label for="productBrand">Product Brand</label>
-                                <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
+                                <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black overflow-y-auto max-h-[200px]" x-bind:required="addMethod === 'po'">
                                     <option value="" disabled selected>Select Brand</option>
-                                    <option value="Pedigree">Pedigree</option>
-                                    <option value="Whiskas">Whiskas</option>
-                                    <option value="Royal Canin">Royal Canin</option>
-                                    <option value="Cesar">Cesar</option>
-                                    <option value="Acana">Acana</option>
+                                    @foreach($brands as $brand)
+                                        <option value="{{ $brand->productBrand }}">{{ $brand->productBrand }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             <div class="container flex flex-col text-start col-span-4">
                                 <label for="productCategory">Product Category</label>
-                                <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
+                                <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black overflow-y-auto max-h-[200px]" x-bind:required="addMethod === 'po'">
                                     <option value="" disabled selected>Select Category</option>
-                                    <option value="Dog Food (Dry)">Dog Food (Dry)</option>
-                                    <option value="Dog Food (Wet)">Dog Food (Wet)</option>
-                                    <option value="Cat Food (Dry)">Cat Food (Dry)</option>
-                                    <option value="Cat Food (Wet)">Cat Food (Wet)</option>
-                                    <option value="Dog Toy">Dog Toy</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->productCategory }}">{{ $category->productCategory }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             
@@ -591,7 +600,6 @@
                                     class="size-44 object-contain border rounded shadow-sm">
                             @endif
                             <div class="w-full">
-                                <!-- REMOVE manual_ prefix -->
                                 <x-form.form-input label="Update image (optional)" name="productImage" type="file" :required="false" />
                             </div>
                         </div>
@@ -599,44 +607,44 @@
                         <!-- Right Side (Main Info) -->
                         <div class="col-span-4 grid grid-cols-4 gap-6">
                             
-                            <!-- Product Name (full width) - REMOVE manual_ prefix -->
+                            <!-- Product Name (full width) -->
                             <x-form.form-input label="Product Name" name="productName" type="text" 
                                 value="{{ $item->productName }}" class="col-span-4" required />
 
-                            <!-- Product Brand (full width) - REMOVE manual_ prefix -->
+                            <!-- Product Brand (full width) - FIXED: Dynamic from database -->
                             <div class="col-span-4 flex flex-col text-start">
                                 <label for="productBrand" class="font-medium">Product Brand</label>
                                 <select name="productBrand" id="productBrand" 
                                     class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
                                     <option value="" disabled>Select Brand</option>
-                                    <option value="Pedigree" {{ $item->productBrand == 'Pedigree' ? 'selected' : '' }}>Pedigree</option>
-                                    <option value="Whiskas" {{ $item->productBrand == 'Whiskas' ? 'selected' : '' }}>Whiskas</option>
-                                    <option value="Royal Canin" {{ $item->productBrand == 'Royal Canin' ? 'selected' : '' }}>Royal Canin</option>
-                                    <option value="Cesar" {{ $item->productBrand == 'Cesar' ? 'selected' : '' }}>Cesar</option>
-                                    <option value="Acana" {{ $item->productBrand == 'Acana' ? 'selected' : '' }}>Acana</option>
+                                    @foreach($brands as $brand)
+                                        <option value="{{ $brand->productBrand }}" {{ $item->productBrand == $brand->productBrand ? 'selected' : '' }}>
+                                            {{ $brand->productBrand }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
 
-                            <!-- Category (half) - REMOVE manual_ prefix -->
+                            <!-- Category (half) - FIXED: Dynamic from database -->
                             <div class="col-span-2 flex flex-col text-start">
                                 <label for="productCategory" class="font-medium">Product Category</label>
                                 <select name="productCategory" id="productCategory" 
                                     class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
                                     <option value="" disabled>Select Category</option>
-                                    <option value="Dog Food (Dry)" {{ $item->productCategory == 'Dog Food (Dry)' ? 'selected' : '' }}>Dog Food (Dry)</option>
-                                    <option value="Dog Food (Wet)" {{ $item->productCategory == 'Dog Food (Wet)' ? 'selected' : '' }}>Dog Food (Wet)</option>
-                                    <option value="Cat Food (Dry)" {{ $item->productCategory == 'Cat Food (Dry)' ? 'selected' : '' }}>Cat Food (Dry)</option>
-                                    <option value="Cat Food (Wet)" {{ $item->productCategory == 'Cat Food (Wet)' ? 'selected' : '' }}>Cat Food (Wet)</option>
-                                    <option value="Dog Toy" {{ $item->productCategory == 'Dog Toy' ? 'selected' : '' }}>Dog Toy</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->productCategory }}" {{ $item->productCategory == $category->productCategory ? 'selected' : '' }}>
+                                            {{ $category->productCategory }}
+                                        </option>
+                                    @endforeach
                                 </select>
                             </div>
 
-                            <!-- Stock (half) - REMOVE manual_ prefix -->
+                            <!-- Stock (half) -->
                             <x-form.form-input label="Stock" name="productStock" value="{{ $item->productStock }}" 
                                 class="col-span-2" type="number" step="1" min="0" required />
                         </div>
 
-                        <!-- Rest of fields below (full-width layout) - REMOVE manual_ prefix -->
+                        <!-- Rest of fields below (full-width layout) -->
                         <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" 
                             value="{{ $item->productSellingPrice }}" class="col-span-2" 
                             type="number" step="0.01" min="0" required
@@ -656,7 +664,6 @@
 
                         <div class="flex flex-col text-start col-span-3">
                             <label for="itemMeasurement" class="font-medium">Measurement per item</label>
-                            <!-- REMOVE manual_ prefix -->
                             <select name="productItemMeasurement" 
                                 class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
                                 <option value="" disabled>Select Measurement</option>
@@ -671,7 +678,6 @@
                             </select>
                         </div>
 
-                        <!-- REMOVE manual_ prefix -->
                         <x-form.form-input label="Expiration Date" name="productExpirationDate" type="date"
                             value="{{ $item->productExpirationDate }}" 
                             min="{{ date('Y-m-d') }}"
@@ -691,6 +697,7 @@
                 </div>
             </x-modal.createModal>
 
+
             <!-- UPDATE CONFIRMATION MODAL -->
             <x-modal.createModal x-ref="confirmEditProduct{{ $item->id }}">
                 <x-slot:dialogTitle>Confirm Changes?</x-slot:dialogTitle>
@@ -703,7 +710,10 @@
                 </div>
             </x-modal.createModal>
 
+            
         @endforeach
+
+
 
         <!-- DELETE CONFIRMATION MODAL -->
         @foreach ($inventoryItems as $item)
