@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('purchase_orders', function (Blueprint $table) {
+        Schema::create('deliveries', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
-            $table->string('orderNumber')->unique();
-            $table->foreignId('supplierId')->constrained('suppliers');
-            $table->enum('paymentTerms', ['Online', 'Cash on Delivery']);
-            $table->date('deliveryDate');
-            $table->decimal('totalAmount', 10, 2);
+            $table->string('deliveryId');
+            $table->enum('orderStatus', ['Pending', 'Delivered', 'Cancelled', 'Confirmed'])->default('Pending');
+            $table->foreignId('purchase_order_id')->constrained()->onDelete('cascade');
+            $table->index('purchase_order_id');
         });
     }
 
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchase_orders');
+        Schema::dropIfExists('deliveries');
     }
 };

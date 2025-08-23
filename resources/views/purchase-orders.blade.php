@@ -70,16 +70,8 @@
                             </div>
                         </div>
 
-                        <select name="status" class="truncate w-36 px-3 py-2 border rounded-md border-black mx-4" onchange="document.getElementById('statusFilterForm').submit()">
-                            <option value="all" {{ request('status') === 'all' ? 'selected' : '' }}>All</option>
-                            <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending</option>
-                            <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
-                            <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
-                            <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                        </select> 
-
                         <!-- Search Button -->
-                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                        <button type="submit" class="px-4 mx-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                             Search
                         </button>
 
@@ -330,7 +322,6 @@
                         <th class=" bg-main px-4 py-3">Date</th>
                         <th class=" bg-main px-4 py-3">Items</th>
                         <th class=" bg-main px-4 py-3">Total</th>
-                        <th class=" bg-main px-4 py-3">Status</th>
                         <th class=" bg-main px-4 py-3">Action</th>
                     </tr>
                 </thead>
@@ -351,22 +342,12 @@
                                 @endforeach
                             </td>
                             <td class="truncate px-2 py-2 text-center">₱{{ number_format($purchaseOrder->totalAmount, 2) }}</td>
-                            <td class="truncate px-2 py-2 text-center">
-                                <span class="px-2 py-1 text-sm font-semibold rounded-full 
-                                    @if($purchaseOrder->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/40
-                                    @elseif($purchaseOrder->orderStatus === 'Confirmed') text-teal-400 bg-teal-200/40
-                                    @elseif($purchaseOrder->orderStatus === 'Delivered') text-button-save bg-button-save/40
-                                    @else text-button-delete bg-button-delete/30  @endif"
-                                    title="This order is {{ $purchaseOrder->orderStatus }}">
-                                    {{ $purchaseOrder->orderStatus }}
-                                </span>
-                            </td>
                             
                             <!-- VIEW DETAILS ACTIONS -->
                             <td class="truncate py-3 max-w-32 px-2 text-center place-content-center">
 
                                 <!-- VIEW PURCHASE ORDER DETAILS BUTTON FOR PURCHASE ORDER DETAILS FORM -->
-                                <button @click="$refs['viewDetailsDialog{{ $purchaseOrder->id }}'].showModal()" class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">View Details</button>
+                                <button @click="$refs['viewDetailsDialog{{ $purchaseOrder->id }}'].showModal()" class="flex rounded-md mx-auto bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">View Details</button>
                                 
                                 <!-- VIEW PURCHASE ORDER DETAILS FORM -->
                                 <dialog x-ref="viewDetailsDialog{{ $purchaseOrder->id }}">
@@ -393,22 +374,6 @@
                                             <div class="col-span-2">
                                                 <label class="font-semibold">Expected Delivery Date</label>
                                                 <p>{{ \Carbon\Carbon::parse($purchaseOrder->deliveryDate)->format('F d, Y') }}</p>
-                                            </div>
-                                            <div class="col-span-2">
-                                                <label class="font-semibold">Grand Total</label>
-                                                <p>₱{{ number_format($purchaseOrder->totalAmount, 2) }}</p>
-                                            </div>
-                                            <div class="col-span-2">
-                                                <label class="font-semibold">Status</label>
-                                                <div class="truncate px-2 py-2 text-center">
-                                                    <span class="px-2 py-1 text-sm font-semibold rounded-full 
-                                                        @if($purchaseOrder->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/40
-                                                        @elseif($purchaseOrder->orderStatus === 'Confirmed') text-teal-400 bg-teal-200/40
-                                                        @elseif($purchaseOrder->orderStatus === 'Delivered') text-button-save bg-button-save/40
-                                                        @else text-button-delete bg-button-delete/30  @endif">
-                                                        {{ $purchaseOrder->orderStatus }}
-                                                    </span>
-                                                </div>
                                             </div>
 
                                         </div>
@@ -438,6 +403,12 @@
                                                 </tbody>
                                             </table>
                                         </div>
+                                    
+                                        <div class="col-span-4 flex items-center place-content-end mb-4 mx-6 pb-4 px-8 border-b-2 border-black">
+                                            <label class="font-bold mr-2 uppercase">Grand Total</label>
+                                            <p>₱{{ number_format($purchaseOrder->totalAmount, 2) }}</p>
+                                        </div>
+
                                         <!-- FORM BUTTONS AND DIALOGS -->
                                         <div class="container col-span-4 gap-x-4 place-content-start w-full flex items-start content-center px-6">
 
@@ -490,22 +461,16 @@
                                                             </select>
                                                         </div>
 
-                                                        <!-- Order Status -->
-                                                        <div class="container text-start flex col-span-2 w-full flex-col">
-                                                            <label for="orderStatus">Order Status</label>
-                                                            <select name="orderStatus" class="px-3 py-2 border rounded-sm border-black" required>
-                                                                <option value="Pending" {{ $purchaseOrder->orderStatus === 'Pending' ? 'selected' : '' }}>Pending</option>
-                                                                <option value="Confirmed" {{ $purchaseOrder->orderStatus === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
-                                                                <option value="Delivered" {{ $purchaseOrder->orderStatus === 'Delivered' ? 'selected' : '' }}>Delivered</option>
-                                                                <option value="Cancelled" {{ $purchaseOrder->orderStatus === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                                                            </select>
-                                                        </div>
-
                                                         <!-- Delivery Date -->
                                                         <x-form.form-input label="Expected Delivery Date" name="deliveryDate" type="date"
                                                             value="{{ \Carbon\Carbon::parse($purchaseOrder->deliveryDate)->format('Y-m-d') }}" 
                                                             min="{{ date('Y-m-d') }}"
                                                             class="col-span-2" required />
+                                                            
+                                                        <!-- Total Amount -->
+                                                        <x-form.form-input label="Grand Total:" name="totalAmount" type="text" disabled
+                                                            value="₱{{ number_format($purchaseOrder->totalAmount, 2) }}"
+                                                            class="col-span-2" />
 
                                                         <!-- Items Table -->
                                                         <table class="col-span-4 w-full text-sm text-left p-2 my-3 text-gray-500">
@@ -558,9 +523,6 @@
 
                                                         <!-- Footer Buttons -->
                                                         <div class="container col-span-4 gap-x-4 place-content-end w-full flex items-end content-center px-6">
-                                                            <x-form.form-input label="Grand Total:" name="totalAmount" type="text" disabled
-                                                                value="₱{{ number_format($purchaseOrder->totalAmount, 2) }}"
-                                                                class="max-w-32 mr-auto text-lg font-semibold" />
 
                                                             <button type="button" @click="$refs['editDialog{{ $purchaseOrder->id }}'].close()" class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out ">
                                                                 Cancel

@@ -15,15 +15,9 @@ class PurchaseOrderController extends Controller
 {
     public function index(Request $request) 
     {
-        $status = $request->input('status', 'all');
-
         // Start with base query
         $query = PurchaseOrder::with(['items', 'supplier']);
 
-        // Apply status filter
-        if ($status !== 'all') {
-            $query->where('orderStatus', $status);
-        }
 
         // Apply search filter - ADD TO EXISTING QUERY
         if ($request->search) {
@@ -110,7 +104,6 @@ class PurchaseOrderController extends Controller
             'paymentTerms' => $firstItem['paymentTerms'],
             'deliveryDate' => $firstItem['deliveryDate'],
             'totalAmount' => collect($items)->sum('totalAmount'),
-            'orderStatus' => 'Pending'
         ]);
 
         // Create purchase order items (many rows)
@@ -169,7 +162,6 @@ class PurchaseOrderController extends Controller
                 'deliveryDate' => $order->deliveryDate,
                 'items' => $order->items,
                 'totalAmount' => $order->totalAmount,
-                'orderStatus' => $order->orderStatus
             ];
             
             $filename = $order->orderNumber . '.pdf';
@@ -279,7 +271,6 @@ class PurchaseOrderController extends Controller
         // Validate the request
         $validated = $request->validate([
             'paymentTerms' => 'required|in:Online,Cash on Delivery',
-            'orderStatus' => 'required|in:Pending,Delivered,Cancelled,Confirmed',
             'deliveryDate' => 'required|date',
             'items' => 'required|array',
             'items.*.productName' => 'required|string',
@@ -292,7 +283,6 @@ class PurchaseOrderController extends Controller
         // Update the main order
         $purchaseOrder->update([
             'paymentTerms' => $validated['paymentTerms'],
-            'orderStatus' => $validated['orderStatus'],
             'deliveryDate' => $validated['deliveryDate']
         ]);
 

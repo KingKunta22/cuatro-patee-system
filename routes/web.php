@@ -69,7 +69,9 @@ Route::get('/download-pdf/{orderId}', [PurchaseOrderController::class, 'download
 
 // ROUTE FOR DELIVERY MANAGEMENT
 Route::resource('delivery-management', DeliveryController::class)->middleware('auth');
-
+// TO UPDATE DELIVERY STATUS
+Route::post('/delivery-management/update-status', [DeliveryController::class, 'updateStatus'])
+    ->name('delivery-management.updateStatus');
 
 // ROUTES FOR PRODUCTS CLASSIFICATION
 Route::resource('product-classification', ProductClassification::class)->middleware('auth');

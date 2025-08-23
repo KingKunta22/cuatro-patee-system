@@ -15,7 +15,9 @@ class InventoryController extends Controller
     public function index(Request $request)
     {
         // Get delivered POs that haven't been added to inventory yet
-        $unaddedPOs = PurchaseOrder::where('orderStatus', 'Delivered')
+        $unaddedPOs = PurchaseOrder::whereHas('deliveries', function($query) {
+                $query->where('orderStatus', 'Delivered');
+            })
             ->whereHas('items', function($query) {
                 $query->whereDoesntHave('inventory');
             })
@@ -23,7 +25,9 @@ class InventoryController extends Controller
             ->get();
 
         // Get all delivered POs
-        $deliveredPOs = PurchaseOrder::where('orderStatus', 'Delivered')
+        $deliveredPOs = PurchaseOrder::whereHas('deliveries', function($query) {
+                $query->where('orderStatus', 'Delivered');
+            })
             ->select('id', 'orderNumber')
             ->get();
 

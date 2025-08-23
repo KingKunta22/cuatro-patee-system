@@ -9,11 +9,19 @@
             </div>
         @endif
 
-        <!-- AUTO-HIDE SUCCESS MESSAGES -->
+        <!-- ERROR MESSAGE CONTAINER AND STATEMENT -->
+        @if(session('error'))
+            <div id="error-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-red-100 border border-red-400 text-red-700 rounded shadow-lg">
+                <p>{{ session('error') }}</p>
+            </div>
+        @endif
+
+        <!-- AUTO-HIDE MESSAGES -->
         <script>
-            // Hide success messages after 3 seconds
+            // Hide success/error messages after 3 seconds
             document.addEventListener('DOMContentLoaded', function() {
                 const successMessage = document.getElementById('success-message');
+                const errorMessage = document.getElementById('error-message');
                 
                 if (successMessage) {
                     setTimeout(() => {
@@ -25,15 +33,25 @@
                         }, 500);
                     }, 3000);
                 }
+                
+                if (errorMessage) {
+                    setTimeout(() => {
+                        errorMessage.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                        errorMessage.style.opacity = '0';
+                        errorMessage.style.transform = 'translate(-50%, -20px)';
+                        setTimeout(() => {
+                            errorMessage.remove();
+                        }, 500);
+                    }, 3000);
+                }
             });
         </script>
 
         <!-- CONTAINER OUTSIDE THE TABLE -->
         <section class="container flex flex-col items-center place-content-start mt-2">
 
-            <!-- SEARCH BAR AND FILTERS - SEPARATE FORM TO AVOID CONFLICTS -->
+            <!-- SEARCH BAR AND FILTERS -->
             <div class="container flex items-center place-content-start gap-4 mb-1">
-                <!-- SEPARATE SEARCH/FILTER FORM - WON'T AFFECT OTHER FORMS -->
                 <form action="{{ route('delivery-management.index') }}" method="GET" id="statusFilterForm" class="flex items-center gap-4 mr-auto">
                     <!-- Simple Search Input -->
                     <div class="relative">
@@ -58,6 +76,7 @@
                         <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
                         <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
                         <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                        <option value="Delayed" {{ request('status') === 'Delayed' ? 'selected' : '' }}>Delayed</option>
                     </select> 
 
                     <!-- Search Button -->
@@ -65,14 +84,13 @@
                         Search
                     </button>
 
-                    <!-- Clear Button (only show when filters are active) -->
-                    @if(request('search'))
+                    <!-- Clear Button -->
+                    @if(request('search') || (request('status') && request('status') !== 'all'))                        
                         <a href="{{ route('delivery-management.index') }}" class="text-white px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">
                             Clear
                         </a>
                     @endif
                 </form>
-
             </div>
         </section>
 
@@ -81,7 +99,7 @@
             <table class="w-full">
                 <thead class="rounded-lg bg-main text-white px-4 py-3">
                     <tr class="rounded-lg">
-                        <th class=" bg-main px-4 py-3">PO Number</th>
+                        <th class=" bg-main px-4 py-3">Delivery Number</th>
                         <th class=" bg-main px-4 py-3">Order Date</th>
                         <th class=" bg-main px-4 py-3">Expected Date</th>
                         <th class=" bg-main px-4 py-3">Lead Time</th>
@@ -92,8 +110,17 @@
                 </thead>
                 <tbody>
                     @foreach( $purchaseOrder as $order)
+                    @php
+                        $orderDate = \Carbon\Carbon::parse($order->created_at)->startOfDay();
+                        $deliveryDate = \Carbon\Carbon::parse($order->deliveryDate)->startOfDay();
+                        $daysLeft = now()->startOfDay()->diffInDays($deliveryDate, false);
+                        $deliveryStatus = $order->deliveries->first()->orderStatus ?? 'Pending';
+                        $isDelayed = $daysLeft < 0 && $deliveryStatus !== 'Delivered';
+                    @endphp
                     <tr class="border-b">
-                        <td class="truncate px-2 py-3 text-center" title="{{ $order->orderNumber }}">{{ $order->orderNumber }}</td>
+                        <td class="truncate px-2 py-3 text-center" title="{{ $order->deliveries->first()->deliveryId ?? 'N/A' }}">
+                            {{ $order->deliveries->first()->deliveryId ?? 'N/A' }}
+                        </td>
                         <td class="truncate px-2 py-3 text-center" 
                             title="{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}">
                             {{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}
@@ -106,22 +133,14 @@
                         {{-- Lead Time Column --}}
                         <td class="truncate px-2 py-3 text-center">
                             @php
-                                $orderDate = \Carbon\Carbon::parse($order->created_at)->startOfDay();
-                                $deliveryDate = \Carbon\Carbon::parse($order->deliveryDate)->startOfDay();
-
-                                // Lead time (order placed → expected delivery)
                                 $leadTime = $orderDate->diffInDays($deliveryDate);
-
-                                // Days left/delayed (today → expected delivery) - we'll store this for later use
-                                $daysLeft = now()->startOfDay()->diffInDays($deliveryDate, false);
                             @endphp
-
                             {{ $leadTime }} {{ \Illuminate\Support\Str::plural('day', $leadTime) }}
                         </td>
 
                         {{-- Estimated Time of Arrival Column --}}
                         <td class="truncate px-2 py-3 text-center">
-                            @if($order->orderStatus === 'Delivered')
+                            @if($deliveryStatus === 'Delivered')
                                 <span class="text-green-600">Delivered</span>
                             @elseif($daysLeft > 0)
                                 <span>{{ $daysLeft }} {{ \Illuminate\Support\Str::plural('day', $daysLeft) }} left</span>
@@ -135,13 +154,16 @@
                         {{-- Delivery Status Column --}}
                         <td class="truncate px-2 py-3 text-center" title="">                                
                             <span class="px-2 py-1 text-sm font-semibold rounded-full 
-                                    @if($order->orderStatus === 'Pending') text-yellow-400 bg-yellow-300/40
-                                    @elseif($order->orderStatus === 'Confirmed') text-teal-400 bg-teal-200/40
-                                    @elseif($order->orderStatus === 'Delivered') text-button-save bg-button-save/40
+                                    @if($isDelayed) text-red-400 bg-red-300/40
+                                    @elseif($deliveryStatus === 'Pending') text-yellow-400 bg-yellow-300/40
+                                    @elseif($deliveryStatus === 'Confirmed') text-teal-400 bg-teal-200/40
+                                    @elseif($deliveryStatus === 'Delivered') text-button-save bg-button-save/40
                                     @else text-button-delete bg-button-delete/30  @endif"
-                                    title="This order is {{ $order->orderStatus }}">
-                                    {{ $order->orderStatus }}
-                                </span>
+                                    title="This order is {{ $isDelayed ? 'Delayed' : $deliveryStatus }}">
+                                    {{ $isDelayed ? 'Delayed' : $deliveryStatus }}
+                            </span>
+                        </td>
+
                         <td class="truncate px-2 py-2 text-center flex place-content-center" title="">
                             <button @click="$refs['viewOrderDetails{{ $order->id }}'].showModal()" class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">
                                 View Details
@@ -156,31 +178,66 @@
             <div class="mt-1 px-4 py-2 bg-gray-50">
                 {{ $purchaseOrder->appends(request()->except('page'))->links() }}
             </div>
-
         </section>
 
-        <!-- ============================================ -->
-        <!----------------- MODALS SECTION ----------------->
-        <!-- ============================================ -->
-        
+        <!-- MODALS SECTION -->
         @foreach( $purchaseOrder as $order)
-        <x-modal.createModal x-ref="viewOrderDetails{{ $order->id}}" class="w-4/5">
-            <x-slot:dialogTitle>ORDER ID: {{ $order->orderNumber}}</x-slot:dialogTitle>
+        @php
+            $orderDate = \Carbon\Carbon::parse($order->created_at)->startOfDay();
+            $deliveryDate = \Carbon\Carbon::parse($order->deliveryDate)->startOfDay();
+            $today = \Carbon\Carbon::now()->startOfDay();
+            $deliveryStatus = $order->deliveries->first()->orderStatus ?? 'Pending';
             
+            $totalDays = max(1, $orderDate->diffInDays($deliveryDate));
+            $daysPassed = $orderDate->diffInDays($today);
+            $daysRemaining = $today->diffInDays($deliveryDate, false);
+            
+            $isDelivered = $deliveryStatus === 'Delivered';
+            $isDelayed = !$isDelivered && $daysRemaining < 0;
+            
+            $phaseInterval = ceil($totalDays / 4);
+            
+            if ($isDelivered) {
+                $percentage = 100;
+                $currentPhase = 4;
+            } elseif ($isDelayed) {
+                $percentage = 100;
+                $currentPhase = 4;
+            } else {
+                $percentage = min(100, max(0, ($daysPassed / $totalDays) * 100));
+                
+                if ($daysPassed >= ($phaseInterval * 3)) {
+                    $currentPhase = 4;
+                } elseif ($daysPassed >= ($phaseInterval * 2)) {
+                    $currentPhase = 3;
+                } elseif ($daysPassed >= $phaseInterval) {
+                    $currentPhase = 2;
+                } else {
+                    $currentPhase = 1;
+                }
+            }
+            
+            $phases = [
+                1 => ['name' => 'Order Placed', 'desc' => 'Order has been received by the system'],
+                2 => ['name' => 'Packaging', 'desc' => 'Order is being prepared and packaged'],
+                3 => ['name' => 'Shipped', 'desc' => 'Order has left the warehouse'], 
+                4 => ['name' => 'Delivered', 'desc' => 'Order successfully delivered']
+            ];
+        @endphp
+        <x-modal.createModal x-ref="viewOrderDetails{{ $order->id}}" class="w-4/5">
+            <x-slot:dialogTitle>PURCHASE ORDER ID: {{ $order->orderNumber}} | DELIVERY ID: {{ $order->deliveries->first()->deliveryId ?? 'N/A' }}</x-slot:dialogTitle>            
             <div class="container">
-
-                <!-- MAIN INFORMATION -->
                 <div class="container grid grid-cols-6 p-4">
+                    {{-- ORDER DETAILS SECTION --}}
                     <div class="container col-span-2 px-6 py-1">
                         <h1 class="flex items-start font-semibold">
-                            <span>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-                                </svg>
-                            </span>Order Details
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+                            </svg>
+                            Order Details
                         </h1>
                         
-                        <div class="container font-semibold grid grid-cols-4 items-start justify-center my-5 text-sm gap-y-3">
+                        <div class="container font-semibold grid grid-cols-4 items-center justify-center my-5 text-sm gap-y-3">
                             <div class="container flex flex-col gap-y-1 col-span-2">
                                 <span class='text-gray-500'>ORDER DATE</span>
                                 <span class='font-normal'>{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y')}}</span>
@@ -231,16 +288,35 @@
                                 <span class='text-gray-500'>TOTAL</span>
                                 <span class='font-semibold'>₱{{ number_format($order->totalAmount, 2) }}</span>
                             </div>
-                        </div>
 
+                            <!-- Order Status Form -->
+                            <form action="{{ route('delivery-management.updateStatus') }}" method="POST" class="container text-start flex col-span-4 w-full flex-col my-6">
+                                @csrf
+                                <input type="hidden" name="order_id" value="{{ $order->id }}">
+                                
+                                <div class="container text-start flex col-span-4 w-full flex-col">
+                                    <label for="orderStatus{{ $order->id }}">Order Status</label>
+                                    <select name="status" id="orderStatus{{ $order->id }}" class="px-3 py-2 border rounded-sm border-black" required>
+                                        <option value="Pending" {{ $deliveryStatus === 'Pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="Confirmed" {{ $deliveryStatus === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
+                                        <option value="Delivered" {{ $deliveryStatus === 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                                        <option value="Cancelled" {{ $deliveryStatus === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                    </select>
+                                    
+                                    <button type="submit" class="mt-2 px-4 py-2 bg-button-save text-white rounded-md hover:bg-green-600 transition-colors duration-200">
+                                        Update Status
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
+
+                    {{-- SUPPLIER INFORMATION SECTION --}}
                     <div class="container col-span-2 px-6 py-1 border-x-gray border-x-2">
                         <h1 class="flex items-start font-semibold">
-                            <span>
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                                </svg>
-                            </span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                            </svg>
                             Supplier Information
                         </h1>
 
@@ -255,12 +331,10 @@
                                 <span>Cuatro Patee</span>
                                 <span class='font-normal'>Don Jose Avila Street</span>
                             </div>
-
                         </div>
-
                     </div>
 
-                    <!-- ESTIMATED PROGRESS CONTAINER -->
+                    {{-- ESTIMATED PROGRESS SECTION --}}
                     <div class="container col-span-2 px-6 py-1">
                         <h1 class="flex items-start font-semibold mb-4">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 mr-2">
@@ -268,61 +342,6 @@
                             </svg>
                             Delivery Progress
                         </h1>
-
-                        @php
-                            // Use startOfDay for accurate day calculations
-                            $orderDate = \Carbon\Carbon::parse($order->created_at)->startOfDay();
-                            $deliveryDate = \Carbon\Carbon::parse($order->deliveryDate)->startOfDay();
-                            $today = \Carbon\Carbon::now()->startOfDay();
-                            
-                            // Calculate total days between order and expected delivery
-                            $totalDays = max(1, $orderDate->diffInDays($deliveryDate));
-                            
-                            // Calculate days passed since order was placed (whole days only)
-                            $daysPassed = $orderDate->diffInDays($today);
-                            
-                            // Calculate days remaining (can be negative if delayed)
-                            $daysRemaining = $today->diffInDays($deliveryDate, false);
-                            
-                            // Check if delivery is explicitly marked as delivered
-                            $isDelivered = $order->orderStatus === 'Delivered';
-                            
-                            // Check if delivery is delayed (past expected date but not marked as delivered)
-                            $isDelayed = !$isDelivered && $daysRemaining < 0;
-                            
-                            // Calculate phase interval (divide total days by 4)
-                            $phaseInterval = ceil($totalDays / 4);
-                            
-                            // Calculate percentage of time passed (0-100%)
-                            if ($isDelivered) {
-                                $percentage = 100;
-                                $currentPhase = 4;
-                            } elseif ($isDelayed) {
-                                $percentage = 100; // Show full progress but mark as delayed
-                                $currentPhase = 4; // Show at final phase but with delayed status
-                            } else {
-                                $percentage = min(100, max(0, ($daysPassed / $totalDays) * 100));
-                                
-                                // Determine current phase based on days passed
-                                if ($daysPassed >= ($phaseInterval * 3)) {
-                                    $currentPhase = 4;
-                                } elseif ($daysPassed >= ($phaseInterval * 2)) {
-                                    $currentPhase = 3;
-                                } elseif ($daysPassed >= $phaseInterval) {
-                                    $currentPhase = 2;
-                                } else {
-                                    $currentPhase = 1;
-                                }
-                            }
-                            
-                            // Define 4 phases
-                            $phases = [
-                                1 => ['name' => 'Order Placed', 'desc' => 'Order has been received by the system'],
-                                2 => ['name' => 'Packaging', 'desc' => 'Order is being prepared and packaged'],
-                                3 => ['name' => 'Shipped', 'desc' => 'Order has left the warehouse'], 
-                                4 => ['name' => 'Delivered', 'desc' => 'Order successfully delivered']
-                            ];
-                        @endphp
 
                         <!-- Progress Bar -->
                         <div class="mb-5">
@@ -408,6 +427,5 @@
             </div>
         </x-modal.createModal>
         @endforeach
-
     </main>
 </x-layout>
