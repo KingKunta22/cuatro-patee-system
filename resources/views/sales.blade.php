@@ -125,20 +125,89 @@
             <x-slot:dialogTitle>Add Sale</x-slot:dialogTitle>
             <div class="container">
                 <!-- ADD ORDER FORM -->
-                <form action="" method="POST" id="addSales" class="px-6 py-4 container grid grid-cols-7 gap-x-8 gap-y-6">
+                <form action="{{ route('sales.store') }}" method="POST" id="addSales" class="px-6 py-4  container grid grid-cols-7 gap-x-8 gap-y-6">
                     @csrf
                     
-                    <div class="container text-start flex col-span-4 w-full flex-col">
-                        <label for="productName">Product Name</label>
-                        <input type="text" name="productName" id="productName" class="px-3 py-2 border rounded-sm border-black" placeholder="Add a product..." required>
+<!-- Product Search with Datalist -->
+<div class="container text-start flex col-span-4 w-full flex-col relative">
+    <label for="productName" class="text-sm font-medium text-gray-700 mb-1">Product Name</label>
+    <input 
+        type="text" 
+        list="productList" 
+        id="productName" 
+        class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm" 
+        placeholder="Type to search products..." 
+        autocomplete="off"
+        oninput="findProduct(this.value)"
+        required
+    >
+    <!-- Search icon -->
+    <div class="absolute right-3 top-10 text-gray-400">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+    </div>
+    
+    <!-- Hidden input to store the selected inventory ID -->
+    <input type="hidden" id="selectedInventoryId" name="inventory_id">
+    
+    <!-- The Datalist - We'll enhance this with a custom dropdown -->
+    <datalist id="productList">
+        @foreach($inventories as $inventory)
+            <option 
+                data-value="{{ $inventory->id }}"
+                data-sku="{{ $inventory->productSKU }}"
+                data-brand="{{ $inventory->productBrand }}"
+                data-measurement="{{ $inventory->productItemMeasurement }}"
+                data-price="{{ $inventory->productSellingPrice }}"
+                data-stocks="{{ $inventory->productStock }}"
+                value="{{ $inventory->productName }} ({{ $inventory->productSKU }})">
+            </option>
+        @endforeach
+    </datalist>
+    
+    <!-- Custom dropdown for better styling (will be shown via JavaScript) -->
+    <div id="customDropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
+        <div class="p-2 space-y-1">
+            @foreach($inventories as $inventory)
+                <div 
+                    class="p-3 rounded-md hover:bg-blue-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-b-0"
+                    data-value="{{ $inventory->id }}"
+                    data-sku="{{ $inventory->productSKU }}"
+                    data-brand="{{ $inventory->productBrand }}"
+                    data-measurement="{{ $inventory->productItemMeasurement }}"
+                    data-price="{{ $inventory->productSellingPrice }}"
+                    data-stocks="{{ $inventory->productStock }}"
+                    onclick="selectCustomProduct(this)"
+                >
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <div class="font-medium text-gray-900">{{ $inventory->productName }}</div>
+                            <div class="text-sm text-gray-500 mt-1">
+                                <span class="bg-gray-100 px-2 py-1 rounded text-xs">{{ $inventory->productSKU }}</span>
+                                <span class="mx-2">•</span>
+                                <span class="text-gray-600">{{ $inventory->productBrand }}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="font-semibold text-blue-600">₱{{ number_format($inventory->productSellingPrice, 2) }}</div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                Stock: <span class="font-medium {{ $inventory->productStock > 0 ? 'text-green-600' : 'text-red-600' }}">{{ $inventory->productStock }}</span>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
                     
                     <div class="container text-start flex col-span-3 w-full flex-col">
                         <label for="customerName">Customer Name</label>
                         <select name="customerName" class="px-3 py-2 border rounded-sm border-black" required>
                             <option value="" disabled selected>Select Customer</option>
                             @foreach($customers as $customer)
-                                <option value="" >{{ $customer->customerName }}</option>
+                                <option value="{{ $customer->customerName }}">{{ $customer->customerName }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -149,81 +218,55 @@
                     
                     <x-form.form-input label="Measurement" name="itemMeasurement" type="text" value="" class="col-span-2" readonly/>
 
-                    <x-form.form-input label="Quantity" name="quantity" type="number" value="" class="col-span-1" required/>
+                    <x-form.form-input label="Available Stocks" name="availableStocks" type="number" value="" class="col-span-1" readonly/>
 
-                    <x-form.form-input label="Amount to Pay (₱)" name="salesAmountToPay" type="number" step="0.01" value="" class="col-span-2" readonly/>
+                    <x-form.form-input label="Quantity" name="quantity" type="number" value="1" min="1" class="col-span-1" required oninput="calculateAmount()"/>
 
-                    <x-form.form-input label="Cash on Hand (₱)" name="salesCash" type="number" step="0.01" value="" class="col-span-2" required />
+                    <x-form.form-input label="Amount to Pay (₱)" name="salesAmountToPay" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
 
-                    <x-form.form-input label="Change (₱)" name="salesChange" type="number" step="0.01" value="" class="col-span-2" readonly/>
+                    <x-form.form-input label="Cash on Hand (₱)" name="salesCash" type="number" step="0.01" value="" class="col-span-2" required oninput="calculateChange()"/>
 
+                    <x-form.form-input label="Change (₱)" name="salesChange" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
+
+                    <!-- Hidden fields for sale items -->
+                    <div id="saleItemsContainer"></div>
 
                     <!-- ADD BUTTON FOR ADDING ITEMS TO SESSION -->
                     <div class="flex items-end content-center place-content-center w-full col-span-1">
-                        <button type="button" class= 'bg-teal-500/70 px-3 py-2 rounded text-white hover:bg-teal-500 w-full'>
+                        <button type="button" onclick="addToCart()" class= 'bg-teal-500/70 px-3 py-2 rounded text-white hover:bg-teal-500 w-full'>
                             Add
                         </button>
                     </div>
 
                     <!-- PREVIEW TABLE FOR ADDED SALES/PRODUCTS -->
-                        <div class="border w-auto rounded-md border-solid border-black my-4 col-span-7">
-                            <table class="w-full">
-                                <thead class="rounded-lg bg-main text-white px-4 py-2">
-                                    <tr class="rounded-lg text-md">
-                                        <th class="bg-main px-2 py-2">Item/s</th>
-                                        <th class="bg-main px-2 py-2">Quantity</th>
-                                        <th class="bg-main px-2 py-2">Price</th>
-                                        <th class="bg-main px-2 py-2">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr class="border-b">
-                                        <td class="px-2 py-2 text-center">ITEM</td>
-                                        <td class="px-2 py-2 text-center">QUANTITY</td>
-                                        <td class="px-2 py-2 text-center">₱ItemPrice</td>
-                                        <td class="px-2 py-2 text-center">
-                                        <form action="" method="POST" class="flex place-content-center">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button>
-                                                <x-form.deleteBtn />
-                                            </button>
-                                        </form>
-                                        </td>
-                                    </tr>
-                                    <tr class="border-b">
-                                        <td class="px-2 py-2 text-center">ITEM</td>
-                                        <td class="px-2 py-2 text-center">QUANTITY</td>
-                                        <td class="px-2 py-2 text-center">₱ItemPrice</td>
-                                        <td class="px-2 py-2 text-center">
-                                        <form action="" method="POST" class="flex place-content-center">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button>
-                                                <x-form.deleteBtn />
-                                            </button>
-                                        </form>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="4" class="px-5 py-2 w-full text-right font-semibold text-lg uppercase">
-                                            <span>Total:</span>
-                                            <span class="ml-2">₱0.00</span>
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-{{--                         
-                        <!-- EMPTY STATE (IF NO ITEMS INSIDE THE SESSION) -->
-                        <div class="border w-auto rounded-md border-solid border-black p-3 my-4 col-span-7">
-                            <div class="text-center py-8 text-gray-500">
-                                <p>No items added yet. Add items above to preview your order.</p>
-                            </div>
-                        </div> --}}
-
+                    <div class="border w-auto rounded-md border-solid border-black my-4 col-span-7">
+                        <table class="w-full">
+                            <thead class="rounded-lg bg-main text-white px-4 py-2">
+                                <tr class="rounded-lg text-md">
+                                    <th class="bg-main px-2 py-2">Item/s</th>
+                                    <th class="bg-main px-2 py-2">Quantity</th>
+                                    <th class="bg-main px-2 py-2">Price</th>
+                                    <th class="bg-main px-2 py-2">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartItems">
+                                <!-- Cart items will be added here dynamically -->
+                                <tr id="emptyCartMessage">
+                                    <td colspan="4" class="text-center py-4 text-gray-500">
+                                        No items added yet. Add items above to preview your order.
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" class="px-5 py-2 w-full text-right font-semibold text-lg uppercase">
+                                        <span>Total:</span>
+                                        <span id="cartTotal" class="ml-2">₱0.00</span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
 
                     <!-- FORM BUTTONS -->
                     <div class="flex justify-end items-center w-full relative col-span-7">
@@ -246,10 +289,7 @@
 
                         </div>
                 
-                        <x-form.saveBtn type="button" @click="
-                            if (document.getElementById('addSales').reportValidity()) {
-                                ($refs.confirmSubmit || document.getElementById('confirmSubmit')).showModal();
-                            }">Save</x-form.saveBtn>
+                        <x-form.saveBtn type="submit">Save</x-form.saveBtn>
 
                     </div>
 
@@ -269,27 +309,252 @@
                 <x-form.saveBtn type="button" 
                         @click="$refs.addSalesRef.close(); 
                         $refs.confirmSalesCancel.close(); 
-                        document.getElementById('addSales').reset()">
+                        resetForm()">
                         Confirm
                 </x-form.saveBtn>
             </div>
         </x-modal.createModal>
 
-        <x-modal.createModal x-ref="confirmSubmit">
-            <x-slot:dialogTitle>Confirm Save?</x-slot:dialogTitle>
-            <h1 class="text-xl px-4 py-3">Are you sure you want to save this sale?</h1>
-            <div class="container flex w-full flex-row items-center content-end place-content-end px-4 py-3">
-                <button type="button" @click="$refs.confirmSubmit.close()" class="mr-3 flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
-                    Cancel
-                </button>
-                <x-form.saveBtn type="submit"  form="addSales">Confirm</x-form.saveBtn>
-            </div>
-        </x-modal.createModal>
-
+        <!-- JavaScript for product selection and form handling -->
+        <script>
+            // Simple function to find the product from the datalist and populate the fields
+            function findProduct(searchTerm) {
+                // Get all options in the datalist
+                const options = document.querySelectorAll('#productList option');
+                let foundProduct = null;
+                
+                // Loop through to find the one that matches the input text
+                options.forEach(option => {
+                    if (option.value === searchTerm) {
+                        foundProduct = {
+                            id: option.getAttribute('data-value'),
+                            sku: option.getAttribute('data-sku'),
+                            brand: option.getAttribute('data-brand'),
+                            measurement: option.getAttribute('data-measurement'),
+                            price: option.getAttribute('data-price'),
+                            stocks: option.getAttribute('data-stocks')
+                        };
+                    }
+                });
+                
+                // If we found a product, populate the fields
+                if (foundProduct) {
+                    document.getElementById('selectedInventoryId').value = foundProduct.id;
+                    document.querySelector('[name="productSKU"]').value = foundProduct.sku;
+                    document.querySelector('[name="productBrand"]').value = foundProduct.brand;
+                    document.querySelector('[name="itemMeasurement"]').value = foundProduct.measurement;
+                    document.querySelector('[name="availableStocks"]').value = foundProduct.stocks;
+                    document.querySelector('[name="salesAmountToPay"]').setAttribute('data-base-price', foundProduct.price);
+                    
+                    // Set max quantity to available stocks
+                    document.querySelector('[name="quantity"]').setAttribute('max', foundProduct.stocks);
+                    
+                    calculateAmount();
+                } else {
+                    // Clear fields if no product is selected
+                    document.getElementById('selectedInventoryId').value = '';
+                    document.querySelector('[name="productSKU"]').value = '';
+                    document.querySelector('[name="productBrand"]').value = '';
+                    document.querySelector('[name="itemMeasurement"]').value = '';
+                    document.querySelector('[name="availableStocks"]').value = '';
+                    document.querySelector('[name="quantity"]').removeAttribute('max');
+                    document.querySelector('[name="salesAmountToPay"]').removeAttribute('data-base-price');
+                    calculateAmount();
+                }
+            }
+            
+            // Function to calculate amount to pay
+            function calculateAmount() {
+                const quantity = parseFloat(document.querySelector('[name="quantity"]').value) || 0;
+                const price = parseFloat(document.querySelector('[name="salesAmountToPay"]').getAttribute('data-base-price')) || 0;
+                const amount = quantity * price;
+                document.querySelector('[name="salesAmountToPay"]').value = amount.toFixed(2);
+                calculateChange();
+            }
+            
+            // Function to calculate change
+            function calculateChange() {
+                const amount = parseFloat(document.querySelector('[name="salesAmountToPay"]').value) || 0;
+                const cash = parseFloat(document.querySelector('[name="salesCash"]').value) || 0;
+                const change = cash - amount;
+                document.querySelector('[name="salesChange"]').value = change.toFixed(2);
+            }
+            
+            // Cart array to store added items
+            let cart = [];
+            let cartTotal = 0;
+            
+            // Function to add product to cart
+            function addToCart() {
+                const inventoryId = document.getElementById('selectedInventoryId').value;
+                const productName = document.getElementById('productName').value;
+                const quantity = parseFloat(document.querySelector('[name="quantity"]').value) || 0;
+                const price = parseFloat(document.querySelector('[name="salesAmountToPay"]').getAttribute('data-base-price')) || 0;
+                const availableStocks = parseFloat(document.querySelector('[name="availableStocks"]').value) || 0;
+                
+                if (!inventoryId || quantity <= 0) {
+                    alert('Please select a product and enter a valid quantity');
+                    return;
+                }
+                
+                if (quantity > availableStocks) {
+                    alert(`Cannot add more than available stock (${availableStocks})`);
+                    return;
+                }
+                
+                // Check if product already exists in cart
+                const existingItemIndex = cart.findIndex(item => item.inventory_id === inventoryId);
+                
+                if (existingItemIndex >= 0) {
+                    // Update existing item
+                    const newQuantity = cart[existingItemIndex].quantity + quantity;
+                    if (newQuantity > availableStocks) {
+                        alert(`Total quantity cannot exceed available stock (${availableStocks})`);
+                        return;
+                    }
+                    cart[existingItemIndex].quantity = newQuantity;
+                    cart[existingItemIndex].total = newQuantity * price;
+                } else {
+                    // Add new item to cart
+                    const itemTotal = price * quantity;
+                    cart.push({
+                        inventory_id: inventoryId,
+                        name: productName,
+                        quantity: quantity,
+                        price: price,
+                        total: itemTotal
+                    });
+                }
+                
+                // Update cart total
+                cartTotal = cart.reduce((sum, item) => sum + item.total, 0);
+                document.getElementById('cartTotal').textContent = '₱' + cartTotal.toFixed(2);
+                
+                // Update cart display
+                updateCartDisplay();
+                
+                // Update hidden form fields for sale items
+                updateSaleItemsForm();
+                
+                // Reset product selection fields
+                document.getElementById('productName').value = '';
+                document.getElementById('selectedInventoryId').value = '';
+                document.querySelector('[name="productSKU"]').value = '';
+                document.querySelector('[name="productBrand"]').value = '';
+                document.querySelector('[name="itemMeasurement"]').value = '';
+                document.querySelector('[name="availableStocks"]').value = '';
+                document.querySelector('[name="quantity"]').value = '1';
+                document.querySelector('[name="quantity"]').removeAttribute('max');
+                document.querySelector('[name="salesAmountToPay"]').value = '0.00';
+                document.querySelector('[name="salesAmountToPay"]').removeAttribute('data-base-price');
+                calculateAmount();
+            }
+            
+            // Function to update cart display
+            function updateCartDisplay() {
+                const cartItemsContainer = document.getElementById('cartItems');
+                const emptyCartMessage = document.getElementById('emptyCartMessage');
+                
+                // Remove empty message if items exist
+                if (cart.length > 0 && emptyCartMessage) {
+                    emptyCartMessage.remove();
+                }
+                
+                // Clear current items
+                cartItemsContainer.innerHTML = '';
+                
+                // Add items to cart
+                cart.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    row.className = 'border-b';
+                    row.innerHTML = `
+                        <td class="px-2 py-2 text-center">${item.name}</td>
+                        <td class="px-2 py-2 text-center">${item.quantity}</td>
+                        <td class="px-2 py-2 text-center">₱${item.total.toFixed(2)}</td>
+                        <td class="px-2 py-2 text-center">
+                            <button type="button" onclick="removeFromCart(${index})" class="text-red-600 hover:text-red-800">
+                                <x-form.deleteBtn />
+                            </button>
+                        </td>
+                    `;
+                    cartItemsContainer.appendChild(row);
+                });
+                
+                // Add empty message if cart is empty
+                if (cart.length === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.id = 'emptyCartMessage';
+                    emptyRow.innerHTML = `
+                        <td colspan="4" class="text-center py-4 text-gray-500">
+                            No items added yet. Add items above to preview your order.
+                        </td>
+                    `;
+                    cartItemsContainer.appendChild(emptyRow);
+                }
+            }
+            
+            // Function to update hidden form fields for sale items
+            function updateSaleItemsForm() {
+                const container = document.getElementById('saleItemsContainer');
+                container.innerHTML = '';
+                
+                cart.forEach((item, index) => {
+                    const inventoryIdInput = document.createElement('input');
+                    inventoryIdInput.type = 'hidden';
+                    inventoryIdInput.name = `items[${index}][inventory_id]`;
+                    inventoryIdInput.value = item.inventory_id;
+                    
+                    const quantityInput = document.createElement('input');
+                    quantityInput.type = 'hidden';
+                    quantityInput.name = `items[${index}][quantity]`;
+                    quantityInput.value = item.quantity;
+                    
+                    const priceInput = document.createElement('input');
+                    priceInput.type = 'hidden';
+                    priceInput.name = `items[${index}][price]`;
+                    priceInput.value = item.price;
+                    
+                    container.appendChild(inventoryIdInput);
+                    container.appendChild(quantityInput);
+                    container.appendChild(priceInput);
+                });
+            }
+            
+            // Function to remove item from cart
+            function removeFromCart(index) {
+                // Subtract from total
+                cartTotal -= cart[index].total;
+                document.getElementById('cartTotal').textContent = '₱' + cartTotal.toFixed(2);
+                
+                // Remove from cart
+                cart.splice(index, 1);
+                
+                // Update display
+                updateCartDisplay();
+                updateSaleItemsForm();
+            }
+            
+            // Function to reset the form
+            function resetForm() {
+                document.getElementById('addSales').reset();
+                document.querySelector('[name="salesAmountToPay"]').removeAttribute('data-base-price');
+                document.getElementById('selectedInventoryId').value = '';
+                document.querySelector('[name="quantity"]').removeAttribute('max');
+                
+                // Reset cart
+                cart = [];
+                cartTotal = 0;
+                document.getElementById('cartTotal').textContent = '₱0.00';
+                updateCartDisplay();
+                updateSaleItemsForm();
+            }
+            
+            // Add event listeners when DOM is loaded
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelector('[name="quantity"]').addEventListener('input', calculateAmount);
+                document.querySelector('[name="salesCash"]').addEventListener('input', calculateChange);
+            });
+        </script>
 
     </main>
-
-
-
-
 </x-layout>
