@@ -219,28 +219,33 @@
                     </div>
 
                     <!-- Other inputs (unchanged) -->
-                    <x-form.form-input label="Product SKU" name="productSKU" type="text" class="col-span-2" readonly/>
                     <x-form.form-input label="Product Brand" name="productBrand" type="text" class="col-span-2" readonly/>
+                    <x-form.form-input label="Product SKU" name="productSKU" type="text" class="col-span-2" readonly/>
+                    <x-form.form-input label="Stocks" name="availableStocks" type="number" class="col-span-1" readonly/>
                     <x-form.form-input label="Measurement" name="itemMeasurement" type="text" class="col-span-2" readonly/>
-                    <x-form.form-input label="Available Stocks" name="availableStocks" type="number" class="col-span-1" readonly/>
                     <x-form.form-input label="Quantity" name="quantity" type="number" value="1" min="1" class="col-span-1" required oninput="calculateAmount()"/>
-                    <x-form.form-input label="Amount to Pay (₱)" name="salesAmountToPay" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
                     <x-form.form-input label="Cash on Hand (₱)" name="salesCash" type="number" step="0.01" value="" class="col-span-2" required oninput="calculateChange()"/>
+                    <x-form.form-input label="Amount to Pay (₱)" name="salesAmountToPay" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
                     <x-form.form-input label="Change (₱)" name="salesChange" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
 
                     
                     <!-- Hidden fields for sale items -->
-                    <div id="saleItemsContainer"></div>
+                    <div id="saleItemsContainer" class="hidden"></div>
+    
+                    <div class="px-5 py-2 w-full font-bold border border-black text-2xl uppercase col-span-4 flex flex-row items-between place-content-between">
+                        <span>Total:</span>
+                        <span id="cartTotal" class="ml-2">₱0.00</span>
+                    </div>
 
                     <!-- ADD BUTTON FOR ADDING ITEMS TO SESSION -->
-                    <div class="flex items-end content-center place-content-center w-full col-span-1">
+                    <div class="flex items-center place-content-end w-full col-start-6 col-span-2">
                         <button type="button" onclick="addToCart()" class= 'bg-teal-500/70 px-3 py-2 rounded text-white hover:bg-teal-500 w-full'>
                             Add
                         </button>
                     </div>
 
                     <!-- PREVIEW TABLE FOR ADDED SALES/PRODUCTS -->
-                    <div class="border w-auto rounded-md border-solid border-black my-4 col-span-7">
+                    <div class="border w-auto rounded-md border-solid border-black my-2 col-span-7">
                         <table class="w-full">
                             <thead class="rounded-lg bg-main text-white px-4 py-2">
                                 <tr class="rounded-lg text-md">
@@ -258,14 +263,6 @@
                                     </td>
                                 </tr>
                             </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td colspan="4" class="px-5 py-2 w-full text-right font-semibold text-lg uppercase">
-                                        <span>Total:</span>
-                                        <span id="cartTotal" class="ml-2">₱0.00</span>
-                                    </td>
-                                </tr>
-                            </tfoot>
                         </table>
                     </div>
 
@@ -321,51 +318,6 @@
 
         <!-- JavaScript for product selection and form handling -->
         <script>
-            // Simple function to find the product from the datalist and populate the fields
-            function findProduct(searchTerm) {
-                // Get all options in the datalist
-                const options = document.querySelectorAll('#productList option');
-                let foundProduct = null;
-                
-                // Loop through to find the one that matches the input text
-                options.forEach(option => {
-                    if (option.value === searchTerm) {
-                        foundProduct = {
-                            id: option.getAttribute('data-value'),
-                            sku: option.getAttribute('data-sku'),
-                            brand: option.getAttribute('data-brand'),
-                            measurement: option.getAttribute('data-measurement'),
-                            price: option.getAttribute('data-price'),
-                            stocks: option.getAttribute('data-stocks')
-                        };
-                    }
-                });
-                
-                // If we found a product, populate the fields
-                if (foundProduct) {
-                    document.getElementById('selectedInventoryId').value = foundProduct.id;
-                    document.querySelector('[name="productSKU"]').value = foundProduct.sku;
-                    document.querySelector('[name="productBrand"]').value = foundProduct.brand;
-                    document.querySelector('[name="itemMeasurement"]').value = foundProduct.measurement;
-                    document.querySelector('[name="availableStocks"]').value = foundProduct.stocks;
-                    document.querySelector('[name="salesAmountToPay"]').setAttribute('data-base-price', foundProduct.price);
-                    
-                    // Set max quantity to available stocks
-                    document.querySelector('[name="quantity"]').setAttribute('max', foundProduct.stocks);
-                    
-                    calculateAmount();
-                } else {
-                    // Clear fields if no product is selected
-                    document.getElementById('selectedInventoryId').value = '';
-                    document.querySelector('[name="productSKU"]').value = '';
-                    document.querySelector('[name="productBrand"]').value = '';
-                    document.querySelector('[name="itemMeasurement"]').value = '';
-                    document.querySelector('[name="availableStocks"]').value = '';
-                    document.querySelector('[name="quantity"]').removeAttribute('max');
-                    document.querySelector('[name="salesAmountToPay"]').removeAttribute('data-base-price');
-                    calculateAmount();
-                }
-            }
             
             // Function to calculate amount to pay
             function calculateAmount() {
