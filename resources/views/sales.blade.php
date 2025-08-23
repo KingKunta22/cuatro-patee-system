@@ -125,83 +125,89 @@
             <x-slot:dialogTitle>Add Sale</x-slot:dialogTitle>
             <div class="container">
                 <!-- ADD ORDER FORM -->
-                <form action="{{ route('sales.store') }}" method="POST" id="addSales" class="px-6 py-4  container grid grid-cols-7 gap-x-8 gap-y-6">
+                <form action="{{ route('sales.store') }}" method="POST" id="addSales" 
+                    class="px-6 py-4 container grid grid-cols-7 gap-x-8 gap-y-6">
                     @csrf
                     
-<!-- Product Search with Datalist -->
-<div class="container text-start flex col-span-4 w-full flex-col relative">
-    <label for="productName" class="text-sm font-medium text-gray-700 mb-1">Product Name</label>
-    <input 
-        type="text" 
-        list="productList" 
-        id="productName" 
-        class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm" 
-        placeholder="Type to search products..." 
-        autocomplete="off"
-        oninput="findProduct(this.value)"
-        required
-    >
-    <!-- Search icon -->
-    <div class="absolute right-3 top-10 text-gray-400">
-        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-        </svg>
-    </div>
-    
-    <!-- Hidden input to store the selected inventory ID -->
-    <input type="hidden" id="selectedInventoryId" name="inventory_id">
-    
-    <!-- The Datalist - We'll enhance this with a custom dropdown -->
-    <datalist id="productList">
-        @foreach($inventories as $inventory)
-            <option 
-                data-value="{{ $inventory->id }}"
-                data-sku="{{ $inventory->productSKU }}"
-                data-brand="{{ $inventory->productBrand }}"
-                data-measurement="{{ $inventory->productItemMeasurement }}"
-                data-price="{{ $inventory->productSellingPrice }}"
-                data-stocks="{{ $inventory->productStock }}"
-                value="{{ $inventory->productName }} ({{ $inventory->productSKU }})">
-            </option>
-        @endforeach
-    </datalist>
-    
-    <!-- Custom dropdown for better styling (will be shown via JavaScript) -->
-    <div id="customDropdown" class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
-        <div class="p-2 space-y-1">
-            @foreach($inventories as $inventory)
-                <div 
-                    class="p-3 rounded-md hover:bg-blue-50 cursor-pointer transition-colors duration-150 border-b border-gray-100 last:border-b-0"
-                    data-value="{{ $inventory->id }}"
-                    data-sku="{{ $inventory->productSKU }}"
-                    data-brand="{{ $inventory->productBrand }}"
-                    data-measurement="{{ $inventory->productItemMeasurement }}"
-                    data-price="{{ $inventory->productSellingPrice }}"
-                    data-stocks="{{ $inventory->productStock }}"
-                    onclick="selectCustomProduct(this)"
-                >
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <div class="font-medium text-gray-900">{{ $inventory->productName }}</div>
-                            <div class="text-sm text-gray-500 mt-1">
-                                <span class="bg-gray-100 px-2 py-1 rounded text-xs">{{ $inventory->productSKU }}</span>
-                                <span class="mx-2">•</span>
-                                <span class="text-gray-600">{{ $inventory->productBrand }}</span>
-                            </div>
+                    <!-- Product Search (Custom Dropdown with AlpineJS) -->
+                    <div 
+                        x-data="{
+                            open: false,
+                            search: '',
+                            products: {{ Js::from($inventories) }},
+                            filtered() {
+                                return this.products.filter(p => 
+                                    p.productName.toLowerCase().includes(this.search.toLowerCase()) ||
+                                    p.productSKU.toLowerCase().includes(this.search.toLowerCase())
+                                )
+                            },
+                            select(product) {
+                                this.search = product.productName + ' (' + product.productSKU + ')'
+                                this.open = false
+
+                                // Fill hidden inputs
+                                document.getElementById('selectedInventoryId').value = product.id
+                                document.querySelector('[name=productSKU]').value = product.productSKU
+                                document.querySelector('[name=productBrand]').value = product.productBrand
+                                document.querySelector('[name=itemMeasurement]').value = product.productItemMeasurement
+                                document.querySelector('[name=availableStocks]').value = product.productStock
+                                document.querySelector('[name=salesAmountToPay]').setAttribute('data-base-price', product.productSellingPrice)
+                                document.querySelector('[name=salesAmountToPay]').value = parseFloat(product.productSellingPrice).toFixed(2)
+                                document.querySelector('[name=quantity]').setAttribute('max', product.productStock)
+                            }
+                        }"
+                        class="relative w-full col-span-4"
+                    >
+                        <label for="productName" class="text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                        <input 
+                            id="productName"
+                            type="text"
+                            x-model="search"
+                            @focus="open = true"
+                            @input="open = true"
+                            @click.outside="open = false"
+                            placeholder="Type to search products..."
+                            class="px-4 py-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
+                            autocomplete="off"
+                            required
+                        >
+
+                        <!-- Dropdown -->
+                        <div 
+                            x-show="open && filtered().length > 0" 
+                            class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                        >
+                            <template x-for="product in filtered()" :key="product.id">
+                                <div 
+                                    @click="select(product)" 
+                                    class="p-3 cursor-pointer hover:bg-blue-50 border-b last:border-b-0"
+                                >
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <div class="font-medium text-gray-900" x-text="product.productName"></div>
+                                            <div class="text-sm text-gray-500 mt-1">
+                                                <span class="bg-gray-100 px-2 py-1 rounded text-xs" x-text="product.productSKU"></span>
+                                                <span class="mx-2">•</span>
+                                                <span class="text-gray-600" x-text="product.productBrand"></span>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="font-semibold text-blue-600">₱<span x-text="parseFloat(product.productSellingPrice).toFixed(2)"></span></div>
+                                            <div class="text-xs text-gray-500 mt-1">
+                                                Stock: 
+                                                <span :class="product.productStock > 0 ? 'text-green-600' : 'text-red-600'" x-text="product.productStock"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
-                        <div class="text-right">
-                            <div class="font-semibold text-blue-600">₱{{ number_format($inventory->productSellingPrice, 2) }}</div>
-                            <div class="text-xs text-gray-500 mt-1">
-                                Stock: <span class="font-medium {{ $inventory->productStock > 0 ? 'text-green-600' : 'text-red-600' }}">{{ $inventory->productStock }}</span>
-                            </div>
-                        </div>
+
+                        <!-- Hidden inventory ID -->
+                        <input type="hidden" id="selectedInventoryId" name="inventory_id">
                     </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-</div>
                     
+                    <!-- Customer Dropdown -->
                     <div class="container text-start flex col-span-3 w-full flex-col">
                         <label for="customerName">Customer Name</label>
                         <select name="customerName" class="px-3 py-2 border rounded-sm border-black" required>
@@ -212,22 +218,17 @@
                         </select>
                     </div>
 
+                    <!-- Other inputs (unchanged) -->
                     <x-form.form-input label="Product SKU" name="productSKU" type="text" class="col-span-2" readonly/>
-
                     <x-form.form-input label="Product Brand" name="productBrand" type="text" class="col-span-2" readonly/>
-                    
-                    <x-form.form-input label="Measurement" name="itemMeasurement" type="text" value="" class="col-span-2" readonly/>
-
-                    <x-form.form-input label="Available Stocks" name="availableStocks" type="number" value="" class="col-span-1" readonly/>
-
+                    <x-form.form-input label="Measurement" name="itemMeasurement" type="text" class="col-span-2" readonly/>
+                    <x-form.form-input label="Available Stocks" name="availableStocks" type="number" class="col-span-1" readonly/>
                     <x-form.form-input label="Quantity" name="quantity" type="number" value="1" min="1" class="col-span-1" required oninput="calculateAmount()"/>
-
                     <x-form.form-input label="Amount to Pay (₱)" name="salesAmountToPay" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
-
                     <x-form.form-input label="Cash on Hand (₱)" name="salesCash" type="number" step="0.01" value="" class="col-span-2" required oninput="calculateChange()"/>
-
                     <x-form.form-input label="Change (₱)" name="salesChange" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
 
+                    
                     <!-- Hidden fields for sale items -->
                     <div id="saleItemsContainer"></div>
 
@@ -270,7 +271,7 @@
 
                     <!-- FORM BUTTONS -->
                     <div class="flex justify-end items-center w-full relative col-span-7">
-    
+
                         <button type="button" @click="$refs.confirmSalesCancel.showModal()" class="flex place-content-center rounded-md bg-button-delete mr-2 px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
                             Cancel
                         </button>
@@ -296,6 +297,9 @@
                 </form>
             </div>
         </x-modal.createModal>
+
+
+
 
 
         <!-- CONFIRM CANCEL/SAVE MODALS -->

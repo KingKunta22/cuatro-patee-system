@@ -17,7 +17,7 @@
             <x-nav-link href="/reports" :active="request()->is('reports')">
                 <img src="{{ asset('assets/imgs/icons/reports.png')}}" class="w-10 pr-2">Reports</x-nav-link>
             <x-nav-link href="/product-classification" :active="request()->is('product-classification')">
-                <img src="{{ asset('assets/imgs/icons/pclassification.png')}}" class="w-10 pr-2">Product Classification</x-nav-link>
+                <img src="{{ asset('assets/imgs/icons/pclassification.png')}}" class="w-10 pr-2">Product Management</x-nav-link>
             <x-nav-link href="/suppliers" :active="request()->is('suppliers')">
                 <img src="{{ asset('assets/imgs/icons/supplier.png')}}" class="w-10 pr-2">Suppliers</x-nav-link>
             <x-nav-link href="/customers" :active="request()->is('customers')">
