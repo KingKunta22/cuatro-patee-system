@@ -360,206 +360,205 @@
                     </section>
 
                     <!-- PURCHASE ORDER SECTION -->
-<!-- PURCHASE ORDER SECTION -->
-<section class="grid grid-cols-6 col-span-6 gap-4" 
-        x-show="addMethod === 'po'"
-        x-data="{
-            items: [],
-            poId: null,
-            sellingPrice: 0,
-            costPrice: 0,
-            profitMargin: '0%',
-            productName: '',
-            productStock: 0,
-            originalStock: 0,
-            itemMeasurement: '',
-            selectedItemId: null,
-            selectedQuality: 'goodCondition',
-            badItemCount: 0,
-            
-            async getItems(poId) {
-                this.poId = poId;
-                this.items = [];
-                this.selectedItemId = null;
-                this.costPrice = 0;
-                this.selectedQuality = 'goodCondition';
-                this.badItemCount = 0;
-                
-                if (!poId) return;
-                
-                const response = await fetch(`/get-items/${poId}`);
-                this.items = await response.json();
-                
-                if (this.items.length === 0) {
-                    console.log('No items available for this PO');
-                    return;
-                }
-                
-                if (this.items.length === 1) {
-                    this.selectedItemId = this.items[0].id;
-                    this.setCostPrice(this.items[0].id);
-                }
-            },
-            
-            setCostPrice(itemId) {
-                this.selectedItemId = itemId;
-                const item = this.items.find(i => i.id == itemId);
-                if (item) {
-                    this.costPrice = item.unitPrice || 0;
-                    this.calculateProfitMargin();
-                    this.productName = item.productName;
-                    this.productStock = item.quantity;
-                    this.originalStock = item.quantity;
-                    this.itemMeasurement = item.itemMeasurement;
-                }
-            },
-            
-            calculateProfitMargin() {
-                if (this.costPrice > 0 && this.sellingPrice > 0) {
-                    const margin = ((this.sellingPrice - this.costPrice) / this.costPrice * 100);
-                    this.profitMargin = margin.toFixed(2) + '%';
-                } else {
-                    this.profitMargin = '0%';
-                }
-            },
-            
-            updateStockBasedOnQuality() {
-                if (this.selectedQuality === 'goodCondition') {
-                    this.productStock = this.originalStock;
-                    this.badItemCount = 0;
-                } else if (this.badItemCount > 0) {
-                    this.productStock = Math.max(0, this.originalStock - this.badItemCount);
-                }
-            }
-        }">
+                    <section class="grid grid-cols-6 col-span-6 gap-4" 
+                            x-show="addMethod === 'po'"
+                            x-data="{
+                                items: [],
+                                poId: null,
+                                sellingPrice: 0,
+                                costPrice: 0,
+                                profitMargin: '0%',
+                                productName: '',
+                                productStock: 0,
+                                originalStock: 0,
+                                itemMeasurement: '',
+                                selectedItemId: null,
+                                selectedQuality: 'goodCondition',
+                                badItemCount: 0,
+                                
+                                async getItems(poId) {
+                                    this.poId = poId;
+                                    this.items = [];
+                                    this.selectedItemId = null;
+                                    this.costPrice = 0;
+                                    this.selectedQuality = 'goodCondition';
+                                    this.badItemCount = 0;
+                                    
+                                    if (!poId) return;
+                                    
+                                    const response = await fetch(`/get-items/${poId}`);
+                                    this.items = await response.json();
+                                    
+                                    if (this.items.length === 0) {
+                                        console.log('No items available for this PO');
+                                        return;
+                                    }
+                                    
+                                    if (this.items.length === 1) {
+                                        this.selectedItemId = this.items[0].id;
+                                        this.setCostPrice(this.items[0].id);
+                                    }
+                                },
+                                
+                                setCostPrice(itemId) {
+                                    this.selectedItemId = itemId;
+                                    const item = this.items.find(i => i.id == itemId);
+                                    if (item) {
+                                        this.costPrice = item.unitPrice || 0;
+                                        this.calculateProfitMargin();
+                                        this.productName = item.productName;
+                                        this.productStock = item.quantity;
+                                        this.originalStock = item.quantity;
+                                        this.itemMeasurement = item.itemMeasurement;
+                                    }
+                                },
+                                
+                                calculateProfitMargin() {
+                                    if (this.costPrice > 0 && this.sellingPrice > 0) {
+                                        const margin = ((this.sellingPrice - this.costPrice) / this.costPrice * 100);
+                                        this.profitMargin = margin.toFixed(2) + '%';
+                                    } else {
+                                        this.profitMargin = '0%';
+                                    }
+                                },
+                                
+                                updateStockBasedOnQuality() {
+                                    if (this.selectedQuality === 'goodCondition') {
+                                        this.productStock = this.originalStock;
+                                        this.badItemCount = 0;
+                                    } else if (this.badItemCount > 0) {
+                                        this.productStock = Math.max(0, this.originalStock - this.badItemCount);
+                                    }
+                                }
+                            }">
 
-    <!-- PO Number Dropdown -->
-    <div class="container text-start flex col-span-3 w-full flex-col font-semibold">
-        <label>Purchase Order Number</label>
-        <select name="purchaseOrderNumber" 
-                class="px-3 py-2 border rounded-sm border-black" 
-                x-model="poId" 
-                :required="addMethod === 'po'" 
-                @change="getItems($event.target.value)">
-            <option value="" disabled selected>Select PO Number</option>
-            @foreach($unaddedPOs as $po)
-                <option value="{{ $po->id }}">{{ $po->orderNumber }}</option>
-            @endforeach
-        </select>
-    </div>
+                        <!-- PO Number Dropdown -->
+                        <div class="container text-start flex col-span-3 w-full flex-col font-semibold">
+                            <label>Purchase Order Number</label>
+                            <select name="purchaseOrderNumber" 
+                                    class="px-3 py-2 border rounded-sm border-black" 
+                                    x-model="poId" 
+                                    :required="addMethod === 'po'" 
+                                    @change="getItems($event.target.value)">
+                                <option value="" disabled selected>Select PO Number</option>
+                                @foreach($unaddedPOs as $po)
+                                    <option value="{{ $po->id }}">{{ $po->orderNumber }}</option>
+                                @endforeach
+                            </select>
+                        </div>
 
-    <!-- PO Items Dropdown -->
-    <div class="container text-start flex col-span-3 w-full flex-col font-semibold">
-        <label>Purchase Order Item</label>
-        <select name="selectedItemId"
-                class="px-3 py-2 border rounded-sm border-black"
-                x-model="selectedItemId" 
-                :disabled="!items.length"
-                @change="setCostPrice($event.target.value)">
-            <option value="" disabled selected>Select PO Item</option>
-            <template x-for="item in items" :key="item.id">
-                <option :value="item.id" x-text="item.productName"></option>
-            </template>
-        </select>
-    </div>
+                        <!-- PO Items Dropdown -->
+                        <div class="container text-start flex col-span-3 w-full flex-col font-semibold">
+                            <label>Purchase Order Item</label>
+                            <select name="selectedItemId"
+                                    class="px-3 py-2 border rounded-sm border-black"
+                                    x-model="selectedItemId" 
+                                    :disabled="!items.length"
+                                    @change="setCostPrice($event.target.value)">
+                                <option value="" disabled selected>Select PO Item</option>
+                                <template x-for="item in items" :key="item.id">
+                                    <option :value="item.id" x-text="item.productName"></option>
+                                </template>
+                            </select>
+                        </div>
 
-    <div class="container grid grid-cols-6 col-span-6 gap-4">
-        <x-form.form-input label="Product Name" name="productName" type="text" value="" 
-                            class="col-span-3"
-                            x-model="productName"
-                            x-bind:required="addMethod === 'po'"/>
+                        <div class="container grid grid-cols-6 col-span-6 gap-4">
+                            <x-form.form-input label="Product Name" name="productName" type="text" value="" 
+                                                class="col-span-3"
+                                                x-model="productName"
+                                                x-bind:required="addMethod === 'po'"/>
+                                                
+                            <div class='container flex flex-col text-start col-span-3'>
+                                <label for="productBrand">Product Brand</label>
+                                <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black overflow-y-auto max-h-[200px]" x-bind:required="addMethod === 'po'">
+                                    <option value="" disabled selected>Select Brand</option>
+                                    @foreach($brands as $brand)
+                                        <option value="{{ $brand->productBrand }}">{{ $brand->productBrand }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="container flex flex-col text-start col-span-3">
+                                <label for="productCategory">Product Category</label>
+                                <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black overflow-y-auto max-h-[200px]" x-bind:required="addMethod === 'po'">
+                                    <option value="" disabled selected>Select Category</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->productCategory }}">{{ $category->productCategory }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             
-        <div class='container flex flex-col text-start col-span-3'>
-            <label for="productBrand">Product Brand</label>
-            <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black overflow-y-auto max-h-[200px]" x-bind:required="addMethod === 'po'">
-                <option value="" disabled selected>Select Brand</option>
-                @foreach($brands as $brand)
-                    <option value="{{ $brand->productBrand }}">{{ $brand->productBrand }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div class="container flex flex-col text-start col-span-3">
-            <label for="productCategory">Product Category</label>
-            <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black overflow-y-auto max-h-[200px]" x-bind:required="addMethod === 'po'">
-                <option value="" disabled selected>Select Category</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category->productCategory }}">{{ $category->productCategory }}</option>
-                @endforeach
-            </select>
-        </div>
-        
-        <x-form.form-input label="Stock" type="number" value="" 
-                            class="col-span-1" 
-                            name="productStock" 
-                            x-model="productStock"
-                            x-bind:required="addMethod === 'po'"
-                            readonly/>
-        
-        <div class="container text-start flex col-span-2 w-full flex-col">
-            <label for="itemMeasurement">Measurement per item</label>
-            <select class="px-3 py-2 border rounded-sm border-black" 
-            name="productItemMeasurement" 
-            x-model="itemMeasurement"
-            x-bind:required="addMethod === 'po'">
-                <option value="" disabled selected>Select Measurement</option>
-                <option value="kilogram">kilogram (kg)</option>
-                <option value="gram">gram (g)</option>
-                <option value="liter">liter (L)</option>
-                <option value="milliliter">milliliter (mL)</option>
-                <option value="pcs">pieces (pcs)</option>
-                <option value="set">set</option>
-                <option value="pair">pair</option>
-                <option value="pack">pack</option>
-            </select>
-        </div>
+                            <x-form.form-input label="Stock" type="number" value="" 
+                                                class="col-span-1" 
+                                                name="productStock" 
+                                                x-model="productStock"
+                                                x-bind:required="addMethod === 'po'"
+                                                readonly/>
+                            
+                            <div class="container text-start flex col-span-2 w-full flex-col">
+                                <label for="itemMeasurement">Measurement per item</label>
+                                <select class="px-3 py-2 border rounded-sm border-black" 
+                                name="productItemMeasurement" 
+                                x-model="itemMeasurement"
+                                x-bind:required="addMethod === 'po'">
+                                    <option value="" disabled selected>Select Measurement</option>
+                                    <option value="kilogram">kilogram (kg)</option>
+                                    <option value="gram">gram (g)</option>
+                                    <option value="liter">liter (L)</option>
+                                    <option value="milliliter">milliliter (mL)</option>
+                                    <option value="pcs">pieces (pcs)</option>
+                                    <option value="set">set</option>
+                                    <option value="pair">pair</option>
+                                    <option value="pack">pack</option>
+                                </select>
+                            </div>
 
-        <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" class="col-span-2" 
-                            x-bind:required="addMethod === 'po'"
-                            x-model="sellingPrice"
-                            @input="calculateProfitMargin()"/>
+                            <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" class="col-span-2" 
+                                                x-bind:required="addMethod === 'po'"
+                                                x-model="sellingPrice"
+                                                @input="calculateProfitMargin()"/>
 
-        <x-form.form-input label="Cost Price (₱)" name="productCostPrice" type="number" value="" 
-                            class="col-span-2" readonly
-                            x-model="costPrice"/>
+                            <x-form.form-input label="Cost Price (₱)" name="productCostPrice" type="number" value="" 
+                                                class="col-span-2" readonly
+                                                x-model="costPrice"/>
 
-        <x-form.form-input label="Profit Margin (%)" name="productProfitMargin" type="text" value="" 
-                            class="col-span-2" readonly
-                            x-model="profitMargin"/>
+                            <x-form.form-input label="Profit Margin (%)" name="productProfitMargin" type="text" value="" 
+                                                class="col-span-2" readonly
+                                                x-model="profitMargin"/>
 
-        <div class="container text-start flex col-span-2 w-full flex-col relative">
-            <label for="productQuality">Quality Status</label>
-            <select class="px-3 py-2 border rounded-sm border-black" 
-            name="productQuality" 
-            x-model="selectedQuality"
-            @change="updateStockBasedOnQuality()"
-            x-bind:required="addMethod === 'po'">
-                <option value="goodCondition" selected>Good Condition</option>
-                <option value="defective">Defective</option>
-                <option value="incorrectItem">Incorrect Item</option>
-                <option value="nearExpiry">Near Expiry</option>
-                <option value="rejected">Rejected</option>
-                <option value="quantityMismatch">Quantity Mismatch</option>
-            </select>
+                            <div class="container text-start flex col-span-2 w-full flex-col relative">
+                                <label for="productQuality">Quality Status</label>
+                                <select class="px-3 py-2 border rounded-sm border-black" 
+                                name="productQuality" 
+                                x-model="selectedQuality"
+                                @change="updateStockBasedOnQuality()"
+                                x-bind:required="addMethod === 'po'">
+                                    <option value="goodCondition" selected>Good Condition</option>
+                                    <option value="defective">Defective</option>
+                                    <option value="incorrectItem">Incorrect Item</option>
+                                    <option value="nearExpiry">Near Expiry</option>
+                                    <option value="rejected">Rejected</option>
+                                    <option value="quantityMismatch">Quantity Mismatch</option>
+                                </select>
 
-            <!-- WILL ONLY SHOW IF QUALITY != goodCondition -->
-            <div class="container absolute flex flex-row items-center content-center top-16 left-0 text-md w-full py-2"
-                 x-show="selectedQuality !== 'goodCondition'">
-                <label for="badItemQuantity" class="pr-2">Item count: </label>
-                <input name="badItemQuantity" id="badItemQuantity" type="number" step="1" min="0" 
-                       :max="originalStock" class="text-sm w-16 px-2 py-1 border border-black"
-                       x-model="badItemCount"
-                       @input="updateStockBasedOnQuality()">
-            </div>
-        </div>
+                                <!-- WILL ONLY SHOW IF QUALITY != goodCondition -->
+                                <div class="container absolute flex flex-row items-center content-center top-16 left-0 text-md w-full py-2"
+                                    x-show="selectedQuality !== 'goodCondition'">
+                                    <label for="badItemQuantity" class="pr-2">Item count: </label>
+                                    <input name="badItemQuantity" id="badItemQuantity" type="number" step="1" min="0" 
+                                        :max="originalStock" class="text-sm w-16 px-2 py-1 border border-black"
+                                        x-model="badItemCount"
+                                        @input="updateStockBasedOnQuality()">
+                                </div>
+                            </div>
 
-        <x-form.form-input label="Expiration Date" name="productExpirationDate" type="date"
-            value="" 
-            min="{{ date('Y-m-d') }}"
-            class="col-span-2" x-bind:required="addMethod === 'po'"
-        />
-        <x-form.form-input label="Upload an image" name="productImage" type="file" value="" class="col-span-2" x-bind:required="addMethod === 'po'"/>
-    </div>
-</section>
+                            <x-form.form-input label="Expiration Date" name="productExpirationDate" type="date"
+                                value="" 
+                                min="{{ date('Y-m-d') }}"
+                                class="col-span-2" x-bind:required="addMethod === 'po'"
+                            />
+                            <x-form.form-input label="Upload an image" name="productImage" type="file" value="" class="col-span-2" x-bind:required="addMethod === 'po'"/>
+                        </div>
+                    </section>
 
                     <!-- FORM BUTTONS -->
                     <div class="col-span-6 place-items-end flex justify-end gap-4">
@@ -569,8 +568,9 @@
                             @click="
                                 if (document.getElementById('addProductForm').reportValidity()) {
                                     ($refs.confirmAddProduct || document.getElementById('confirmAddProduct')).showModal();
-                                }" >Add</x-form.saveBtn>
-                    </div>  
+                                }" >Add
+                        </x-form.saveBtn>
+                    </div>
                 </form>
             </div>
         </x-modal.createModal>
