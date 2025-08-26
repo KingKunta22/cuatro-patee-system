@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamps();
             $table->string('deliveryId');
             $table->enum('orderStatus', ['Pending', 'Delivered', 'Cancelled', 'Confirmed'])->default('Pending');
-            $table->foreignId('purchase_order_id')->constrained()->onDelete('cascade');
+            $table->foreignId('purchase_order_id')->constrained()->onDelete('cascade')->unique();
             $table->index('purchase_order_id');
         });
     }

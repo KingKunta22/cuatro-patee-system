@@ -76,7 +76,6 @@
                         <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
                         <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
                         <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                        <option value="Delayed" {{ request('status') === 'Delayed' ? 'selected' : '' }}>Delayed</option>
                     </select> 
 
                     <!-- Search Button -->
@@ -114,12 +113,18 @@
                         $orderDate = \Carbon\Carbon::parse($order->created_at)->startOfDay();
                         $deliveryDate = \Carbon\Carbon::parse($order->deliveryDate)->startOfDay();
                         $daysLeft = now()->startOfDay()->diffInDays($deliveryDate, false);
-                        $deliveryStatus = $order->deliveries->first()->orderStatus ?? 'Pending';
+                        
+                        // SAFE CHECK: Get delivery status with fallback
+                        $delivery = $order->deliveries->first();
+                        $deliveryStatus = $delivery ? $delivery->orderStatus : 'Pending';
+                        $deliveryId = $delivery ? $delivery->deliveryId : 'N/A';
+                        
                         $isDelayed = $daysLeft < 0 && $deliveryStatus !== 'Delivered';
+                        $displayStatus = $isDelayed ? 'Delayed' : $deliveryStatus;
                     @endphp
                     <tr class="border-b">
-                        <td class="truncate px-2 py-3 text-center" title="{{ $order->deliveries->first()->deliveryId ?? 'N/A' }}">
-                            {{ $order->deliveries->first()->deliveryId ?? 'N/A' }}
+                        <td class="truncate px-2 py-3 text-center" title="{{ $deliveryId }}">
+                            {{ $deliveryId }}
                         </td>
                         <td class="truncate px-2 py-3 text-center" 
                             title="{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}">
@@ -155,12 +160,12 @@
                         <td class="truncate px-2 py-3 text-center" title="">                                
                             <span class="px-2 py-1 text-sm font-semibold rounded-full 
                                     @if($isDelayed) text-red-400 bg-red-300/40
-                                    @elseif($deliveryStatus === 'Pending') text-yellow-400 bg-yellow-300/40
-                                    @elseif($deliveryStatus === 'Confirmed') text-teal-400 bg-teal-200/40
-                                    @elseif($deliveryStatus === 'Delivered') text-button-save bg-button-save/40
+                                    @elseif($displayStatus === 'Pending') text-yellow-400 bg-yellow-300/40
+                                    @elseif($displayStatus === 'Confirmed') text-teal-400 bg-teal-200/40
+                                    @elseif($displayStatus === 'Delivered') text-button-save bg-button-save/40
                                     @else text-button-delete bg-button-delete/30  @endif"
-                                    title="This order is {{ $isDelayed ? 'Delayed' : $deliveryStatus }}">
-                                    {{ $isDelayed ? 'Delayed' : $deliveryStatus }}
+                                    title="This order is {{ $displayStatus }}">
+                                    {{ $displayStatus }}
                             </span>
                         </td>
 
@@ -186,7 +191,11 @@
             $orderDate = \Carbon\Carbon::parse($order->created_at)->startOfDay();
             $deliveryDate = \Carbon\Carbon::parse($order->deliveryDate)->startOfDay();
             $today = \Carbon\Carbon::now()->startOfDay();
-            $deliveryStatus = $order->deliveries->first()->orderStatus ?? 'Pending';
+            
+            // SAFE CHECK: Get delivery status with fallback
+            $delivery = $order->deliveries->first();
+            $deliveryStatus = $delivery ? $delivery->orderStatus : 'Pending';
+            $deliveryId = $delivery ? $delivery->deliveryId : 'N/A';
             
             $totalDays = max(1, $orderDate->diffInDays($deliveryDate));
             $daysPassed = $orderDate->diffInDays($today);
@@ -225,7 +234,7 @@
             ];
         @endphp
         <x-modal.createModal x-ref="viewOrderDetails{{ $order->id}}" class="w-4/5">
-            <x-slot:dialogTitle>PURCHASE ORDER ID: {{ $order->orderNumber}} | DELIVERY ID: {{ $order->deliveries->first()->deliveryId ?? 'N/A' }}</x-slot:dialogTitle>            
+            <x-slot:dialogTitle>PURCHASE ORDER ID: {{ $order->orderNumber}} | DELIVERY ID: {{ $deliveryId }}</x-slot:dialogTitle>            
             <div class="container">
                 <div class="container grid grid-cols-6 p-4">
                     {{-- ORDER DETAILS SECTION --}}
@@ -290,7 +299,7 @@
                             </div>
 
                             <!-- Order Status Form -->
-                            <form action="{{ route('delivery-management.updateStatus') }}" method="POST" class="container text-start flex col-span-4 w-full flex-col my-6">
+                            <form action="{{ route('delivery-management.updateStatus')}}" method="POST" class="container text-start flex col-span-4 w-full flex-col my-6">
                                 @csrf
                                 <input type="hidden" name="order_id" value="{{ $order->id }}">
                                 
