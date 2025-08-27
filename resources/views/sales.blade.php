@@ -126,7 +126,7 @@
             <div class="container">
                 <!-- ADD ORDER FORM -->
                 <form action="{{ route('sales.store') }}" method="POST" id="addSales" 
-                    class="px-6 py-4 container grid grid-cols-7 gap-x-8 gap-y-6">
+                    class="px-6 py-4 container grid grid-cols-7 gap-x-8 gap-y-6" novalidate>
                     @csrf
                     
                     <!-- Product Search (Custom Dropdown with AlpineJS) -->
@@ -151,9 +151,12 @@
                                 document.querySelector('[name=productBrand]').value = product.productBrand
                                 document.querySelector('[name=itemMeasurement]').value = product.productItemMeasurement
                                 document.querySelector('[name=availableStocks]').value = product.productStock
-                                document.querySelector('[name=salesAmountToPay]').setAttribute('data-base-price', product.productSellingPrice)
-                                document.querySelector('[name=salesAmountToPay]').value = parseFloat(product.productSellingPrice).toFixed(2)
+                                document.querySelector('[name=salesPrice]').setAttribute('data-base-price', product.productSellingPrice)
+                                document.querySelector('[name=salesPrice]').value = parseFloat(product.productSellingPrice).toFixed(2)
                                 document.querySelector('[name=quantity]').setAttribute('max', product.productStock)
+                                
+                                // Auto-calculate amount when product is selected
+                                calculateAmount();
                             }
                         }"
                         class="relative w-full col-span-4"
@@ -169,7 +172,6 @@
                             placeholder="Type to search products..."
                             class="px-4 py-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
                             autocomplete="off"
-                            required
                         >
 
                         <!-- Dropdown -->
@@ -210,7 +212,7 @@
                     <!-- Customer Dropdown -->
                     <div class="container text-start flex col-span-3 w-full flex-col">
                         <label for="customerName">Customer Name</label>
-                        <select name="customerName" class="px-3 py-2 border rounded-sm border-black" required>
+                        <select name="customerName" id="customerName" class="px-3 py-2 border rounded-sm border-black" required>
                             <option value="" disabled selected>Select Customer</option>
                             @foreach($customers as $customer)
                                 <option value="{{ $customer->customerName }}">{{ $customer->customerName }}</option>
@@ -224,9 +226,9 @@
                     <x-form.form-input label="Stocks" name="availableStocks" type="number" class="col-span-1" readonly/>
                     <x-form.form-input label="Measurement" name="itemMeasurement" type="text" class="col-span-2" readonly/>
                     <x-form.form-input label="Quantity" name="quantity" type="number" value="1" min="1" class="col-span-1" required oninput="calculateAmount()"/>
-                    <x-form.form-input label="Cash on Hand (₱)" name="salesCash" type="number" step="0.01" value="" class="col-span-2" required oninput="calculateChange()"/>
-                    <x-form.form-input label="Amount to Pay (₱)" name="salesAmountToPay" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
-                    <x-form.form-input label="Change (₱)" name="salesChange" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
+                    <x-form.form-input label="Cash on Hand (₱)" name="salesCash" id="salesCash" type="number" step="0.01" value="" class="col-span-2" required oninput="calculateChange()"/>
+                    <x-form.form-input label="Unit Price (₱)" name="salesPrice" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
+                    <x-form.form-input label="Change (₱)" name="salesChange" id="salesChange" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
 
                     
                     <!-- Hidden fields for sale items -->
@@ -295,10 +297,6 @@
             </div>
         </x-modal.createModal>
 
-
-
-
-
         <!-- CONFIRM CANCEL/SAVE MODALS -->
         <x-modal.createModal x-ref="confirmSalesCancel">
             <x-slot:dialogTitle>Confirm Cancel?</x-slot:dialogTitle>
@@ -318,22 +316,117 @@
 
         <!-- JavaScript for product selection and form handling -->
         <script>
+            // Track if items have been added to cart
+            let itemsAdded = false;
             
-            // Function to calculate amount to pay
+            // Function to format numbers with commas
+            function formatNumberWithCommas(number) {
+                return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+
+
+            // Function to calculate amount to pay (quantity * unit price)
             function calculateAmount() {
                 const quantity = parseFloat(document.querySelector('[name="quantity"]').value) || 0;
-                const price = parseFloat(document.querySelector('[name="salesAmountToPay"]').getAttribute('data-base-price')) || 0;
-                const amount = quantity * price;
-                document.querySelector('[name="salesAmountToPay"]').value = amount.toFixed(2);
+                const basePrice = parseFloat(document.querySelector('[name="salesPrice"]').getAttribute('data-base-price') || 0);
+                const amount = quantity * basePrice;
+                
+                // Kept number plain in input, no commas to accept more than 999.99 values
+                document.querySelector('[name="salesPrice"]').value = amount.toFixed(2);
+
                 calculateChange();
             }
-            
-            // Function to calculate change
+
+            // Function to calculate change (cash - total cart amount)
             function calculateChange() {
-                const amount = parseFloat(document.querySelector('[name="salesAmountToPay"]').value) || 0;
-                const cash = parseFloat(document.querySelector('[name="salesCash"]').value) || 0;
-                const change = cash - amount;
-                document.querySelector('[name="salesChange"]').value = change.toFixed(2);
+                const cashInput = document.querySelector('[name="salesCash"]');
+                const changeInput = document.querySelector('[name="salesChange"]');
+
+                // Only calculate if cash is entered
+                if (cashInput.value && cashInput.value.trim() !== '') {
+                    const cash = parseFloat(cashInput.value) || 0;
+                    const change = cash - cartTotal;
+                    // FIX: keep number plain in input, no commas
+                    changeInput.value = Math.max(0, change).toFixed(2);
+                } else {
+                    changeInput.value = '0.00';
+                }
+            }
+            
+            // Function to lock customer field only (not cash)
+            function lockCustomerField() {
+                if (itemsAdded) {
+                    document.getElementById('customerName').setAttribute('disabled', 'disabled');
+                    
+                    // Add hidden field to ensure customer value is submitted
+                    const customerValue = document.getElementById('customerName').value;
+                    
+                    let hiddenCustomer = document.getElementById('hiddenCustomerName');
+                    if (!hiddenCustomer) {
+                        hiddenCustomer = document.createElement('input');
+                        hiddenCustomer.type = 'hidden';
+                        hiddenCustomer.name = 'customerName';
+                        hiddenCustomer.id = 'hiddenCustomerName';
+                        document.getElementById('addSales').appendChild(hiddenCustomer);
+                    }
+                    hiddenCustomer.value = customerValue;
+                }
+            }
+            
+            // Function to unlock customer field
+            function unlockCustomerField() {
+                document.getElementById('customerName').removeAttribute('disabled');
+                
+                // Remove hidden field
+                const hiddenCustomer = document.getElementById('hiddenCustomerName');
+                if (hiddenCustomer) hiddenCustomer.remove();
+            }
+            
+            // Store original product data for stock management
+            let originalProducts = {{ Js::from($inventories) }};
+            let currentProducts = JSON.parse(JSON.stringify(originalProducts));
+            
+            // Function to update available stocks in UI
+            function updateAvailableStocksUI(inventoryId, quantityAdded) {
+                // Find the product in our current products data
+                const productIndex = currentProducts.findIndex(p => p.id == inventoryId);
+                
+                if (productIndex !== -1) {
+                    // Update the product stock
+                    currentProducts[productIndex].productStock -= quantityAdded;
+                    
+                    // Update the stock field if this product is currently selected
+                    const selectedInventoryId = document.getElementById('selectedInventoryId').value;
+                    if (selectedInventoryId == inventoryId) {
+                        document.querySelector('[name="availableStocks"]').value = currentProducts[productIndex].productStock;
+                        // Also update the max quantity
+                        document.querySelector('[name="quantity"]').setAttribute('max', currentProducts[productIndex].productStock);
+                    }
+                    
+                    // Update Alpine data for dropdown display
+                    updateAlpineStockData(inventoryId, currentProducts[productIndex].productStock);
+                }
+            }
+            
+            // Function to update AlpineJS data for stock display
+            function updateAlpineStockData(inventoryId, newStock) {
+                try {
+                    const alpineElement = document.querySelector('[x-data]');
+                    if (alpineElement && alpineElement.__x && alpineElement.__x.$data) {
+                        const alpineData = alpineElement.__x.$data;
+                        const alpineProductIndex = alpineData.products.findIndex(p => p.id == inventoryId);
+                        if (alpineProductIndex !== -1) {
+                            alpineData.products[alpineProductIndex].productStock = newStock;
+                            // Force Alpine to update by triggering a reactive update
+                            alpineData.search = alpineData.search + ' ';
+                            setTimeout(() => {
+                                alpineData.search = alpineData.search.trim();
+                            }, 10);
+                        }
+                    }
+                } catch (e) {
+                    console.log('Could not update Alpine data:', e);
+                }
             }
             
             // Cart array to store added items
@@ -345,53 +438,65 @@
                 const inventoryId = document.getElementById('selectedInventoryId').value;
                 const productName = document.getElementById('productName').value;
                 const quantity = parseFloat(document.querySelector('[name="quantity"]').value) || 0;
-                const price = parseFloat(document.querySelector('[name="salesAmountToPay"]').getAttribute('data-base-price')) || 0;
-                const availableStocks = parseFloat(document.querySelector('[name="availableStocks"]').value) || 0;
-                
+                const basePrice = parseFloat(document.querySelector('[name="salesPrice"]').getAttribute('data-base-price') || 0);
+
+                // Get stock from original data (true available stock)
+                const productOriginal = originalProducts.find(p => p.id == inventoryId);
+                const originalStock = productOriginal ? productOriginal.productStock : 0;
+
                 if (!inventoryId || quantity <= 0) {
                     alert('Please select a product and enter a valid quantity');
                     return;
                 }
-                
-                if (quantity > availableStocks) {
-                    alert(`Cannot add more than available stock (${availableStocks})`);
+
+                // Check if customer is filled
+                const customerName = document.getElementById('customerName').value;
+                if (!customerName) {
+                    alert('Please select a customer first');
                     return;
                 }
-                
-                // Check if product already exists in cart
+
+                // Find if item already in cart
                 const existingItemIndex = cart.findIndex(item => item.inventory_id === inventoryId);
-                
+                const currentQuantityInCart = existingItemIndex >= 0 ? cart[existingItemIndex].quantity : 0;
+                const totalRequested = currentQuantityInCart + quantity;
+
+                // ✅ Compare against original stock
+                if (totalRequested > originalStock) {
+                    alert(`Total quantity cannot exceed available stock (${originalStock})`);
+                    return;
+                }
+
                 if (existingItemIndex >= 0) {
                     // Update existing item
-                    const newQuantity = cart[existingItemIndex].quantity + quantity;
-                    if (newQuantity > availableStocks) {
-                        alert(`Total quantity cannot exceed available stock (${availableStocks})`);
-                        return;
-                    }
-                    cart[existingItemIndex].quantity = newQuantity;
-                    cart[existingItemIndex].total = newQuantity * price;
+                    cart[existingItemIndex].quantity = totalRequested;
+                    cart[existingItemIndex].total = totalRequested * basePrice;
                 } else {
                     // Add new item to cart
-                    const itemTotal = price * quantity;
+                    const itemTotal = basePrice * quantity;
                     cart.push({
                         inventory_id: inventoryId,
                         name: productName,
                         quantity: quantity,
-                        price: price,
+                        price: basePrice,
                         total: itemTotal
                     });
                 }
-                
+
+                // Update UI for available stocks (subtract from currentProducts for display only)
+                updateAvailableStocksUI(inventoryId, quantity);
+
                 // Update cart total
                 cartTotal = cart.reduce((sum, item) => sum + item.total, 0);
-                document.getElementById('cartTotal').textContent = '₱' + cartTotal.toFixed(2);
-                
-                // Update cart display
+                document.getElementById('cartTotal').textContent = '₱' + formatNumberWithCommas(cartTotal.toFixed(2));
+
+                // Update displays and hidden inputs
                 updateCartDisplay();
-                
-                // Update hidden form fields for sale items
                 updateSaleItemsForm();
-                
+
+                itemsAdded = true;
+                lockCustomerField();
+
                 // Reset product selection fields
                 document.getElementById('productName').value = '';
                 document.getElementById('selectedInventoryId').value = '';
@@ -401,10 +506,12 @@
                 document.querySelector('[name="availableStocks"]').value = '';
                 document.querySelector('[name="quantity"]').value = '1';
                 document.querySelector('[name="quantity"]').removeAttribute('max');
-                document.querySelector('[name="salesAmountToPay"]').value = '0.00';
-                document.querySelector('[name="salesAmountToPay"]').removeAttribute('data-base-price');
-                calculateAmount();
+                document.querySelector('[name="salesPrice"]').value = '0.00';
+                document.querySelector('[name="salesPrice"]').removeAttribute('data-base-price');
+
+                calculateChange();
             }
+
             
             // Function to update cart display
             function updateCartDisplay() {
@@ -426,7 +533,7 @@
                     row.innerHTML = `
                         <td class="px-2 py-2 text-center">${item.name}</td>
                         <td class="px-2 py-2 text-center">${item.quantity}</td>
-                        <td class="px-2 py-2 text-center">₱${item.total.toFixed(2)}</td>
+                        <td class="px-2 py-2 text-center">₱${formatNumberWithCommas(item.total.toFixed(2))}</td>
                         <td class="px-2 py-2 text-center">
                             <button type="button" onclick="removeFromCart(${index})" class="text-red-600 hover:text-red-800">
                                 <x-form.deleteBtn />
@@ -478,24 +585,86 @@
             
             // Function to remove item from cart
             function removeFromCart(index) {
+                const removedItem = cart[index];
+                
                 // Subtract from total
-                cartTotal -= cart[index].total;
-                document.getElementById('cartTotal').textContent = '₱' + cartTotal.toFixed(2);
+                cartTotal -= removedItem.total;
+                document.getElementById('cartTotal').textContent = '₱' + formatNumberWithCommas(cartTotal.toFixed(2));
                 
                 // Remove from cart
                 cart.splice(index, 1);
                 
+                // Update UI for available stocks (add back the quantity)
+                const productIndex = currentProducts.findIndex(p => p.id == removedItem.inventory_id);
+                if (productIndex !== -1) {
+                    currentProducts[productIndex].productStock += removedItem.quantity;
+                    
+                    // Update the stock field if this product is currently selected
+                    const selectedInventoryId = document.getElementById('selectedInventoryId').value;
+                    if (selectedInventoryId == removedItem.inventory_id) {
+                        document.querySelector('[name="availableStocks"]').value = currentProducts[productIndex].productStock;
+                    }
+                    
+                    // Update Alpine data
+                    updateAlpineStockData(removedItem.inventory_id, currentProducts[productIndex].productStock);
+                }
+                
                 // Update display
                 updateCartDisplay();
                 updateSaleItemsForm();
+                
+                // Recalculate change
+                calculateChange();
+                
+                // If cart is empty, unlock customer field
+                if (cart.length === 0) {
+                    itemsAdded = false;
+                    unlockCustomerField();
+                }
             }
             
-            // Function to reset the form
+            // Function to validate form before submission
+            function validateFormBeforeSubmit() {
+                const salesCash = document.getElementById('salesCash').value;
+                
+                if (!salesCash || parseFloat(salesCash) <= 0) {
+                    alert('Please enter a valid cash amount before saving');
+                    return false;
+                }
+                
+                const cash = parseFloat(salesCash);
+                
+                if (cash < cartTotal) {
+                    alert('Cash amount cannot be less than the total amount to pay');
+                    return false;
+                }
+                
+                if (cart.length === 0) {
+                    alert('Please add at least one item to the cart');
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            // Function to reset the form properly
             function resetForm() {
-                document.getElementById('addSales').reset();
-                document.querySelector('[name="salesAmountToPay"]').removeAttribute('data-base-price');
+                // Reset customer and payment fields
+                document.querySelector('[name="customerName"]').value = '';
+                document.querySelector('[name="salesCash"]').value = '';
+                document.querySelector('[name="salesChange"]').value = '0.00';
+                
+                // Reset product selection fields
+                document.getElementById('productName').value = '';
                 document.getElementById('selectedInventoryId').value = '';
+                document.querySelector('[name="productSKU"]').value = '';
+                document.querySelector('[name="productBrand"]').value = '';
+                document.querySelector('[name="itemMeasurement"]').value = '';
+                document.querySelector('[name="availableStocks"]').value = '';
+                document.querySelector('[name="quantity"]').value = '1';
                 document.querySelector('[name="quantity"]').removeAttribute('max');
+                document.querySelector('[name="salesPrice"]').value = '0.00';
+                document.querySelector('[name="salesPrice"]').removeAttribute('data-base-price');
                 
                 // Reset cart
                 cart = [];
@@ -503,12 +672,38 @@
                 document.getElementById('cartTotal').textContent = '₱0.00';
                 updateCartDisplay();
                 updateSaleItemsForm();
+                
+                // Unlock fields
+                itemsAdded = false;
+                unlockCustomerField();
+                
+                // Reset product data
+                currentProducts = JSON.parse(JSON.stringify(originalProducts));
+                
+                // Reset Alpine data by reloading the modal
+                try {
+                    const alpineElement = document.querySelector('[x-data]');
+                    if (alpineElement && alpineElement.__x && alpineElement.__x.$data) {
+                        const alpineData = alpineElement.__x.$data;
+                        alpineData.products = JSON.parse(JSON.stringify(originalProducts));
+                        alpineData.search = '';
+                    }
+                } catch (e) {
+                    console.log('Could not reset Alpine data:', e);
+                }
             }
             
             // Add event listeners when DOM is loaded
             document.addEventListener('DOMContentLoaded', function() {
                 document.querySelector('[name="quantity"]').addEventListener('input', calculateAmount);
                 document.querySelector('[name="salesCash"]').addEventListener('input', calculateChange);
+                
+                // Add form validation on submit
+                document.getElementById('addSales').addEventListener('submit', function(e) {
+                    if (!validateFormBeforeSubmit()) {
+                        e.preventDefault();
+                    }
+                });
             });
         </script>
 
