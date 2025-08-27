@@ -77,7 +77,7 @@
 
                         <!-- Clear Button (only show when filters are active) -->
                         @if(request('search') )
-                            <a href="{{ route('purchase-orders.index') }}" class="text-white px-4 mx-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            <a href="{{ route('purchase-orders.index') }}" class="px-4 mx-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
                                 Clear
                             </a>
                         @endif

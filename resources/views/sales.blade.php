@@ -145,15 +145,20 @@
                                 this.search = product.productName + ' (' + product.productSKU + ')'
                                 this.open = false
 
-                                // Fill hidden inputs
+                                // Find the current stock from our updated products data
+                                const currentProduct = currentProducts.find(p => p.id === product.id);
+                                const currentStock = currentProduct ? currentProduct.productStock : product.productStock;
+
+                                // Fill hidden inputs with CURRENT stock data, not original
                                 document.getElementById('selectedInventoryId').value = product.id
                                 document.querySelector('[name=productSKU]').value = product.productSKU
                                 document.querySelector('[name=productBrand]').value = product.productBrand
                                 document.querySelector('[name=itemMeasurement]').value = product.productItemMeasurement
-                                document.querySelector('[name=availableStocks]').value = product.productStock
+                                document.querySelector('[name=availableStocks]').value = currentStock // CHANGED: Now shows current stock
                                 document.querySelector('[name=salesPrice]').setAttribute('data-base-price', product.productSellingPrice)
                                 document.querySelector('[name=salesPrice]').value = parseFloat(product.productSellingPrice).toFixed(2)
-                                document.querySelector('[name=quantity]').setAttribute('max', product.productStock)
+                                document.querySelector('[name=quantity]').setAttribute('max', currentStock) // CHANGED: Now uses current stock
+                                document.querySelector('[name=quantity]').value = '1'
                                 
                                 // Auto-calculate amount when product is selected
                                 calculateAmount();
@@ -314,7 +319,11 @@
             </div>
         </x-modal.createModal>
 
-        <!-- JavaScript for product selection and form handling -->
+
+        <!-- ================================================================================== -->
+        <!----------------JAVASCRIPT FUNCTIONS FOR PRODUCT SELECTION AND FORM HANDLING ----------->
+        <!-- ================================================================================= --->
+
         <script>
             // Track if items have been added to cart
             let itemsAdded = false;
@@ -323,7 +332,6 @@
             function formatNumberWithCommas(number) {
                 return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
             }
-
 
             // Function to calculate amount to pay (quantity * unit price)
             function calculateAmount() {
@@ -461,7 +469,7 @@
                 const currentQuantityInCart = existingItemIndex >= 0 ? cart[existingItemIndex].quantity : 0;
                 const totalRequested = currentQuantityInCart + quantity;
 
-                // ✅ Compare against original stock
+                // Compare against original stock
                 if (totalRequested > originalStock) {
                     alert(`Total quantity cannot exceed available stock (${originalStock})`);
                     return;
