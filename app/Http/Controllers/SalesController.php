@@ -182,11 +182,20 @@ class SalesController extends Controller
             'sale_date' => $validated['sale_date']
         ]);
         
-        // Update sale items
+        // Update sale items and handle deletions
+        $totalAmount = 0;
+        
         if ($request->has('items')) {
-            $totalAmount = 0;
-            
             foreach ($request->items as $itemId => $itemData) {
+                // Check if item is marked for deletion
+                if (isset($itemData['_delete']) && $itemData['_delete'] == '1') {
+                    $saleItem = SaleItem::find($itemId);
+                    if ($saleItem && $saleItem->sale_id == $sale->id) {
+                        $saleItem->delete();
+                    }
+                    continue;
+                }
+                
                 $saleItem = SaleItem::find($itemId);
                 if ($saleItem && $saleItem->sale_id == $sale->id) {
                     $saleItem->update([
@@ -198,10 +207,10 @@ class SalesController extends Controller
                     $totalAmount += $saleItem->total_price;
                 }
             }
-            
-            // Update sale total
-            $sale->update(['total_amount' => $totalAmount]);
         }
+        
+        // Update sale total
+        $sale->update(['total_amount' => $totalAmount]);
         
         return redirect()->route('sales.index')
             ->with('success', 'Sale updated successfully!');
