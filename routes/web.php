@@ -41,6 +41,9 @@ Route::get('/reports', function() {
 Route::resource('sales', SalesController::class)->middleware('auth');
 // Route for invoice PDF
 // Route::get('sales/{sale}/invoice', [SalesController::class, 'showInvoice'])->name('sales.invoice');}}
+Route::get('/sales/{id}/edit', [SalesController::class, 'edit'])->name('sales.edit');
+Route::put('/sales/{id}', [SalesController::class, 'update'])->name('sales.update');
+Route::delete('/sales/{id}', [SalesController::class, 'destroy'])->name('sales.destroy');
 
 
 // ROUTES FOR INVENTORY

@@ -121,7 +121,8 @@
                                         @csrf
                                         @method('DELETE')
                                         <div>
-                                            <h1>Are you sure you want to delete this supplier?</h1>
+                                            <p class="text-lg">Are you sure you want to delete this supplier?</p>
+                                            <p class="text-xs text-gray-600 mt-2">This action cannot be undone. All items associated with this supplier will also be deleted.</p>
                                         </div>
                                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
                                             <x-form.closeBtn type="button" @click="closeDelete()">Cancel</x-form.closeBtn>

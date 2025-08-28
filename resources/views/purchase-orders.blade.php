@@ -541,7 +541,8 @@
                                                         @csrf
                                                         @method('DELETE')
                                                         <div>
-                                                            <p>Are you sure you want to delete this purchase order?</p>
+                                                            <p class="text-lg">Are you sure you want to delete this purchase order?</p>
+                                                            <p class="text-xs text-gray-600 mt-2">This action cannot be undone. All items associated with this purchase order will also be deleted.</p>
                                                         </div>
                                                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
                                                             <button type="button" @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].close()" class="mr-2 px-4 py-2 rounded text-white bg-gray-300 hover:bg-gray-400">

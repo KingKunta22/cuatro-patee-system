@@ -761,7 +761,8 @@
                 
                 <div class="container px-2 py-2">
                     <h1 class="py-6 px-5 text-xl">
-                        Are you sure you want to delete <span class="font-bold">{{ $item->productName }}</span>?
+                        <p class="text-lg">Are you sure you want to delete <span class="font-bold">{{ $item->productName }}</span>?</p>
+                        <p class="text-xs text-gray-600 mt-2">This action cannot be undone. All items associated with this product will also be deleted.</p>
                     </h1>
                     
                     <div class="flex justify-end gap-4">

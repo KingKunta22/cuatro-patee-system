@@ -437,6 +437,131 @@
 </x-modal.createModal>
 @endforeach
 
+<!-- EDIT DIALOG -->
+@foreach($sales as $sale)
+<x-modal.createModal x-ref="editDialog{{ $sale->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
+    <x-slot:dialogTitle>Update Sale: {{ $sale->invoice_number }}</x-slot:dialogTitle>
+
+    <div class="container px-3 py-4">
+        <form action="{{ route('sales.update', $sale->id) }}" method="POST" class="px-6 py-4 container grid grid-cols-4 gap-x-8 gap-y-6">
+            @csrf
+            @method('PUT')
+
+            <!-- Customer -->
+            <div class="container text-start flex col-span-2 flex-col">
+                <label for="customerName">Customer</label>
+                <select name="customerName" class="w-full px-3 py-2 border rounded-sm" required>
+                    <option value="" disabled>Select Customer</option>
+                    @foreach($customers as $customer)
+                        <option value="{{ $customer->customerName }}" {{ $sale->customer_name === $customer->customerName ? 'selected' : '' }}>
+                            {{ $customer->customerName }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Sale Date -->
+            <x-form.form-input label="Sale Date" name="sale_date" type="date"
+                value="{{ \Carbon\Carbon::parse($sale->sale_date)->format('Y-m-d') }}" 
+                class="col-span-2" required />
+
+            <!-- Total Amount -->
+            <x-form.form-input label="Total Amount:" name="total_amount" type="text" 
+                value="₱{{ number_format($sale->total_amount, 2) }}"
+                class="col-span-2" readonly />
+
+            <!-- Items Table -->
+            <div class="col-span-4">
+                <h3 class="text-lg font-semibold mb-3">Items</h3>
+                <table class="w-full text-sm text-left text-gray-500 border overflow-hidden">
+                    <thead class="text-xs uppercase bg-main text-white">
+                        <tr>
+                            <th class="px-4 py-3">Product</th>
+                            <th class="px-2 py-3">Quantity</th>
+                            <th class="px-2 py-3">Unit Price (₱)</th>
+                            <th class="px-2 py-3">Total (₱)</th>
+                            <th class="px-2 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($sale->items as $index => $item)
+                            <tr class="bg-white border-b hover:bg-gray-50">
+                                <td class="px-4 py-3">
+                                    <input type="text" value="{{ $item->inventory->productName ?? 'N/A' }}" 
+                                        class="border rounded px-2 py-1 w-full" readonly>
+                                    <input type="hidden" name="items[{{ $item->id }}][inventory_id]" value="{{ $item->inventory_id }}">
+                                </td>
+                                <td class="px-2 py-3">
+                                    <input type="number" name="items[{{ $item->id }}][quantity]" 
+                                        value="{{ $item->quantity }}" min="1" 
+                                        class="border rounded px-2 py-1 w-20" onchange="updateItemTotal(this)">
+                                </td>
+                                <td class="px-2 py-3">
+                                    <input type="number" step="0.01" name="items[{{ $item->id }}][unit_price]" 
+                                        value="{{ $item->unit_price }}" 
+                                        class="border rounded px-2 py-1 w-24" onchange="updateItemTotal(this)">
+                                </td>
+                                <td class="px-2 py-3">
+                                    <input type="text" value="₱{{ number_format($item->total_price, 2) }}" 
+                                        class="border rounded px-2 py-1 w-24 bg-gray-100 cursor-not-allowed" readonly>
+                                </td>
+                                <td class="px-2 py-3 flex justify-center">
+                                    <button type="button" onclick="removeSaleItem(this)" 
+                                        class="text-red-600 hover:text-red-800">
+                                        <x-form.deleteBtn/>
+                                    </button>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-4 py-4 text-center text-gray-500">
+                                    No items in this sale.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="container col-span-4 gap-x-4 place-content-end w-full flex items-end content-center px-6 pt-4">
+                <button type="button" @click="$refs['editDialog{{ $sale->id }}'].close()" 
+                    class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out">
+                    Cancel
+                </button>
+                <x-form.saveBtn>Update</x-form.saveBtn>
+            </div>
+        </form>
+    </div>
+</x-modal.createModal>
+@endforeach
+
+<!-- DELETE DIALOG -->
+@foreach($sales as $sale)
+<x-modal.createModal x-ref="deleteDialog{{ $sale->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
+    <x-slot:dialogTitle>Delete Sale?</x-slot:dialogTitle>
+    <div class="container px-2 py-2">
+        <form action="{{ route('sales.destroy', $sale->id) }}" method="POST" class="px-6 container">
+            @csrf
+            @method('DELETE')
+            <div class="mb-4 py-6">
+                <p class="text-lg">Are you sure you want to delete sale <strong>{{ $sale->invoice_number }}</strong>?</p>
+                <p class="text-xs text-gray-600 mt-2">This action cannot be undone. All items associated with this sale will also be deleted.</p>
+            </div>
+            <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
+                <button type="button" @click="$refs['deleteDialog{{ $sale->id }}'].close()" class="mr-2 px-4 py-2 rounded text-white bg-gray-300 hover:bg-gray-400">
+                    Cancel
+                </button>
+                <button type="submit" name="" value="" class="flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">
+                    Delete
+                </button>
+            </div>
+        </form>
+    </div>
+</x-modal.createModal>
+@endforeach
+
+
 
 
         <!-- ================================================================================== -->
@@ -874,6 +999,48 @@
                     // If both validations pass, the form will submit normally
                 });
             });
+
+            // Function to update item total when quantity or price changes
+            function updateItemTotal(input) {
+                const row = input.closest('tr');
+                const quantity = parseFloat(row.querySelector('input[name*="[quantity]"]').value) || 0;
+                const unitPrice = parseFloat(row.querySelector('input[name*="[unit_price]"]').value) || 0;
+                const total = quantity * unitPrice;
+                
+                // Update the total display
+                const totalInput = row.querySelector('input[readonly]');
+                totalInput.value = '₱' + total.toFixed(2);
+                
+                // Recalculate grand total
+                updateGrandTotal();
+            }
+
+            // Function to update grand total
+            function updateGrandTotal() {
+                let grandTotal = 0;
+                document.querySelectorAll('tr').forEach(row => {
+                    const totalInput = row.querySelector('input[readonly]');
+                    if (totalInput && totalInput.value) {
+                        const totalValue = parseFloat(totalInput.value.replace('₱', '')) || 0;
+                        grandTotal += totalValue;
+                    }
+                });
+                
+                // Update grand total display if exists
+                const grandTotalElem = document.querySelector('input[name="total_amount"]');
+                if (grandTotalElem) {
+                    grandTotalElem.value = '₱' + grandTotal.toFixed(2);
+                }
+            }
+
+            // Function to remove sale item (visual only, backend handled by controller)
+            function removeSaleItem(button) {
+                if (confirm('Are you sure you want to remove this item?')) {
+                    const row = button.closest('tr');
+                    row.remove();
+                    updateGrandTotal();
+                }
+            }
         </script>
 
     </main>

@@ -153,4 +153,73 @@ class SalesController extends Controller
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
+
+    // Edit method - Show edit form
+    public function edit($id)
+    {
+        $sale = Sale::with(['items.inventory', 'customer'])->findOrFail($id);
+        $customers = Customer::all();
+        
+        return view('sales.edit', compact('sale', 'customers'));
+    }
+
+    // Update method - Process edit form
+    public function update(Request $request, $id)
+    {
+        $sale = Sale::findOrFail($id);
+        
+        // Validate request
+        $validated = $request->validate([
+            'customerName' => 'required|string|max:255',
+            'sale_date' => 'required|date',
+            'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0'
+        ]);
+        
+        // Update sale details
+        $sale->update([
+            'customer_name' => $validated['customerName'],
+            'sale_date' => $validated['sale_date']
+        ]);
+        
+        // Update sale items
+        if ($request->has('items')) {
+            $totalAmount = 0;
+            
+            foreach ($request->items as $itemId => $itemData) {
+                $saleItem = SaleItem::find($itemId);
+                if ($saleItem && $saleItem->sale_id == $sale->id) {
+                    $saleItem->update([
+                        'quantity' => $itemData['quantity'],
+                        'unit_price' => $itemData['unit_price'],
+                        'total_price' => $itemData['quantity'] * $itemData['unit_price']
+                    ]);
+                    
+                    $totalAmount += $saleItem->total_price;
+                }
+            }
+            
+            // Update sale total
+            $sale->update(['total_amount' => $totalAmount]);
+        }
+        
+        return redirect()->route('sales.index')
+            ->with('success', 'Sale updated successfully!');
+    }
+
+    // Destroy method - Delete sale
+    public function destroy($id)
+    {
+        $sale = Sale::findOrFail($id);
+        
+        // Delete associated items first
+        $sale->items()->delete();
+        
+        // Delete the sale
+        $sale->delete();
+        
+        return redirect()->route('sales.index')
+            ->with('success', 'Sale deleted successfully!');
+    }
+
 }
