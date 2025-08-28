@@ -31,12 +31,12 @@
         <section class="container flex flex-col items-center place-content-start">
             <div class="container flex items-start justify-start place-content-start w-auto gap-x-4 text-white mr-auto mb-4">
                 <div class="container flex flex-col px-5 py-2 w-44 text-start rounded-md bg-[#5C717B]">
-                    <span class="font-semibold text-2xl">{{ $deliveredPOs->count() }}</span>
-                    <span class="text-xs">Stock In</span>
+                    <span class="font-semibold text-2xl">{{ number_format($totalStockIn) }}</span>
+                    <span class="text-xs">Total Stock In</span>
                 </div>
                 <div class="container flex flex-col px-5 py-2 w-44 text-start rounded-md bg-[#2C3747]">
-                    <span class="font-semibold text-2xl">98</span>
-                    <span class="text-xs">Stock Out</span>
+                    <span class="font-semibold text-2xl">{{ number_format($totalStockOut) }}</span>
+                    <span class="text-xs">Total Stock Out</span>
                 </div>
             </div>
 
@@ -664,7 +664,7 @@
                                 </select>
                             </div>
 
-                            <!-- Category (half) - FIXED: Dynamic from database -->
+                            <!-- Category  -->
                             <div class="col-span-2 flex flex-col text-start">
                                 <label for="productCategory" class="font-medium">Product Category</label>
                                 <select name="productCategory" id="productCategory" 

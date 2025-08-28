@@ -2,21 +2,25 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Sale extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'customerName', 
-        'totalAmount',
-        'saleDate',
+        'invoice_number',
+        'sale_date',
+        'customer_name',
+        'total_amount',
+        'cash_received',
+        'change'
     ];
 
-    public function inventories()
+    // Relationship: A sale has many items
+    public function items()
     {
-        return $this->belongsToMany(Inventory::class, 'sale_items')
-                    ->withPivot('quantity', 'price') // sold qty + price at sale time
-                    ->withTimestamps();
+        return $this->hasMany(SaleItem::class);
     }
 }
-

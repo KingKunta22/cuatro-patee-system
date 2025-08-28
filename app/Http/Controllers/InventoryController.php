@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\SaleItem;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
@@ -14,6 +15,15 @@ class InventoryController extends Controller
 {
     public function index(Request $request)
     {
+        // STOCK IN: Total quantity of items from delivered POs
+        $totalStockIn = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
+                $query->where('orderStatus', 'Delivered');
+            })
+            ->sum('quantity');
+
+        // STOCK OUT: Total quantity of items sold across all sales
+        $totalStockOut = SaleItem::sum('quantity');
+
         // Get delivered POs that haven't been added to inventory yet
         $unaddedPOs = PurchaseOrder::whereHas('deliveries', function($query) {
                 $query->where('orderStatus', 'Delivered');
@@ -24,7 +34,7 @@ class InventoryController extends Controller
             ->select('id', 'orderNumber')
             ->get();
 
-        // Get all delivered POs
+        // Get all delivered POs (for reference if needed)
         $deliveredPOs = PurchaseOrder::whereHas('deliveries', function($query) {
                 $query->where('orderStatus', 'Delivered');
             })
@@ -61,11 +71,21 @@ class InventoryController extends Controller
         $categories = Category::orderBy('productCategory')->get();
         $brands = Brand::orderBy('productBrand')->get();
 
-        // Get unique values from inventory for filters (keep your existing functionality)
+        // Get unique values from inventory for filters
         $uniqueCategories = Inventory::distinct()->pluck('productCategory')->filter();
         $uniqueBrands = Inventory::distinct()->pluck('productBrand')->filter();
 
-        return view('inventory', compact('unaddedPOs', 'inventoryItems', 'deliveredPOs', 'categories', 'brands', 'uniqueCategories', 'uniqueBrands'));
+        return view('inventory', compact(
+            'unaddedPOs', 
+            'inventoryItems', 
+            'deliveredPOs', 
+            'categories', 
+            'brands', 
+            'uniqueCategories', 
+            'uniqueBrands', 
+            'totalStockIn',
+            'totalStockOut'
+        ));
     }
 
 

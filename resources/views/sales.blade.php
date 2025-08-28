@@ -28,28 +28,26 @@
             });
         </script>
 
-        <!-- CONTAINER OUTSIDE THE TABLE -->
+        <!-- REVENUE STATS -->
         <section class="container flex flex-col items-center place-content-start">
             <div class="container flex items-start justify-start place-content-start w-auto gap-x-4 text-white mr-auto mb-4">
                 <div class="container flex flex-col px-6 py-3 w-64 text-start rounded-md bg-[#5C717B]">
-                    <span class="font-semibold text-xl">₱(InsertRevenue)</span>
+                    <span class="font-semibold text-xl">₱{{ number_format($totalRevenue, 2) }}</span>
                     <span class="text-xs">Total Revenue</span>
                 </div>
                 <div class="container flex flex-col px-6 py-3 w-64 text-start rounded-md bg-[#2C3747]">
-                    <span class="font-semibold text-xl">₱(InsertProfit)</span>
+                    <span class="font-semibold text-xl">₱{{ number_format($totalProfit, 2) }}</span>
                     <span class="text-xs">Total Profit</span>
                 </div>
                <div class="container flex flex-col px-6 py-3 w-64 text-start rounded-md bg-[#5C717B]">
-                    <span class="font-semibold text-xl">₱(InsertCost)</span>
+                    <span class="font-semibold text-xl">₱{{ number_format($totalCost, 2) }}</span>
                     <span class="text-xs">Total Cost</span>
                 </div>
             </div>
 
-            <!-- SEARCH BAR AND FILTERS - SEPARATE FORM TO AVOID CONFLICTS -->
+            <!-- SEARCH BAR -->
             <div class="container flex items-center place-content-start gap-4 mb-4">
-                <!-- SEPARATE SEARCH/FILTER FORM - WON'T AFFECT OTHER FORMS -->
                 <form action="{{ route('sales.index') }}" method="GET" class="flex items-center gap-4 mr-auto">
-                    <!-- Simple Search Input -->
                     <div class="relative">
                         <input 
                             type="text" 
@@ -66,12 +64,10 @@
                         </div>
                     </div>
 
-                    <!-- Search Button -->
                     <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
                         Search
                     </button>
 
-                    <!-- Clear Button (only show when filters are active) -->
                     @if(request('search'))
                         <a href="{{ route('sales.index') }}" class="text-white px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">
                             Clear
@@ -79,41 +75,51 @@
                     @endif
                 </form>
 
-                <!-- Your existing create button - SEPARATE FROM THE FILTER FORM -->
                 <x-form.createBtn @click="$refs.addSalesRef.showModal()">Add New Sale</x-form.createBtn>
             </div>
         </section>
 
-        <!-- CONTAINER FOR TABLE DETAILS -->
+        <!-- SALES TABLE -->
         <section class="border w-full rounded-md border-solid border-black my-3">
             <table class="w-full">
                 <thead class="rounded-lg bg-main text-white px-4 py-3">
                     <tr class="rounded-lg">
-                        <th class=" bg-main px-4 py-3">Invoice Number</th>
-                        <th class=" bg-main px-4 py-3">Date</th>
-                        <th class=" bg-main px-4 py-3">Customer Name</th>
-                        <th class=" bg-main px-4 py-3">Amount</th>
-                        <th class=" bg-main px-4 py-3">Quantity</th>
-                        <th class=" bg-main px-4 py-3">Action</th>
+                        <th class="bg-main px-4 py-3">Invoice Number</th>
+                        <th class="bg-main px-4 py-3">Date</th>
+                        <th class="bg-main px-4 py-3">Customer Name</th>
+                        <th class="bg-main px-4 py-3">Total Amount</th>
+                        <th class="bg-main px-4 py-3">Items</th>
+                        <th class="bg-main px-4 py-3">Action</th>
                     </tr>
                 </thead>
                 <tbody>
+                    @forelse($sales as $sale)
                     <tr class="border-b">
-                        <td class="truncate px-2 py-2 text-center" title="">INVOICE NUM</td>
-                        <td class="truncate px-2 py-2 text-center" title="">DATE</td>
-                        <td class="truncate px-2 py-2 text-center" title="">CUSTOMER NAME</td>
-                        <td class="truncate px-2 py-2 text-center" title="">AMOUNT</td>
-                        <td class="truncate px-2 py-2 text-center" title="">QUANTITY</td>
-                        <td class="truncate px-2 py-2 text-center" title="">ACTION</td>
+                        <td class="px-2 py-2 text-center">{{ $sale->invoice_number }}</td>
+                        <td class="px-2 py-2 text-center">{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</td>
+                        <td class="px-2 py-2 text-center">{{ $sale->customer_name }}</td>
+                        <td class="px-2 py-2 text-center">₱{{ number_format($sale->total_amount, 2) }}</td>
+                        <td class="px-2 py-2 text-center">{{ $sale->items->count() }} items</td>
+                        <td class="truncate px-2 py-2 text-center flex justify-center items-center">
+                            <button @click="$refs['viewSaleDetails{{ $sale->id }}'].showModal()" class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">
+                                View Details
+                            </button>
+                        </td>
                     </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-gray-500">
+                            No sales records found.
+                        </td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
 
-            <!-- PAGINATION VIEW -->
-            {{-- <div class="mt-4 px-4 py-2 bg-gray-50"> --}}
-            {{--    {{ $inventoryItems->appends(request()->except('page'))->links() }} --}}
-            {{-- </div> --}}
-
+            <!-- PAGINATION -->
+            <div class="mt-4 px-4 py-2 bg-gray-50">
+                {{ $sales->links() }}
+            </div>
         </section>
 
         <!-- ============================================ -->
@@ -318,6 +324,85 @@
                 </x-form.saveBtn>
             </div>
         </x-modal.createModal>
+
+
+
+        <!-- VIEW DETAILS MODAL -->
+        @foreach($sales as $sale)
+        <x-modal.createModal x-ref="viewSaleDetails{{ $sale->id }}">
+            <x-slot:dialogTitle>Sale Details: {{ $sale->invoice_number }}</x-slot:dialogTitle>
+            
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <!-- Sale Information -->
+                    <div class="col-span-2">
+                        <h2 class="text-xl font-bold mb-4">Sale Information</h2>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="font-semibold">Invoice Number</p>
+                                <p>{{ $sale->invoice_number }}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold">Date</p>
+                                <p>{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold">Customer</p>
+                                <p>{{ $sale->customer_name }}</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold">Total Amount</p>
+                                <p>₱{{ number_format($sale->total_amount, 2) }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items in this sale -->
+                    <div class="col-span-2">
+                        <h2 class="text-xl font-bold mb-4">Items Sold</h2>
+                        <table class="w-full border-collapse border border-gray-300">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="border border-gray-300 px-4 py-2">Product</th>
+                                    <th class="border border-gray-300 px-4 py-2">Quantity</th>
+                                    <th class="border border-gray-300 px-4 py-2">Price</th>
+                                    <th class="border border-gray-300 px-4 py-2">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($sale->items as $saleItem)
+                                <tr>
+                                    <td class="border border-gray-300 px-4 py-2">
+                                        {{ $saleItem->inventory->productName ?? 'N/A' }}
+                                    </td>
+                                    <td class="border border-gray-300 px-4 py-2 text-center">
+                                        {{ $saleItem->quantity }}
+                                    </td>
+                                    <td class="border border-gray-300 px-4 py-2 text-right">
+                                        ₱{{ number_format($saleItem->unit_price, 2) }}
+                                    </td>
+                                    <td class="border border-gray-300 px-4 py-2 text-right">
+                                        ₱{{ number_format($saleItem->total_price, 2) }}
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="flex justify-end gap-4 px-6 pb-4 mt-4 border-t pt-4">
+                <button 
+                    @click="$refs.viewSaleDetails{{ $sale->id }}.close()" 
+                    class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
+                    Close
+                </button>
+            </div>
+        </x-modal.createModal>
+        @endforeach
+
 
 
         <!-- ================================================================================== -->
@@ -700,6 +785,38 @@
                     console.log('Could not reset Alpine data:', e);
                 }
             }
+
+            function validateCartBeforeSubmit() {
+                if (cart.length === 0) {
+                    alert('Please add at least one item to proceed');
+                    return false;
+                }
+                
+                // Group quantities by product ID
+                const quantityByProduct = {};
+                cart.forEach(item => {
+                    quantityByProduct[item.inventory_id] = (quantityByProduct[item.inventory_id] || 0) + item.quantity;
+                });
+                
+                // Validate each product's total quantity
+                for (const [inventoryId, totalQuantity] of Object.entries(quantityByProduct)) {
+                    const originalProduct = originalProducts.find(p => p.id == inventoryId);
+                    
+                    if (!originalProduct) {
+                        alert(`One of your products is no longer available`);
+                        return false;
+                    }
+                    
+                    // CRITICAL: Check TOTAL quantity against stock
+                    if (totalQuantity > originalProduct.productStock) {
+                        const productName = cart.find(item => item.inventory_id == inventoryId).name;
+                        alert(`Not enough stock for ${productName}. Available: ${originalProduct.productStock}, Requested: ${totalQuantity}`);
+                        return false;
+                    }
+                }
+                
+                return true;
+            }
             
             // Add event listeners when DOM is loaded
             document.addEventListener('DOMContentLoaded', function() {
@@ -708,9 +825,19 @@
                 
                 // Add form validation on submit
                 document.getElementById('addSales').addEventListener('submit', function(e) {
+                    // First validate the form inputs
                     if (!validateFormBeforeSubmit()) {
                         e.preventDefault();
+                        return;
                     }
+                    
+                    // THEN validate the cart data (this is what goes to database)
+                    if (!validateCartBeforeSubmit()) {
+                        e.preventDefault();
+                        return;
+                    }
+                    
+                    // If both validations pass, the form will submit normally
                 });
             });
         </script>

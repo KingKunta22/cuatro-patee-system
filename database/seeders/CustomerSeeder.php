@@ -16,7 +16,7 @@ class CustomerSeeder extends Seeder
             Customer::create([
                 'customerName' => $faker->firstName(),
                 'customerAddress' => $faker->address,
-                'customerContactNumber' => '09' . $faker->numerify('###########'),
+                'customerContactNumber' => '09' . $faker->numerify('#########'),
                 'customerEmailAddress' => $faker->safeEmail,
                 'customerStatus' => 'Active',
             ]);

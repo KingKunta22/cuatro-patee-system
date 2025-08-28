@@ -39,6 +39,8 @@ Route::get('/reports', function() {
 
 // ROUTE FOR SALES
 Route::resource('sales', SalesController::class)->middleware('auth');
+// Route for invoice PDF
+// Route::get('sales/{sale}/invoice', [SalesController::class, 'showInvoice'])->name('sales.invoice');}}
 
 
 // ROUTES FOR INVENTORY
