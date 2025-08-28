@@ -356,22 +356,21 @@
                                     <!-- CONTAINER FOR EVERYTHING INSIDE THE VIEW DETAILS MODAL -->
                                     <div class="container px-3 py-4">
 
-                                        <!-- ADD ORDER FORM -->
                                         {{-- Purchase Order Details --}}
-                                        <div class="px-6 py-4 container grid grid-cols-4 gap-x-8 gap-y-6">
-                                            <div class="col-span-2">
+                                        <div class="px-6 py-4 container grid grid-cols-4 gap-5 text-start">
+                                            <div class="bg-gray-50 p-3 rounded-md col-span-2">
                                                 <label class="font-semibold">Order Number</label>
                                                 <p>{{ $purchaseOrder->orderNumber }}</p>
                                             </div>
-                                            <div class="col-span-2">
+                                            <div class="bg-gray-50 p-3 rounded-md col-span-2">
                                                 <label class="font-semibold">Supplier Name</label>
                                                 <p>{{ $purchaseOrder->supplier->supplierName }}</p>
                                             </div>
-                                            <div class="col-span-2">
+                                            <div class="bg-gray-50 p-3 rounded-md col-span-2">
                                                 <label class="font-semibold">Payment Terms</label>
                                                 <p>{{ ucfirst($purchaseOrder->paymentTerms) }}</p>
                                             </div>
-                                            <div class="col-span-2">
+                                            <div class="bg-gray-50 p-3 rounded-md col-span-2">
                                                 <label class="font-semibold">Expected Delivery Date</label>
                                                 <p>{{ \Carbon\Carbon::parse($purchaseOrder->deliveryDate)->format('F d, Y') }}</p>
                                             </div>

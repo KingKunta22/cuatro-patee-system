@@ -155,89 +155,89 @@
                 </tbody>
 
                 <!-- VIEW INVENTORY DETAILS MODAL PER PRODUCT-->
-                <x-modal.createModal x-ref="viewInventoryDetails{{ $item->id }}">
-                    <x-slot:dialogTitle>Product Details</x-slot:dialogTitle>
-                    
-                    <div class="grid grid-cols-2 gap-6 p-6">
+            <x-modal.createModal x-ref="viewInventoryDetails{{ $item->id }}">
+                <x-slot:dialogTitle>Product Details</x-slot:dialogTitle>
+                
+                <div class="grid grid-cols-2 gap-6 p-6">
 
-                        <!-- LEFT: IMAGE -->
-                        <div class="flex flex-col items-center justify-center">
-                            <img src="{{ asset('storage/' . $item->productImage) }}" 
-                                alt="{{ $item->productName }}" 
-                                class="w-full max-h-80 object-contain rounded-xl shadow-lg border">
-                        </div>
+                    <!-- LEFT: IMAGE -->
+                    <div class="flex flex-col items-center justify-center">
+                        <!-- Product name bigger -->
+                        <h2 class="text-3xl tracking-wide font-bold text-start mr-auto uppercase pb-4 text-gray-800">{{ $item->productName }}</h2>
 
-                        <!-- RIGHT: DETAILS -->
-                        <div class="flex flex-col space-y-4">
-                            <!-- Product name bigger -->
-                            <h2 class="text-2xl font-bold text-gray-800">{{ $item->productName }}</h2>
+                        <img src="{{ asset('storage/' . $item->productImage) }}" 
+                            alt="{{ $item->productName }}" 
+                            class="w-full max-h-80 object-contain rounded-xl shadow-lg border">
+                    </div>
 
-                            <!-- Info grid -->
-                            <div class="grid grid-cols-2 gap-4 text-gray-700">
-                                <div>
-                                    <p class="font-semibold">SKU</p>
-                                    <p>{{ $item->productSKU }}</p>
-                                </div>
-                                <div>
-                                    <p class="font-semibold">Brand</p>
-                                    <p>{{ $item->productBrand }}</p>
-                                </div>
-                                <div>
-                                    <p class="font-semibold">Stock</p>
-                                    <p>{{ $item->productStock }}</p>
-                                </div>
-                                <div>
-                                    <p class="font-semibold">Item Measurement</p>
-                                    <p>({{ $item->productStock }}) {{ $item->productItemMeasurement }}</p>
-                                </div>
-                                <div>
-                                    <p class="font-semibold">Category</p>
-                                    <p>{{ $item->productCategory }}</p>
-                                </div>
-                                <div>
-                                    <p class="font-semibold">Selling Price</p>
-                                    <p>₱{{ number_format($item->productSellingPrice, 2) }}</p>
-                                </div>
-                                <div>
-                                    <p class="font-semibold">Cost Price</p>
-                                    <p>₱{{ number_format($item->productCostPrice, 2) }}</p>
-                                </div>
-                                <div>
-                                    <p class="font-semibold">Profit Margin</p>
-                                    <p>{{ $item->productProfitMargin }}%</p>
-                                </div>
-                                <div class="col-span-2 text-center">
-                                    <p class="font-semibold">Item Expiration Date</p>
-                                    <p>
-                                        {{ \Carbon\Carbon::parse($item->productExpirationDate)->format('M d, Y') }}
-                                        ({{ \Carbon\Carbon::parse($item->productExpirationDate)->diffForHumans() }})
-                                    </p>
-                                </div>
+                    <!-- RIGHT: DETAILS -->
+                    <div class="flex flex-col space-y-4">
+
+                        <!-- Info grid -->
+                        <div class="grid grid-cols-4 gap-3">
+                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                <p class="font-semibold text-md">SKU</p>
+                                <p class="text-sm">{{ $item->productSKU }}</p>
+                            </div>
+                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                <p class="font-semibold text-md">Brand</p>
+                                <p class="text-sm">{{ $item->productBrand }}</p>
+                            </div>
+                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                <p class="font-semibold text-md">Stock</p>
+                                <p class="text-sm">{{ $item->productStock }}</p>
+                            </div>
+                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                <p class="font-semibold text-md">Measurement</p>
+                                <p class="text-sm">{{ $item->productItemMeasurement }}</p>
+                            </div>
+                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                <p class="font-semibold text-md">Category</p>
+                                <p class="text-sm">{{ $item->productCategory }}</p>
+                            </div>
+                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                <p class="font-semibold text-md">Selling Price</p>
+                                <p class="text-sm">₱{{ number_format($item->productSellingPrice, 2) }}</p>
+                            </div>
+                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                <p class="font-semibold text-md">Cost Price</p>
+                                <p class="text-sm">₱{{ number_format($item->productCostPrice, 2) }}</p>
+                            </div>
+                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                <p class="font-semibold text-md">Profit Margin</p>
+                                <p class="text-sm">{{ $item->productProfitMargin }}%</p>
+                            </div>
+                            <div class="bg-gray-50 col-span-3 p-3 rounded-md">
+                                <p class="font-semibold text-md">Expiration Date</p>
+                                <p class="text-sm">
+                                    {{ \Carbon\Carbon::parse($item->productExpirationDate)->format('M d, Y') }}
+                                    ({{ \Carbon\Carbon::parse($item->productExpirationDate)->diffForHumans() }})
+                                </p>
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- ACTION BUTTONS -->
-                    <div class="flex justify-between items-center gap-x-4 px-6 pb-4 mt-4 border-t pt-4">
-                        <!-- EDIT BUTTON: Opens edit dialog -->
-                        <button 
-                            @click="$refs['editProductDetails{{ $item->id }}'].showModal()" 
-                            class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/60 transition-all duration-100 ease-in">
-                            Edit
-                        </button>
+                <!-- ACTION BUTTONS -->
+                <div class="flex justify-between items-center gap-x-4 px-6 pb-4 mt-4 border-t pt-4">
+                    <!-- EDIT BUTTON: Opens edit dialog -->
+                    <button 
+                        @click="$refs['editProductDetails{{ $item->id }}'].showModal()" 
+                        class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/60 transition-all duration-100 ease-in">
+                        Edit
+                    </button>
 
-                        <!-- DELETE BUTTON: Opens delete dialog -->
-                        <x-form.closeBtn @click="$refs['confirmDeleteModal{{ $item->id }}'].showModal()">Delete</x-form.closeBtn>
+                    <!-- DELETE BUTTON: Opens delete dialog -->
+                    <x-form.closeBtn @click="$refs['confirmDeleteModal{{ $item->id }}'].showModal()">Delete</x-form.closeBtn>
 
-                        <!-- CLOSE BUTTON: Closes view details dialog -->
-                        <button 
-                            @click="$refs[viewInventoryDetails{{ $item-> id}}.close()]" 
-                            class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
-                            Close
-                        </button>
-
-                    </div>
-                </x-modal.createModal>
+                    <!-- CLOSE BUTTON: Closes view details dialog -->
+                    <button 
+                        @click="$refs['viewInventoryDetails{{ $item->id }}'].close()" 
+                        class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
+                        Close
+                    </button>
+                </div>
+            </x-modal.createModal>
 
                 @endforeach
             </table>

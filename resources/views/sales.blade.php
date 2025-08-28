@@ -327,81 +327,115 @@
 
 
 
-        <!-- VIEW DETAILS MODAL -->
-        @foreach($sales as $sale)
-        <x-modal.createModal x-ref="viewSaleDetails{{ $sale->id }}">
-            <x-slot:dialogTitle>Sale Details: {{ $sale->invoice_number }}</x-slot:dialogTitle>
-            
-            <div class="p-6">
-                <div class="grid grid-cols-2 gap-6">
-                    <!-- Sale Information -->
-                    <div class="col-span-2">
-                        <h2 class="text-xl font-bold mb-4">Sale Information</h2>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="font-semibold">Invoice Number</p>
-                                <p>{{ $sale->invoice_number }}</p>
-                            </div>
-                            <div>
-                                <p class="font-semibold">Date</p>
-                                <p>{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</p>
-                            </div>
-                            <div>
-                                <p class="font-semibold">Customer</p>
-                                <p>{{ $sale->customer_name }}</p>
-                            </div>
-                            <div>
-                                <p class="font-semibold">Total Amount</p>
-                                <p>₱{{ number_format($sale->total_amount, 2) }}</p>
-                            </div>
-                        </div>
+<!-- VIEW DETAILS MODAL -->
+@foreach($sales as $sale)
+<x-modal.createModal x-ref="viewSaleDetails{{ $sale->id }}">
+    <!-- Changed header to match purchase order style -->
+    <x-slot:dialogTitle>Sale Details: {{ $sale->invoice_number }}</x-slot:dialogTitle>
+    
+    <div class="container px-3 pt-4 pb-0">
+        <div class="grid grid-cols-2 gap-3 px-4">
+            <!-- Sale Information -->
+            <div class="col-span-3">
+                <h2 class="text-xl font-bold mb-4">Sale Information</h2>
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-gray-50 p-3 rounded-md">
+                        <p class="font-semibold text-md">Invoice Number</p>
+                        <p class="text-sm">{{ $sale->invoice_number }}</p>
                     </div>
-
-                    <!-- Items in this sale -->
-                    <div class="col-span-2">
-                        <h2 class="text-xl font-bold mb-4">Items Sold</h2>
-                        <table class="w-full border-collapse border border-gray-300">
-                            <thead class="bg-gray-100">
-                                <tr>
-                                    <th class="border border-gray-300 px-4 py-2">Product</th>
-                                    <th class="border border-gray-300 px-4 py-2">Quantity</th>
-                                    <th class="border border-gray-300 px-4 py-2">Price</th>
-                                    <th class="border border-gray-300 px-4 py-2">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($sale->items as $saleItem)
-                                <tr>
-                                    <td class="border border-gray-300 px-4 py-2">
-                                        {{ $saleItem->inventory->productName ?? 'N/A' }}
-                                    </td>
-                                    <td class="border border-gray-300 px-4 py-2 text-center">
-                                        {{ $saleItem->quantity }}
-                                    </td>
-                                    <td class="border border-gray-300 px-4 py-2 text-right">
-                                        ₱{{ number_format($saleItem->unit_price, 2) }}
-                                    </td>
-                                    <td class="border border-gray-300 px-4 py-2 text-right">
-                                        ₱{{ number_format($saleItem->total_price, 2) }}
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    <div class="bg-gray-50 p-3 rounded-md">
+                        <p class="font-semibold text-md">Sale Date</p>
+                        <p class="text-sm">{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-md">
+                        <p class="font-semibold text-md">Customer Name</p>
+                        <p class="text-sm">{{ $sale->customer_name }}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-md">
+                        <p class="font-semibold text-md">Items Count</p>
+                        <p class="text-sm">{{ $sale->items->count() }} items</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-md">
+                        <p class="font-semibold text-md">Total Amount</p>
+                        <p class="text-sm">₱{{ number_format($sale->total_amount, 2) }}</p>
+                    </div>
+                    <div class="bg-gray-50 p-3 rounded-md">
+                        <p class="font-semibold text-main">Processed By</p>
+                        <p class="text-sm">{{ $sale->employee->name ?? 'System' }}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- ACTION BUTTONS -->
-            <div class="flex justify-end gap-4 px-6 pb-4 mt-4 border-t pt-4">
+            <!-- Items in this sale - Updated table styling -->
+            <div class="col-span-2">
+                <h2 class="text-xl font-bold mb-4">Items Sold</h2>
+                <div class="border w-auto rounded-md border-solid border-black p-3 my-4">
+                    <table class="w-full">
+                        <thead class="rounded-lg bg-main text-white px-4 py-2">
+                            <tr class="rounded-lg">
+                                <th class="bg-main px-2 py-2 text-sm">Product</th>
+                                <th class="bg-main px-2 py-2 text-sm">Quantity</th>
+                                <th class="bg-main px-2 py-2 text-sm">Unit Price</th>
+                                <th class="bg-main px-2 py-2 text-sm">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($sale->items as $saleItem)
+                            <tr class="border-b">
+                                <td class="px-2 py-2 text-center">{{ $saleItem->inventory->productName ?? 'N/A' }}</td>
+                                <td class="px-2 py-2 text-center">{{ $saleItem->quantity }} {{ $saleItem->inventory->productItemMeasurement ?? '' }}</td>
+                                <td class="px-2 py-2 text-center">₱{{ number_format($saleItem->unit_price, 2) }}</td>
+                                <td class="px-2 py-2 text-center">₱{{ number_format($saleItem->total_price, 2) }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Total Row -->
+                <div class="col-span-4 flex items-center place-content-end mb-4 mx-6 pb-4 px-8 border-b-2 border-black">
+                    <label class="font-bold mr-2 uppercase">Grand Total:</label>
+                    <p>₱{{ number_format($sale->total_amount, 2) }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS - Updated layout with checkboxes on left, action buttons on right -->
+        <div class="flex justify-between items-center w-full px-6 py-4 border-t">
+            <!-- Checkboxes on left -->
+            <div class="flex items-center space-x-4">
+                <label class="flex items-center space-x-1">
+                    <input type="checkbox" name="downloadPDF">
+                    <span>Download</span>
+                </label>
+                <label class="flex items-center space-x-1">
+                    <input type="checkbox" name="print">
+                    <span>Print</span>
+                </label>
+            </div>
+
+            <!-- Action buttons on right (Edit, Delete, Close) -->
+            <div class="flex gap-4">
+                <!-- EDIT BUTTON: Opens edit dialog -->
                 <button 
-                    @click="$refs.viewSaleDetails{{ $sale->id }}.close()" 
-                    class="px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500">
+                    @click="$refs['editDialog{{ $sale->id }}'].showModal()" 
+                    class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/70 transition-all duration-100 ease-in">
+                    Edit
+                </button>
+
+                <!-- DELETE BUTTON: Opens delete dialog -->
+                <x-form.closeBtn @click="$refs['deleteDialog{{ $sale->id }}'].showModal()">Delete</x-form.closeBtn>
+
+                <!-- CLOSE BUTTON: Closes view details dialog -->
+                <button 
+                    @click="$refs['viewSaleDetails{{ $sale->id }}'].close()" 
+                    class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
                     Close
                 </button>
             </div>
-        </x-modal.createModal>
-        @endforeach
+        </div>
+    </div>
+</x-modal.createModal>
+@endforeach
 
 
 
