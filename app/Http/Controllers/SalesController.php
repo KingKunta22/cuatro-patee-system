@@ -14,9 +14,12 @@ class SalesController extends Controller
     // Show all sales
     public function index()
     {
-        // Calculate the stats
-        $totalRevenue = Sale::sum('total_amount');
-        $totalCost = SaleItem::sum(DB::raw('quantity * unit_price'));
+        // Total Revenue (based on selling price)
+        $totalRevenue = SaleItem::sum(DB::raw('quantity * unit_price'));
+        // Total Cost (based on cost price from inventory)
+        $totalCost = SaleItem::join('inventories', 'sale_items.inventory_id', '=', 'inventories.id')
+            ->sum(DB::raw('sale_items.quantity * inventories.productCostPrice'));
+        // Total Profit (revenue minus cost)
         $totalProfit = $totalRevenue - $totalCost;
         
         // Get sales data
