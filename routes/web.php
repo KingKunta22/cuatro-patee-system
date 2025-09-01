@@ -97,6 +97,12 @@ Route::resource('customers', CustomerController::class)->middleware('auth');
 
 
 
+
+
+
+
+
+
 /*
 
     ====MANUAL====

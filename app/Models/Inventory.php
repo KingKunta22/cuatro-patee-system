@@ -40,4 +40,8 @@ class Inventory extends Model
     public function category() {
         return $this->belongsTo(Category::class, 'category_id');
     }
+
+    public function badItems() {
+        return $this->hasMany(BadItem::class);
+    }
 }
