@@ -48,4 +48,9 @@ class PurchaseOrder extends Model
     {
         return $this->hasMany(Delivery::class);
     }
+    
+    public function badItems()
+    {
+        return $this->hasManyThrough(BadItem::class, PurchaseOrderItem::class);
+    }
 }

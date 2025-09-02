@@ -24,5 +24,10 @@ class PurchaseOrderItem extends Model
     {
         return $this->hasOne(Inventory::class, 'purchase_order_item_id');
     }
+
+    public function badItems()
+    {
+        return $this->hasMany(BadItem::class, 'purchase_order_item_id');
+    }
     
 }

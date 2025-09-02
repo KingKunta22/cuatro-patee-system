@@ -13,6 +13,7 @@ class BadItem extends Model
     protected $fillable = [
         'inventory_id',
         'purchase_order_id',
+        'purchase_order_item_id',
         'quality_status',
         'item_count',
         'notes',
@@ -34,4 +35,10 @@ class BadItem extends Model
     {
         return $this->belongsTo(PurchaseOrder::class);
     }
+
+    public function purchaseOrderItem(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseOrderItem::class);
+    }
+
 }

@@ -19,11 +19,12 @@
                 <td class="px-2 py-2 text-center"></td>
                 <td class="px-2 py-2 text-center"></td>
                 <td class="px-2 py-2 text-center"></td>
-                <td class="px-2 py-2 text-center">
-                    <button @click=""
-                        class="flex items-center justify-center rounded-md bg-gray-500 px-3 py-2 text-sm text-white font-semibold hover:bg-gray-600 transition">
-                        View Details
-                    </button>
+                <td class="truncate px-2 py-2 text-center flex place-content-center" title="">
+                    <button @click="" 
+                        class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center 
+                            hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold"
+                    >
+                    View Details</button>
                 </td>
             </tr>
             <tr>

@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Brand;
+use App\Models\BadItem;
 use App\Models\Category;
 use App\Models\SaleItem;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class InventoryController extends Controller
@@ -129,52 +131,101 @@ class InventoryController extends Controller
                 'productName' => 'required|string|max:255',
                 'productBrand' => 'required|string|max:255',
                 'productCategory' => 'required|string|max:255',
-                'productStock' => 'required|numeric|min:0',
                 'productSellingPrice' => 'required|numeric|min:0',
                 'productCostPrice' => 'required|numeric|min:0',
                 'productItemMeasurement' => 'required|string|max:255',
                 'productExpirationDate' => 'required|date|after_or_equal:today',
                 'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'purchaseOrderNumber' => 'nullable|exists:purchase_orders,id',
-                'selectedItemId' => 'nullable|exists:purchase_order_items,id',
+                'purchaseOrderNumber' => 'required|exists:purchase_orders,id',
+                'selectedItemId' => 'required|exists:purchase_order_items,id',
+                'productQuality' => 'required|string',
+                'badItemQuantity' => 'nullable|integer|min:0',
             ];
         }
 
         $validated = $request->validate($validationRules);
 
-        // Map fields to database fields using the appropriate prefix
-        $inventoryData = [
-            'productName' => $validated[$fieldPrefix . 'productName'],
-            'productSKU' => $newSKU,
-            'productBrand' => $validated[$fieldPrefix . 'productBrand'],
-            'productCategory' => $validated[$fieldPrefix . 'productCategory'],
-            'productStock' => $validated[$fieldPrefix . 'productStock'],
-            'productSellingPrice' => $validated[$fieldPrefix . 'productSellingPrice'],
-            'productCostPrice' => $validated[$fieldPrefix . 'productCostPrice'],
-            'productItemMeasurement' => $validated[$fieldPrefix . 'productItemMeasurement'],
-            'productExpirationDate' => $validated[$fieldPrefix . 'productExpirationDate'],
-            'purchase_order_id' => ($addMethod === 'po') ? ($validated['purchaseOrderNumber'] ?? null) : null,
-            'purchase_order_item_id' => ($addMethod === 'po') ? ($validated['selectedItemId'] ?? null) : null,
-        ];
+        // Start a database transaction
+        DB::beginTransaction();
 
-        // Handle image upload
-        $imageField = $fieldPrefix . 'productImage';
-        if ($request->hasFile($imageField)) {
-            $imagePath = $request->file($imageField)->store('inventory', 'public');
-            $inventoryData['productImage'] = $imagePath;
+        try {
+            // For PO method, calculate actual stock (total - bad items)
+            if ($addMethod === 'po') {
+                $poItem = PurchaseOrderItem::find($validated['selectedItemId']);
+                $totalQuantity = $poItem->quantity;
+                $badItemCount = ($validated['productQuality'] !== 'goodCondition') 
+                    ? ($validated['badItemQuantity'] ?? 0) 
+                    : 0;
+                
+                $actualStock = $totalQuantity - $badItemCount;
+                
+                if ($actualStock < 0) {
+                    throw new \Exception('Bad items cannot exceed total quantity');
+                }
+                
+                if ($actualStock === 0) {
+                    throw new \Exception('Cannot add product with zero stock');
+                }
+            }
+
+            // Map fields to database fields using the appropriate prefix
+            $inventoryData = [
+                'productName' => $validated[$fieldPrefix . 'productName'],
+                'productSKU' => $newSKU,
+                'productBrand' => $validated[$fieldPrefix . 'productBrand'],
+                'productCategory' => $validated[$fieldPrefix . 'productCategory'],
+                'productStock' => ($addMethod === 'po') ? $actualStock : $validated[$fieldPrefix . 'productStock'],
+                'productSellingPrice' => $validated[$fieldPrefix . 'productSellingPrice'],
+                'productCostPrice' => $validated[$fieldPrefix . 'productCostPrice'],
+                'productItemMeasurement' => $validated[$fieldPrefix . 'productItemMeasurement'],
+                'productExpirationDate' => $validated[$fieldPrefix . 'productExpirationDate'],
+                'purchase_order_id' => ($addMethod === 'po') ? $validated['purchaseOrderNumber'] : null,
+                'purchase_order_item_id' => ($addMethod === 'po') ? $validated['selectedItemId'] : null,
+            ];
+
+            // Handle image upload
+            $imageField = $fieldPrefix . 'productImage';
+            if ($request->hasFile($imageField)) {
+                $imagePath = $request->file($imageField)->store('inventory', 'public');
+                $inventoryData['productImage'] = $imagePath;
+            }
+
+            // Calculate profit margin
+            $profitMargin = 0;
+            if ($inventoryData['productCostPrice'] > 0) {
+                $profitMargin = round(($inventoryData['productSellingPrice'] - $inventoryData['productCostPrice']) / $inventoryData['productCostPrice'] * 100, 2);
+            }
+            $inventoryData['productProfitMargin'] = $profitMargin;
+
+            // Save to database
+            $inventory = Inventory::create($inventoryData);
+
+            // Handle bad items if adding from PO and quality is not good
+            if ($addMethod === 'po' && $validated['productQuality'] !== 'goodCondition' && $badItemCount > 0) {
+                BadItem::create([
+                    'inventory_id' => $inventory->id,
+                    'purchase_order_id' => $validated['purchaseOrderNumber'],
+                    'purchase_order_item_id' => $validated['selectedItemId'],
+                    'quality_status' => $validated['productQuality'],
+                    'item_count' => $badItemCount,
+                    'notes' => 'Reported during inventory addition from PO',
+                    'status' => 'Pending',
+                ]);
+            }
+
+            // Commit the transaction
+            DB::commit();
+
+            return redirect()->route('inventory.index')->with('success', 'Product added successfully!');
+
+        } catch (\Exception $e) {
+            // Rollback the transaction on error
+            DB::rollBack();
+            
+            return back()->withInput()->withErrors([
+                'error' => 'An error occurred: ' . $e->getMessage()
+            ]);
         }
-
-        // Calculate profit margin
-        $profitMargin = 0;
-        if ($inventoryData['productCostPrice'] > 0) {
-            $profitMargin = round(($inventoryData['productSellingPrice'] - $inventoryData['productCostPrice']) / $inventoryData['productCostPrice'] * 100, 2);
-        }
-        $inventoryData['productProfitMargin'] = $profitMargin;
-
-        // Save to database
-        Inventory::create($inventoryData);
-
-        return redirect()->route('inventory.index')->with('success', 'Product added successfully!');
     }
 
 

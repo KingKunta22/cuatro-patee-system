@@ -4,12 +4,17 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductClassification;
+use App\Http\Controllers\SalesReportController;
 use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\InventoryReportController;
+use App\Http\Controllers\PurchaseOrderReportController;
+use App\Http\Controllers\ProductMovementReportController;
 
 Route::get('/', function() {
     return view('login');
@@ -26,11 +31,6 @@ Route::get('/main', function() {
 
 // The function is inside the UserController.php for cleaner code
 Route::post('/logout', [UserController::class, 'logout']);
-
-
-Route::get('/reports', function() {
-    return view('reports');
-})->middleware('auth');
 
 
 // This resource route doesn't route the user to the /suppliers. 
@@ -85,6 +85,18 @@ Route::resource('product-classification', ProductClassification::class)->middlew
 Route::delete('brands/{id}', [ProductClassification::class, 'destroyBrand'])->name('brands.destroy')->middleware('auth');
 Route::delete('categories/{id}', [ProductClassification::class, 'destroyCategory'])->name('categories.destroy')->middleware('auth');
 Route::delete('subcategories/{id}', [ProductClassification::class, 'destroySubcategory'])->name('subcategories.destroy')->middleware('auth');
+
+
+// ROUTES FOR REPORTS AND IT HAS ONLY ONE SINGLE ENTRY POINT
+Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
+
+// Update defective status
+Route::put('/reports/update-defective-status/{item}', [ReportsController::class, 'updateDefectiveStatus'])->name('reports.update-defective-status');
+
+
+
+
+
 
 
 
