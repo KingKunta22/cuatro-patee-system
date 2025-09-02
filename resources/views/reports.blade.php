@@ -121,7 +121,7 @@
         </div>
 
         <!-- MAIN CONTENT (TAB SWITCHING with x-if) -->
-        <div class="bg-white rounded-lg w-full h-full">
+        <div class="bg-white rounded-lg w-full h-full" x-data>
             <template x-if="activeTab === 'product'">
                 @include('reports.product-movement-reports')
             </template>
