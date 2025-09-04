@@ -32,7 +32,6 @@ class Inventory extends Model
         return $this->belongsTo(PurchaseOrderItem::class, 'purchase_order_item_id');
     }
 
-    // Add these relationships for dropdowns but keep text fields for data
     public function brand() {
         return $this->belongsTo(Brand::class, 'brand_id');
     }

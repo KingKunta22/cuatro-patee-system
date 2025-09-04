@@ -314,7 +314,7 @@
 
         <!-- TABLE FOR PURCHASE ORDER DETAILS -->
         <div class="border w-full rounded-md border-solid border-black mt-6 mb-2">
-            <table class="w-full">
+            <table class="w-full table-fixed">
                 <thead class="rounded-lg bg-main text-white px-4 py-3">
                     <tr class="rounded-lg">
                         <th class=" bg-main px-4 py-3">Order Number</th>

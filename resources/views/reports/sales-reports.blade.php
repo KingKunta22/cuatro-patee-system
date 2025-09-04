@@ -1,5 +1,5 @@
 <section class="border w-full rounded-md border-solid border-black my-3 shadow-sm">
-    <table class="w-full border-collapse">
+    <table class="w-full border-collapse table-fixed">
         <thead class="bg-main text-white">
             <tr>
                 <th class="px-4 py-3 text-center">Invoice No.</th>

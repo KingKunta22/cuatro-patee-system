@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Inventory;
 use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
@@ -17,8 +18,11 @@ class ReportsController extends Controller
             })
             ->orderBy('created_at', 'DESC')
             ->paginate(10);
+
+        $inventories = Inventory::with(['category', 'brand'])
+                        ->paginate(10);
         
-        return view('reports', compact('purchaseOrders'));
+        return view('reports', compact('purchaseOrders', 'inventories'));
     }
 
     public function purchaseOrderReports()

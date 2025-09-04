@@ -1,5 +1,5 @@
 <section class="border w-full rounded-md border-solid border-black my-3 shadow-sm">
-    <table class="w-full">
+    <table class="w-full table-fixed">
         <thead class="rounded-lg bg-main text-white px-4 py-3">
             <tr class="rounded-lg">
                 <th class="px-4 py-3 text-center">PO Number</th>
