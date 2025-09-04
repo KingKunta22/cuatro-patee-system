@@ -1,9 +1,4 @@
 <section class="border w-full rounded-md border-solid border-black my-3 shadow-sm">
-    <div class="p-4 bg-gray-50 border-b">
-        <h3 class="text-lg font-semibold">Purchase Order Delivery Reports</h3>
-        <p class="text-sm text-gray-600">Track all items received from purchase orders</p>
-    </div>
-    
     <table class="w-full">
         <thead class="rounded-lg bg-main text-white px-4 py-3">
             <tr class="rounded-lg">
@@ -64,12 +59,12 @@
                             <span class="text-green-600 bg-green-100 px-2 py-1 rounded-xl">Completed</span>
                         @endif
                     </td>
-                <td class="px-2 py-2 text-center">
-                    <button @click="document.getElementById('poDetails{{ $po->id }}').showModal()" 
-                        class="flex rounded-md bg-gray-400 px-3 py-2 text-white items-center content-center hover:bg-gray-400/70 transition duration-100 ease-in font-semibold">
-                        View Details
-                    </button>
-                </td>
+                    <td class="px-2 py-2 text-center">
+                        <button onclick="document.getElementById('poDetails{{ $po->id }}').showModal()" 
+                            class="flex rounded-md bg-gray-400 px-3 py-2 text-white items-center content-center hover:bg-gray-400/70 transition duration-100 ease-in font-semibold">
+                            View Details
+                        </button>
+                    </td>
                 </tr>
             @empty
                 <tr>
@@ -107,7 +102,7 @@
     @endphp
 
     <!-- PO Details Modal -->
-    <x-modal.createModal :id="'poDetails' . $po->id">
+    <x-modal.createModal x-ref="poDetails{{ $po->id }}">
         <x-slot:dialogTitle>PO Details: {{ $po->orderNumber }}</x-slot:dialogTitle>
         
         <div class="p-6">
@@ -191,10 +186,7 @@
                     </tbody>
                 </table>
             </div>
-
-            <div class="flex justify-end gap-4 mt-6">
-                <x-form.closeBtn @click="$id('poDetails{{ $po->id }}').close()">Close</x-form.closeBtn>
-            </div>
+            <x-form.closeBtn @click="$refs.poDetails{{ $po->id }}.close()">Close</x-form.closeBtn>
         </div>
     </x-modal.createModal>
 @endforeach
