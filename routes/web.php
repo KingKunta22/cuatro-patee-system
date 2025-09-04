@@ -11,10 +11,14 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductClassification;
 use App\Http\Controllers\SalesReportController;
+use App\Http\Controllers\SalesReportsController;
 use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\InventoryReportController;
+use App\Http\Controllers\InventoryReportsController;
 use App\Http\Controllers\PurchaseOrderReportController;
+use App\Http\Controllers\PurchaseOrderReportsController;
 use App\Http\Controllers\ProductMovementReportController;
+use App\Http\Controllers\ProductMovementReportsController;
 
 Route::get('/', function() {
     return view('login');
@@ -87,13 +91,25 @@ Route::delete('categories/{id}', [ProductClassification::class, 'destroyCategory
 Route::delete('subcategories/{id}', [ProductClassification::class, 'destroySubcategory'])->name('subcategories.destroy')->middleware('auth');
 
 
-// ROUTES FOR REPORTS AND IT HAS ONLY ONE SINGLE ENTRY POINT
+
+// Main route for the reports dashboard - loads the main reports.blade.php
 Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
 
-// Update defective status
-Route::put('/reports/update-defective-status/{item}', [ReportsController::class, 'updateDefectiveStatus'])->name('reports.update-defective-status');
+// Group all report-type specific routes
+Route::prefix('reports')->name('reports.')->group(function () {
+    // Product Movements Routes
+    Route::get('/product-movements', [ProductMovementReportsController::class, 'index'])->name('product-movements.index');
 
+    // PO Reports Routes
+    Route::get('/purchase-orders', [PurchaseOrderReportsController::class, 'index'])->name('purchase-orders.index');
+    Route::put('/purchase-orders/update-defective-status/{item}', [PurchaseOrderReportsController::class, 'updateDefectiveStatus'])->name('purchase-orders.update-defective-status');
 
+    // Inventory Reports Routes
+    Route::get('/inventory', [InventoryReportsController::class, 'index'])->name('inventory.index');
+
+    // Sales Reports Routes (for the future)
+    Route::get('/sales', [SalesReportsController::class, 'index'])->name('sales.index');
+});
 
 
 

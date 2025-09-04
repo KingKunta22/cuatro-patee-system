@@ -120,24 +120,29 @@
             </div>
         </div>
 
-        <!-- MAIN CONTENT (TAB SWITCHING with x-if) -->
-        <div class="bg-white rounded-lg w-full h-full" x-data>
-            <template x-if="activeTab === 'product'">
+        <!-- MAIN CONTENT (TAB SWITCHING with x-show) -->
+        <div class="bg-white rounded-lg w-full h-full">
+            <div x-show="activeTab === 'product'">
                 @include('reports.product-movement-reports')
-            </template>
-            <template x-if="activeTab === 'sales'">
+            </div>
+            <div x-show="activeTab === 'sales'">
                 @include('reports.sales-reports')
-            </template>
-            <template x-if="activeTab === 'inventory'">
-                @include('reports.inventory-reports')
-            </template>
-            <template x-if="activeTab === 'po'">
-                @include('reports.purchase-order-reports')
-            </template>
+            </div>
+            <div x-show="activeTab === 'inventory'">
+                @include('reports.inventory-reports', ['inventories' => $inventories])
+            </div>
+            <div x-show="activeTab === 'po'">
+                @include('reports.purchase-order-reports', ['purchaseOrders' => $purchaseOrders])
+            </div>
         </div>
 
         
-        <!-- MODALS SECTION -->
+        <!-- ========================================= -->
+        <!----------------ALL MODALS SECTION ------------>
+        <!-- ======================================== --->
+
+
+
         @foreach($purchaseOrders as $po)
             @php
                 // Calculate totals for this PO
@@ -230,11 +235,11 @@
                                         </td>
                                         <td class="px-2 py-2 text-center">
                                             @if($itemDefectiveCount > 0)
-                                                <span class="text-sm font-semibold text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl">
+                                                <span class="text-xs font-semibold text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl">
                                                     {{ $badItem->status }}
                                                 </span>
                                             @else
-                                                <span class="text-sm font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-xl">Completed</span>
+                                                <span class="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-xl">Completed</span>
                                             @endif
                                         </td>
                                     </tr>

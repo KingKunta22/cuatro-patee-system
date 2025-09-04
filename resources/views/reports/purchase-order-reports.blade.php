@@ -7,7 +7,7 @@
                 <th class="px-4 py-3 text-center">Date Received</th>
                 <th class="px-4 py-3 text-center">Total Items</th>
                 <th class="px-4 py-3 text-center">Good Items</th>
-                <th class="px-4 py-3 text-center">Defective Items</th>
+                <th class="px-4 py-3 text-center">Bad Items</th>
                 <th class="px-4 py-3 text-center">Status</th>
                 <th class="px-4 py-3 text-center">Action</th>
             </tr>
@@ -59,7 +59,7 @@
                             <span class=" text-sm font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-xl">Completed</span>
                         @endif
                     </td>
-                    <td class="px-2 py-2 text-center">
+                    <td class="px-2 py-2 text-center flex place-content-center">
                         <button onclick="document.getElementById('poDetails{{ $po->id }}').showModal()" 
                             class="flex rounded-md bg-gray-400 px-3 py-2 text-white items-center content-center hover:bg-gray-400/70 transition duration-100 ease-in font-semibold">
                             View Details

@@ -26,7 +26,7 @@
                     }
                 @endphp
                 
-                <tr class="hover:bg-gray-50 transition">
+                <tr>
                     <td class="px-2 py-2 text-center">{{ $inventory->productSKU ?? 'N/A' }}</td>
                     <td class="px-2 py-2 text-center">{{ $inventory->productName ?? 'N/A' }}</td>
                     <td class="px-2 py-2 text-center">{{ $inventory->category->categoryName ?? $inventory->productCategory ?? 'N/A' }}</td>
