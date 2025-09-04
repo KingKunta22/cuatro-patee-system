@@ -136,5 +136,116 @@
             </template>
         </div>
 
+        
+        <!-- MODALS SECTION -->
+        @foreach($purchaseOrders as $po)
+            @php
+                // Calculate totals for this PO
+                $totalItems = $po->items->sum('quantity');
+                $goodItemsCount = 0;
+                $defectiveCount = 0;
+                $hasDefective = false;
+                
+                foreach ($po->items as $item) {
+                    $goodItemsCount += $item->inventory ? $item->inventory->productStock : 0;
+                    $itemDefectiveCount = $item->badItems->sum('item_count');
+                    $defectiveCount += $itemDefectiveCount;
+                    
+                    if ($itemDefectiveCount > 0) {
+                        $hasDefective = true;
+                    }
+                }
+            @endphp
+
+            <!-- PO Details Modal -->
+            <x-modal.createModal x-ref="poDetails{{ $po->id }}">
+                <x-slot:dialogTitle>PO Details: {{ $po->orderNumber }}</x-slot:dialogTitle>
+                
+                <div class="px-6 py-4">
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div class="bg-gray-100 rounded p-4">
+                            <h4 class="font-bold mb-1 text-lg">Order Information</h4>
+                            <p><strong>Supplier:</strong> {{ $po->supplier->supplierName ?? 'N/A' }}</p>
+                            <p><strong>Order Date:</strong> {{ $po->created_at->format('M d, Y') }}</p>
+                            <p><strong>Status:</strong> 
+                                @if($hasDefective)
+                                    <span class="font-semibold text-sm text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl">Pending Review</span>
+                                @else
+                                    <span class="font-semibold text-sm text-green-600 bg-green-100 px-2 py-1 rounded-xl">Completed</span>
+                                @endif
+                            </p>
+                        </div>
+                        <div class="bg-gray-100 rounded p-4">
+                            <h4 class="font-bold mb-2 text-lg">Delivery Summary</h4>
+                            <p><strong>Total Items:</strong> {{ $totalItems }}</p>
+                            <p><strong>Good Items:</strong> <span class="text-green-600">{{ $goodItemsCount }}</span></p>
+                            <p><strong>Defective Items:</strong> 
+                                @if($defectiveCount > 0)
+                                    <span class="text-red-600">{{ $defectiveCount }}</span>
+                                @else
+                                    <span class="text-gray-500">0</span>
+                                @endif
+                            </p>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold mb-3">Items Breakdown</h4>
+                    <div class="border rounded-lg mb-6">
+                        <table class="w-full text-sm">
+                            <thead class="rounded-lg bg-main text-white">
+                                <tr>
+                                    <th class="px-4 py-3 text-center">Product</th>
+                                    <th class="px-4 py-3 text-center">Ordered</th>
+                                    <th class="px-4 py-3 text-center">Good</th>
+                                    <th class="px-4 py-3 text-center">Defective</th>
+                                    <th class="px-4 py-3 text-center">Defect</th>
+                                    <th class="px-4 py-3 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($po->items as $item)
+                                    @php
+                                        $itemGoodCount = $item->inventory ? $item->inventory->productStock : 0;
+                                        $itemDefectiveCount = $item->badItems->sum('item_count');
+                                        $itemDefectType = $item->badItems->first() ? $item->badItems->first()->quality_status : '';
+                                        $badItem = $item->badItems->first();
+                                    @endphp
+                                    <tr class="border-b">
+                                        <td class="px-2 py-2 text-center">{{ $item->productName }}</td>
+                                        <td class="px-2 py-2 text-center">{{ $item->quantity }}</td>
+                                        <td class="px-2 py-2 text-center text-green-600 font-semibold">{{ $itemGoodCount }}</td>
+                                        <td class="px-2 py-2 text-center">
+                                            @if($itemDefectiveCount > 0)
+                                                <span class="text-red-600 font-semibold">{{ $itemDefectiveCount }}</span>
+                                            @else
+                                                <span class="text-gray-500">0</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-2 py-2 text-center">
+                                            @if($itemDefectType)
+                                                <span class="text-red-500 text-sm capitalize">{{ $itemDefectType }}</span>
+                                            @else
+                                                <span class="text-gray-400 text-sm">-</span>
+                                            @endif
+                                        </td>
+                                        <td class="px-2 py-2 text-center">
+                                            @if($itemDefectiveCount > 0)
+                                                <span class="text-sm font-semibold text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl">
+                                                    {{ $badItem->status }}
+                                                </span>
+                                            @else
+                                                <span class="text-sm font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-xl">Completed</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <x-form.closeBtn @click="$refs.poDetails{{ $po->id }}.close()">Close</x-form.closeBtn>
+                </div>
+            </x-modal.createModal>
+        @endforeach
+
     </div>
 </x-layout>
