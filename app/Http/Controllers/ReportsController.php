@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Inventory;
 use App\Models\PurchaseOrder;
+use App\Models\PurchaseOrderItem;
+use App\Models\SaleItem;
 use Illuminate\Http\Request;
 
 class ReportsController extends Controller
@@ -23,7 +25,14 @@ class ReportsController extends Controller
             ->orderBy('created_at', 'DESC')
             ->paginate(10);
 
+        // Calculate stock totals for inventory reports
+        $totalStockIn = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
+                $query->where('orderStatus', 'Delivered');
+            })
+            ->sum('quantity');
 
-        return view('reports', compact('inventories', 'purchaseOrders'));
+        $totalStockOut = SaleItem::sum('quantity');
+
+        return view('reports', compact('inventories', 'purchaseOrders', 'totalStockIn', 'totalStockOut'));
     }
 }

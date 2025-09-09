@@ -93,7 +93,7 @@ Route::delete('subcategories/{id}', [ProductClassification::class, 'destroySubca
 
 
 
-// Main route for the reports dashboard - loads the main reports.blade.php
+// MAIN ROUTE FOR REPORTS - loads the main reports.blade.php
 Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
 
 // Group all report-type specific routes

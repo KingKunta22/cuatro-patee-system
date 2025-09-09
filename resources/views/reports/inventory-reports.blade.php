@@ -1,56 +1,69 @@
+<!-- TOTAL STOCK IN AND OUT SECTION -->
+<div class="container flex items-start justify-start place-content-start w-auto gap-x-4 text-white mr-auto mb-4 p-4">
+    <div class="container flex flex-col px-5 py-2 w-44 text-start rounded-md bg-[#5C717B]">
+        <span class="font-semibold text-2xl">{{ number_format($totalStockIn) }}</span>
+        <span class="text-xs">Total Stock In</span>
+    </div>
+    <div class="container flex flex-col px-5 py-2 w-44 text-start rounded-md bg-[#2C3747]">
+        <span class="font-semibold text-2xl">{{ number_format($totalStockOut) }}</span>
+        <span class="text-xs">Total Stock Out</span>
+    </div>
+</div>
+
 <section class="border w-full rounded-md border-solid border-black my-3 shadow-sm">
 
-    
     <table class="w-full border-collapse">
         <thead class="bg-main text-white table-fixed">
             <tr>
-                <th class="px-4 py-3 text-center">Product SKU</th>
                 <th class="px-4 py-3 text-center">Product Name</th>
                 <th class="px-4 py-3 text-center">Category</th>
+                <th class="px-4 py-3 text-center">SKU</th>
                 <th class="px-4 py-3 text-center">Brand</th>
+                <th class="px-4 py-3 text-center">Price</th>
                 <th class="px-4 py-3 text-center">Stock</th>
                 <th class="px-4 py-3 text-center">Status</th>
+                <th class="px-4 py-3 text-center">Expiry Date</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
             @forelse($inventories as $inventory)
-                @php
-                    // Determine status based on stock level
-                    $status = 'Active Stock';
-                    $statusClass = 'bg-green-100 text-green-600';
-                    
-                    if ($inventory->productStock == 0) {
-                        $status = 'Out of stock';
-                        $statusClass = 'bg-red-100 text-red-600';
-                    } elseif ($inventory->productStock <= 10) {
-                        $status = 'Low stock';
-                        $statusClass = 'bg-yellow-100 text-yellow-600';
-                    }
-                @endphp
-                
-                <tr>
-                    <td class="px-2 py-2 text-center">{{ $inventory->productSKU ?? 'N/A' }}</td>
-                    <td class="px-2 py-2 text-center">{{ $inventory->productName ?? 'N/A' }}</td>
-                    <td class="px-2 py-2 text-center">{{ $inventory->category->categoryName ?? $inventory->productCategory ?? 'N/A' }}</td>
-                    <td class="px-2 py-2 text-center">{{ $inventory->brand->brandName ?? $inventory->productBrand ?? 'N/A' }}</td>
-                    <td class="px-2 py-2 text-center font-semibold">{{ $inventory->productStock }}</td>
-                    <td class="px-2 py-2 text-center">
-                        <span class="text-sm font-semibold px-2 py-1 rounded-xl {{ $statusClass }}">
-                            {{ $status }}
-                        </span>
+                <tr class="border-b">
+                    <td class="px-2 py-2 text-center">{{ $inventory->productName }}</td>
+                    <td class="px-2 py-2 text-center">{{ $inventory->productCategory }}</td>
+                    <td class="px-2 py-2 text-center">{{ $inventory->productSKU }}</td>
+                    <td class="px-2 py-2 text-center">{{ $inventory->productBrand }}</td>
+                    <td class="px-2 py-2 text-center">₱{{ number_format($inventory->productSellingPrice, 2) }}</td>
+                    <td class="px-2 py-2 text-center">{{ $inventory->productStock }}</td>
+                    <td class="px-2 py-2 text-center text-sm font-semibold">
+                        @if ($inventory->productStock == 0)
+                            <span class="text-red-600 bg-red-100 px-2 py-1 rounded-xl" title="This item is out of stock (0 units available)">
+                                Out of Stock
+                            </span>
+                        @elseif ($inventory->productStock <= 5)
+                            <span class="text-red-600 bg-red-100 px-2 py-1 rounded-xl" title="This item has very low stock (only {{ $inventory->productStock }} units left)">
+                                Very Low Stock
+                            </span>
+                        @elseif ($inventory->productStock <= 10)
+                            <span class="text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl" title="This item has low stock (only {{ $inventory->productStock }} units left)">
+                                Low Stock
+                            </span>
+                        @else
+                            <span class="text-green-600 bg-green-100 px-2 py-1 rounded-xl">Active Stock</span>
+                        @endif
                     </td>
+                    <td class="px-2 py-2 text-center">{{ $inventory->productExpirationDate }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center py-4 text-gray-500">
-                        No inventory records found.
+                    <td colspan="8" class="text-center py-4 text-gray-500">
+                        No inventory items found.
                     </td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 
-    <div class="mt-4 px-4 py-2 bg-gray-50 border-t">
+    <div class="mt-4 px-4 py-2 bg-gray-50">
         {{ $inventories->links() }}
     </div>
 </section>

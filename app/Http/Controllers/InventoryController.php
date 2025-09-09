@@ -17,15 +17,6 @@ class InventoryController extends Controller
 {
     public function index(Request $request)
     {
-        // STOCK IN: Total quantity of items from delivered POs
-        $totalStockIn = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
-                $query->where('orderStatus', 'Delivered');
-            })
-            ->sum('quantity');
-
-        // STOCK OUT: Total quantity of items sold across all sales
-        $totalStockOut = SaleItem::sum('quantity');
-
         // Get delivered POs that haven't been added to inventory yet
         $unaddedPOs = PurchaseOrder::whereHas('deliveries', function($query) {
                 $query->where('orderStatus', 'Delivered');
@@ -66,7 +57,7 @@ class InventoryController extends Controller
         }
 
         $inventoryItems = $query->orderBy('created_at', 'DESC')
-            ->paginate(6)
+            ->paginate(7)
             ->withQueryString();
 
         // Get categories and brands from their models for dropdowns
@@ -84,9 +75,7 @@ class InventoryController extends Controller
             'categories', 
             'brands', 
             'uniqueCategories', 
-            'uniqueBrands', 
-            'totalStockIn',
-            'totalStockOut'
+            'uniqueBrands',
         ));
     }
 

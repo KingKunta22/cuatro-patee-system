@@ -68,6 +68,7 @@
             <div class="relative">
                 <form method="GET" class="flex">
                     <select name="timePeriod" class="px-3 py-2 border rounded-md border-black w-48 appearance-none max-h-[200px] overflow-y-auto" onchange="this.form.submit()">
+                        <option value="daily" {{ request('timePeriod') == 'daily' ? 'selected' : '' }}>All Time</option>
                         <option value="daily" {{ request('timePeriod') == 'daily' ? 'selected' : '' }}>Daily</option>
                         <option value="weekly" {{ request('timePeriod') == 'weekly' ? 'selected' : '' }}>Weekly</option>
                         <option value="monthly" {{ request('timePeriod') == 'monthly' ? 'selected' : '' }}>Monthly</option>
@@ -164,6 +165,9 @@
                 $status = $hasDefective ? ($hasNotes ? 'Reviewed' : 'Pending Review') : 'Completed';
                 $statusClass = $hasDefective ? ($hasNotes ? 'text-green-600 bg-green-100' : 'text-yellow-600 bg-yellow-100') : 'text-green-600 bg-green-100';
             @endphp
+
+
+            <!---------------- MODALS FROM PO REPORTS SECTION ------------>
 
             <!-- PO Details Modal -->
             <x-modal.createModal x-ref="poDetails{{ $po->id }}">
@@ -316,6 +320,12 @@
                     </div>
                 </form>
             </x-modal.createModal>
+
+
+
         @endforeach
+
+
+
     </div>
 </x-layout>
