@@ -136,12 +136,10 @@
             </div>
         </div>
 
-        
+                
         <!-- ========================================= -->
         <!----------------ALL MODALS SECTION ------------>
         <!-- ======================================== --->
-
-
 
         @foreach($purchaseOrders as $po)
             @php
@@ -150,6 +148,7 @@
                 $goodItemsCount = 0;
                 $defectiveCount = 0;
                 $hasDefective = false;
+                $hasNotes = $po->notes->count() > 0;
                 
                 foreach ($po->items as $item) {
                     $goodItemsCount += $item->inventory ? $item->inventory->productStock : 0;
@@ -160,6 +159,10 @@
                         $hasDefective = true;
                     }
                 }
+
+                // Determine status based on defects and notes
+                $status = $hasDefective ? ($hasNotes ? 'Reviewed' : 'Pending Review') : 'Completed';
+                $statusClass = $hasDefective ? ($hasNotes ? 'text-green-600 bg-green-100' : 'text-yellow-600 bg-yellow-100') : 'text-green-600 bg-green-100';
             @endphp
 
             <!-- PO Details Modal -->
@@ -173,11 +176,9 @@
                             <p><strong>Supplier:</strong> {{ $po->supplier->supplierName ?? 'N/A' }}</p>
                             <p><strong>Order Date:</strong> {{ $po->created_at->format('M d, Y') }}</p>
                             <p><strong>Status:</strong> 
-                                @if($hasDefective)
-                                    <span class="font-semibold text-sm text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl">Pending Review</span>
-                                @else
-                                    <span class="font-semibold text-sm text-green-600 bg-green-100 px-2 py-1 rounded-xl">Completed</span>
-                                @endif
+                                <span class="font-semibold text-sm {{ $statusClass }} px-2 py-1 rounded-xl">
+                                    {{ $status }}
+                                </span>
                             </p>
                         </div>
                         <div class="bg-gray-100 rounded p-4">
@@ -214,6 +215,14 @@
                                         $itemDefectiveCount = $item->badItems->sum('item_count');
                                         $itemDefectType = $item->badItems->first() ? $item->badItems->first()->quality_status : '';
                                         $badItem = $item->badItems->first();
+                                        
+                                        // Determine item status
+                                        $itemStatus = $itemDefectiveCount > 0 ? 
+                                            ($hasNotes ? 'Reviewed' : 'Pending') : 
+                                            'Completed';
+                                        $itemStatusClass = $itemDefectiveCount > 0 ? 
+                                            ($hasNotes ? 'text-green-600 bg-green-100' : 'text-yellow-600 bg-yellow-100') : 
+                                            'text-green-600 bg-green-100';
                                     @endphp
                                     <tr class="border-b">
                                         <td class="px-2 py-2 text-center">{{ $item->productName }}</td>
@@ -234,23 +243,79 @@
                                             @endif
                                         </td>
                                         <td class="px-2 py-2 text-center">
-                                            @if($itemDefectiveCount > 0)
-                                                <span class="text-xs font-semibold text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl">
-                                                    {{ $badItem->status }}
-                                                </span>
-                                            @else
-                                                <span class="text-xs font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-xl">Completed</span>
-                                            @endif
+                                            <span class="text-xs font-semibold {{ $itemStatusClass }} px-2 py-1 rounded-xl">
+                                                {{ $itemStatus }}
+                                            </span>
                                         </td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
-                    <x-form.closeBtn @click="$refs.poDetails{{ $po->id }}.close()">Close</x-form.closeBtn>
+
+                    <!-- Notes Section -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold">Notes</h4>
+                            <button onclick="document.getElementById('addNoteModal{{ $po->id }}').showModal()" 
+                                    class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
+                                Add Note
+                            </button>
+                        </div>
+                        
+                        @if($po->notes->count() > 0)
+                            <div class="border rounded-lg p-4 bg-gray-50 max-h-40 overflow-y-auto">
+                                @foreach($po->notes as $note)
+                                    <div class="mb-3 pb-3 border-b last:border-b-0 last:mb-0 last:pb-0">
+                                        <div class="flex justify-between items-start">
+                                            <p class="text-sm">{{ $note->note }}</p>
+                                            <div class="flex space-x-2">
+                                                <form action="{{ route('po-notes.destroy', $note->id) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" 
+                                                            class="text-red-500 hover:text-red-700 text-xs"
+                                                            onclick="return confirm('Are you sure you want to delete this note?')">
+                                                        <x-form.deleteBtn/>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">{{ $note->created_at->format('M d, Y h:i A') }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-gray-500 text-sm">No notes added yet.</p>
+                        @endif
+                    </div>
                 </div>
             </x-modal.createModal>
-        @endforeach
 
+            <!-- Add Note Modal -->
+            <x-modal.createModal x-ref="addNoteModal{{ $po->id }}" id="addNoteModal{{ $po->id }}">
+                <x-slot:dialogTitle>Add Note for PO: {{ $po->orderNumber }}</x-slot:dialogTitle>
+                
+                <form action="{{ route('po-notes.store') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="purchase_order_id" value="{{ $po->id }}">
+                    
+                    <div class="px-6 py-4">
+                        <div class="mb-4">
+                            <label for="note{{ $po->id }}" class="block text-sm font-medium text-gray-700 mb-1">Note</label>
+                            <textarea name="note" id="note{{ $po->id }}" rows="4" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    required>
+                            </textarea>
+                        </div>
+                        
+                        <div class="flex justify-end space-x-3">
+                            <x-form.closeBtn type="button" @click="$refs.addNoteModal{{ $po->id }}.close()">Cancel</x-form.closeBtn>
+                            <x-form.saveBtn type="submit">Add Note</x-form.saveBtn>
+                        </div>
+                    </div>
+                </form>
+            </x-modal.createModal>
+        @endforeach
     </div>
 </x-layout>

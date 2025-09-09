@@ -16,7 +16,7 @@ class ReportsController extends Controller
                         ->paginate(10);
 
         // Data for PO tab
-        $purchaseOrders = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems'])
+        $purchaseOrders = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems', 'notes'])
             ->whereHas('deliveries', function($query) {
                 $query->where('orderStatus', 'Delivered');
             })

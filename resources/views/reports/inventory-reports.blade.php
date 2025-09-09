@@ -1,4 +1,6 @@
 <section class="border w-full rounded-md border-solid border-black my-3 shadow-sm">
+
+    
     <table class="w-full border-collapse">
         <thead class="bg-main text-white table-fixed">
             <tr>

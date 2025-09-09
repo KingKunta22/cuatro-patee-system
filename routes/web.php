@@ -4,6 +4,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\PONotesController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DeliveryController;
@@ -110,6 +111,8 @@ Route::prefix('reports')->name('reports.')->group(function () {
     // Sales Reports Routes (for the future)
     Route::get('/sales', [SalesReportsController::class, 'index'])->name('sales.index');
 });
+
+Route::resource('po-notes', PONotesController::class);
 
 
 

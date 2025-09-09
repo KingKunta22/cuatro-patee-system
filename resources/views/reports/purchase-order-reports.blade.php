@@ -20,6 +20,7 @@
                     $goodItemsCount = 0;
                     $defectiveCount = 0;
                     $hasDefective = false;
+                    $hasNotes = $po->notes->count() > 0;
                     
                     foreach ($po->items as $item) {
                         $goodItemsCount += $item->inventory ? $item->inventory->productStock : 0;
@@ -29,6 +30,15 @@
                         if ($itemDefectiveCount > 0) {
                             $hasDefective = true;
                         }
+                    }
+
+                    // Determine status based on defects and notes
+                    if ($hasDefective) {
+                        $status = $hasNotes ? 'Reviewed' : 'Pending Review';
+                        $statusClass = $hasNotes ? 'text-green-600 bg-green-100' : 'text-yellow-600 bg-yellow-100';
+                    } else {
+                        $status = 'Completed';
+                        $statusClass = 'text-green-600 bg-green-100';
                     }
                 @endphp
                 <tr class="border-b">
@@ -53,11 +63,9 @@
                         @endif
                     </td>
                     <td class="px-2 py-2 text-center">
-                        @if($hasDefective)
-                            <span class=" text-sm font-semibold text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl">Pending Review</span>
-                        @else
-                            <span class=" text-sm font-semibold text-green-600 bg-green-100 px-2 py-1 rounded-xl">Completed</span>
-                        @endif
+                        <span class="text-sm font-semibold {{ $statusClass }} px-2 py-1 rounded-xl">
+                            {{ $status }}
+                        </span>
                     </td>
                     <td class="px-2 py-2 text-center flex place-content-center">
                         <button onclick="document.getElementById('poDetails{{ $po->id }}').showModal()" 
