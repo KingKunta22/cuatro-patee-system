@@ -30,20 +30,6 @@
 
         <!-- REVENUE STATS -->
         <section class="container flex flex-col items-center place-content-start">
-            <div class="container flex items-start justify-start place-content-start w-auto gap-x-4 text-white mr-auto mb-4">
-                <div class="container flex flex-col px-6 py-3 w-64 text-start rounded-md bg-[#5C717B]">
-                    <span class="font-semibold text-xl">₱{{ number_format($totalRevenue, 2) }}</span>
-                    <span class="text-xs">Total Revenue</span>
-                </div>
-                <div class="container flex flex-col px-6 py-3 w-64 text-start rounded-md bg-[#2C3747]">
-                    <span class="font-semibold text-xl">₱{{ number_format($totalProfit, 2) }}</span>
-                    <span class="text-xs">Total Profit</span>
-                </div>
-               <div class="container flex flex-col px-6 py-3 w-64 text-start rounded-md bg-[#5C717B]">
-                    <span class="font-semibold text-xl">₱{{ number_format($totalCost, 2) }}</span>
-                    <span class="text-xs">Total Cost</span>
-                </div>
-            </div>
 
             <!-- SEARCH BAR -->
             <div class="container flex items-center place-content-start gap-4 mb-4">

@@ -108,7 +108,7 @@ Route::prefix('reports')->name('reports.')->group(function () {
     // Inventory Reports Routes
     Route::get('/inventory', [InventoryReportsController::class, 'index'])->name('inventory.index');
 
-    // Sales Reports Routes (for the future)
+    // Sales Reports Routes
     Route::get('/sales', [SalesReportsController::class, 'index'])->name('sales.index');
 });
 
