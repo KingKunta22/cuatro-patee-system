@@ -1,3 +1,9 @@
+@php
+    // Fallback to ensure variables exist
+    $totalStockIn = $totalStockIn ?? 0;
+    $totalStockOut = $totalStockOut ?? 0;
+@endphp
+
 <!-- TOTAL STOCK IN AND OUT SECTION -->
 <div class="container flex items-start justify-start place-content-start w-auto gap-x-4 text-white mr-auto mb-4 pl-0 p-4">
     <div class="container flex flex-col px-5 py-2 w-44 text-start rounded-md bg-[#5C717B]">

@@ -1,6 +1,6 @@
 <x-layout>
     <x-sidebar/>
-    <div x-data="{ activeTab: 'product' }" 
+    <div x-data="{ activeTab: '{{ request('tab', 'product') }}' }" 
          class="container w-auto ml-64 px-10 py-6 flex flex-col items-center content-start">
         
         <!-- SUCCESS MESSAGE POPUP -->
@@ -37,6 +37,8 @@
         <div class="w-full flex items-center justify-between mb-4">
             <!-- SEARCH BAR -->
             <form action="" method="GET" class="flex items-center gap-4 mr-auto">
+                <input type="hidden" name="timePeriod" value="{{ $timePeriod ?? 'all' }}">
+                <input type="hidden" name="tab" x-model="activeTab">
                 <div class="relative">
                     <input 
                         type="text" 
@@ -58,7 +60,8 @@
                 </button>
 
                 @if(request('search'))
-                    <a href="" class="text-white px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">
+                    <a href="{{ route('reports.index', ['tab' => request('tab', 'product'), 'timePeriod' => $timePeriod ?? 'all']) }}" 
+                       class="text-white px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">
                         Clear
                     </a>
                 @endif
@@ -67,11 +70,12 @@
             <!-- RIGHT SIDE: Time Period Dropdown -->
             <div class="relative">
                 <form method="GET" class="flex">
+                    <input type="hidden" name="tab" x-model="activeTab">
                     <select name="timePeriod" class="px-3 py-2 border rounded-md border-black w-48 appearance-none max-h-[200px] overflow-y-auto" onchange="this.form.submit()">
-                        <option value="daily" {{ request('timePeriod') == 'daily' ? 'selected' : '' }}>All Time</option>
-                        <option value="daily" {{ request('timePeriod') == 'daily' ? 'selected' : '' }}>Daily</option>
-                        <option value="weekly" {{ request('timePeriod') == 'weekly' ? 'selected' : '' }}>Weekly</option>
-                        <option value="monthly" {{ request('timePeriod') == 'monthly' ? 'selected' : '' }}>Monthly</option>
+                        <option value="all" {{ ($timePeriod ?? 'all') == 'all' ? 'selected' : '' }}>All Time</option>
+                        <option value="today" {{ ($timePeriod ?? 'all') == 'today' ? 'selected' : '' }}>Today</option>
+                        <option value="lastWeek" {{ ($timePeriod ?? 'all') == 'lastWeek' ? 'selected' : '' }}>Last 7 Days</option>
+                        <option value="lastMonth" {{ ($timePeriod ?? 'all') == 'lastMonth' ? 'selected' : '' }}>Last Month</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,25 +91,25 @@
             <!-- TAB BUTTONS -->
             <div class="flex space-x-2">
                 <a href="#"
-                @click.prevent="activeTab = 'product'"
+                @click.prevent="activeTab = 'product'; updateUrl('product')"
                 :class="activeTab === 'product' ? 'bg-main text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                 class="w-40 text-center font-bold text-xs py-3 uppercase rounded transition">
                     Product Movements
                 </a>
                 <a href="#"
-                @click.prevent="activeTab = 'sales'"
+                @click.prevent="activeTab = 'sales'; updateUrl('sales')"
                 :class="activeTab === 'sales' ? 'bg-main text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                 class="w-40 text-center font-bold text-xs py-3 uppercase rounded transition">
                     Sales Reports
                 </a>
                 <a href="#"
-                @click.prevent="activeTab = 'inventory'"
+                @click.prevent="activeTab = 'inventory'; updateUrl('inventory')"
                 :class="activeTab === 'inventory' ? 'bg-main text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                 class="w-40 text-center font-bold text-xs py-3 uppercase rounded transition">
                     Inventory Reports
                 </a>
                 <a href="#"
-                @click.prevent="activeTab = 'po'"
+                @click.prevent="activeTab = 'po'; updateUrl('po')"
                 :class="activeTab === 'po' ? 'bg-main text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                 class="w-40 text-center font-bold text-xs py-3 uppercase rounded transition">
                     PO Reports
@@ -124,24 +128,54 @@
         <!-- MAIN CONTENT (TAB SWITCHING with x-show) -->
         <div class="bg-white rounded-lg w-full h-full">
             <div x-show="activeTab === 'product'">
-                @include('reports.product-movement-reports')
+                @include('reports.product-movement-reports', ['timePeriod' => $timePeriod ?? 'all'])
             </div>
             <div x-show="activeTab === 'sales'">
-                @include('reports.sales-reports')
+                @include('reports.sales-reports', ['timePeriod' => $timePeriod ?? 'all'])
             </div>
             <div x-show="activeTab === 'inventory'">
-                @include('reports.inventory-reports', ['inventories' => $inventories])
+                @include('reports.inventory-reports', [
+                    'inventories' => $inventories, 
+                    'timePeriod' => $timePeriod ?? 'all'
+                ])
             </div>
             <div x-show="activeTab === 'po'">
-                @include('reports.purchase-order-reports', ['purchaseOrders' => $purchaseOrders])
+                @include('reports.purchase-order-reports', [
+                    'purchaseOrders' => $purchaseOrders, 
+                    'timePeriod' => $timePeriod ?? 'all'
+                ])
             </div>
         </div>
 
+        <!-- URL update script -->
+        <script>
+            function updateUrl(tab) {
+                const url = new URL(window.location);
+                url.searchParams.set('tab', tab);
+                // Preserve timePeriod parameter if it exists
+                if (!url.searchParams.has('timePeriod')) {
+                    url.searchParams.set('timePeriod', '{{ $timePeriod ?? 'all' }}');
+                }
+                window.history.replaceState({}, '', url);
+            }
+            
+            // Initialize tab from URL parameter
+            document.addEventListener('DOMContentLoaded', function() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const tab = urlParams.get('tab');
+                if (tab) {
+                    // Set the active tab based on URL parameter
+                    Alpine.data('tabState', () => ({
+                        activeTab: tab
+                    }));
+                }
+            });
+        </script>
                 
         <!-- ========================================= -->
         <!----------------ALL MODALS SECTION ------------>
         <!-- ======================================== --->
-
+        
         @foreach($purchaseOrders as $po)
             @php
                 // Calculate totals for this PO
@@ -320,12 +354,6 @@
                     </div>
                 </form>
             </x-modal.createModal>
-
-
-
         @endforeach
-
-
-
     </div>
 </x-layout>

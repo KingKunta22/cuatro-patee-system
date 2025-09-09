@@ -8,17 +8,35 @@ use Illuminate\Http\Request;
 
 class PurchaseOrderReportsController extends Controller
 {
-    public function index()
+    public function index(Request $request) // Add Request parameter
     {
-        // Logic moved from ReportsController::index and purchaseOrderReports
-        $purchaseOrders = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems'])
-            ->whereHas('deliveries', function($query) {
-                $query->where('orderStatus', 'Delivered');
-            })
-            ->orderBy('created_at', 'DESC')
+        // Start with base query
+        $query = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems'])
+            ->whereHas('deliveries', function($q) {
+                $q->where('orderStatus', 'Delivered');
+            });
+
+        // Apply time period filter
+        $timePeriod = $request->timePeriod ?? 'all'; // Default to 'all'
+
+        if ($timePeriod !== 'all') {
+            switch ($timePeriod) {
+                case 'daily':
+                    $query->whereDate('created_at', today());
+                    break;
+                case 'weekly':
+                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                    break;
+                case 'monthly':
+                    $query->whereMonth('created_at', now()->month)
+                         ->whereYear('created_at', now()->year);
+                    break;
+            }
+        }
+
+        $purchaseOrders = $query->orderBy('created_at', 'DESC')
             ->paginate(10);
 
-        // Return the view for the PO reports tab content
         return view('reports.purchase-order-reports', compact('purchaseOrders'));
     }
 

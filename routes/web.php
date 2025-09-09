@@ -98,9 +98,9 @@ Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index
 
 // Group all report-type specific routes
 Route::prefix('reports')->name('reports.')->group(function () {
+
     // Product Movements Routes
     Route::get('/product-movements', [ProductMovementReportsController::class, 'index'])->name('product-movements.index');
-
     // PO Reports Routes
     Route::get('/purchase-orders', [PurchaseOrderReportsController::class, 'index'])->name('purchase-orders.index');
     Route::put('/purchase-orders/update-defective-status/{item}', [PurchaseOrderReportsController::class, 'updateDefectiveStatus'])->name('purchase-orders.update-defective-status');
@@ -113,8 +113,6 @@ Route::prefix('reports')->name('reports.')->group(function () {
 });
 
 Route::resource('po-notes', PONotesController::class);
-
-
 
 
 
