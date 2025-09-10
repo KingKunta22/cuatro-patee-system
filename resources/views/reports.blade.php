@@ -128,7 +128,15 @@
         <!-- MAIN CONTENT (TAB SWITCHING with x-show) -->
         <div class="bg-white rounded-lg w-full h-full">
             <div x-show="activeTab === 'product'">
-                @include('reports.product-movement-reports', ['timePeriod' => $timePeriod ?? 'all'])
+                @include('reports.product-movement-reports', [
+                    'movementsPaginator' => $productMovements['movementsPaginator'],
+                    'totalStockIn' => $productMovements['totalStockIn'],
+                    'totalStockOut' => $productMovements['totalStockOut'],
+                    'totalRevenue' => $productMovements['totalRevenue'],
+                    'totalCost' => $productMovements['totalCost'],
+                    'totalProfit' => $productMovements['totalProfit'],
+                    'timePeriod' => $timePeriod
+                ])
             </div>
             <div x-show="activeTab === 'sales'">
                 @include('reports.sales-reports', ['timePeriod' => $timePeriod ?? 'all'])

@@ -135,6 +135,7 @@ class SalesController extends Controller
                 SaleItem::create([
                     'sale_id' => $sale->id,
                     'inventory_id' => $item['inventory_id'],
+                    'product_name' => $inventory->productName,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['price'],
                     'total_price' => $item['quantity'] * $item['price']
