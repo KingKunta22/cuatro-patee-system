@@ -568,12 +568,13 @@
             // Function to calculate amount to pay (quantity * unit price)
             function calculateAmount() {
                 const quantity = parseFloat(document.querySelector('[name="quantity"]').value) || 0;
-                const basePrice = parseFloat(document.querySelector('[name="salesPrice"]').getAttribute('data-base-price') || 0);
+                const basePriceElement = document.querySelector('[name="salesPrice"]');
+                const basePriceValue = basePriceElement.getAttribute('data-base-price');
+                const basePrice = basePriceValue ? parseFloat(basePriceValue) : 0;
                 const amount = quantity * basePrice;
                 
                 // Kept number plain in input, no commas to accept more than 999.99 values
                 document.querySelector('[name="salesPrice"]').value = amount.toFixed(2);
-
                 calculateChange();
             }
 
@@ -747,7 +748,7 @@
                 document.querySelector('[name="quantity"]').value = '1';
                 document.querySelector('[name="quantity"]').removeAttribute('max');
                 document.querySelector('[name="salesPrice"]').value = '0.00';
-                document.querySelector('[name="salesPrice"]').removeAttribute('data-base-price');
+                document.querySelector('[name="salesPrice"]').setAttribute('data-base-price', '0');
 
                 calculateChange();
             }
@@ -984,6 +985,7 @@
                         return;
                     }
                     
+                    console.log('Form submitting...');
                     // If both validations pass, the form will submit normally
                 });
             });
