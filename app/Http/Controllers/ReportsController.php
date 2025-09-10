@@ -119,7 +119,14 @@ class ReportsController extends Controller
         
         // Sort movements by date (newest first)
         usort($movements, function($a, $b) {
-            return $b['date'] <=> $a['date'];
+            // First compare dates
+            $dateCompare = strtotime($b['date']) <=> strtotime($a['date']);
+            if ($dateCompare !== 0) {
+                return $dateCompare;
+            }
+            
+            // If dates are equal, use reference number as secondary sort
+            return $b['reference_number'] <=> $a['reference_number'];
         });
         
         // Paginate movements (simple version)
