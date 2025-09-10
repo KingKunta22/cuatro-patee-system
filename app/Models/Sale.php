@@ -14,6 +14,8 @@ class Sale extends Model
         'customer_name',
         'sale_date',
         'total_amount',
+        'cash_received',
+        'change',
         'payment_method',
         'status',
         'employee_id',

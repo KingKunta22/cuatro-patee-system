@@ -8,6 +8,7 @@ use App\Models\SaleItem;
 use App\Models\Inventory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SalesController extends Controller
 {
@@ -23,7 +24,7 @@ class SalesController extends Controller
         $totalProfit = $totalRevenue - $totalCost;
         
         // Get sales data
-        $sales = Sale::with('items')->latest()->paginate(10);
+        $sales = Sale::with('items')->latest()->paginate(7);
         
         // Get inventories for the product dropdown
         $inventories = Inventory::all();
@@ -89,6 +90,7 @@ class SalesController extends Controller
         $request->validate([
             'items' => 'required|array|min:1',
             'items.*.inventory_id' => 'required|exists:inventories,id',
+            'items.*.product_name' => 'required|string|max:255',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
         ]);
@@ -135,7 +137,7 @@ class SalesController extends Controller
                 SaleItem::create([
                     'sale_id' => $sale->id,
                     'inventory_id' => $item['inventory_id'],
-                    'product_name' => $inventory->productName,
+                    'product_name' => $item['product_name'] ?? $inventory->productName,
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['price'],
                     'total_price' => $item['quantity'] * $item['price']
@@ -146,11 +148,12 @@ class SalesController extends Controller
             DB::commit();
 
             return redirect()->route('sales.index')
-                ->with('success', 'Sale completed successfully! Invoice: ' . $invoiceNumber);
+                ->with('success', 'Sale completed successfully!');
 
         } catch (\Exception $e) {
             // Rollback the transaction on error
             DB::rollBack();
+            
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }

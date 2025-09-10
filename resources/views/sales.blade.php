@@ -1,3 +1,13 @@
+@if($errors->any())
+    <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-red-100 border border-red-400 text-red-700 rounded shadow-lg">
+        <ul>
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
 <x-layout>
     <x-sidebar/>
     <main x-data class="container w-auto ml-64 px-10 pt-6 pb-3 flex flex-col items-center content-start">
@@ -718,6 +728,7 @@
                     cart.push({
                         inventory_id: inventoryId,
                         name: productName,
+                        product_name: productName,
                         quantity: quantity,
                         price: basePrice,
                         total: itemTotal
@@ -740,7 +751,6 @@
 
                 // Reset product selection fields
                 document.getElementById('productName').value = '';
-                document.getElementById('selectedInventoryId').value = '';
                 document.querySelector('[name="productSKU"]').value = '';
                 document.querySelector('[name="productBrand"]').value = '';
                 document.querySelector('[name="itemMeasurement"]').value = '';
@@ -808,6 +818,11 @@
                     inventoryIdInput.name = `items[${index}][inventory_id]`;
                     inventoryIdInput.value = item.inventory_id;
                     
+                    const productNameInput = document.createElement('input');
+                    productNameInput.type = 'hidden';
+                    productNameInput.name = `items[${index}][product_name]`;
+                    productNameInput.value = item.product_name;
+                    
                     const quantityInput = document.createElement('input');
                     quantityInput.type = 'hidden';
                     quantityInput.name = `items[${index}][quantity]`;
@@ -819,11 +834,11 @@
                     priceInput.value = item.price;
                     
                     container.appendChild(inventoryIdInput);
+                    container.appendChild(productNameInput);
                     container.appendChild(quantityInput);
                     container.appendChild(priceInput);
                 });
             }
-            
             // Function to remove item from cart
             function removeFromCart(index) {
                 const removedItem = cart[index];
@@ -973,6 +988,8 @@
                 
                 // Add form validation on submit
                 document.getElementById('addSales').addEventListener('submit', function(e) {
+                    console.log('Sales form submitting...');
+
                     // First validate the form inputs
                     if (!validateFormBeforeSubmit()) {
                         e.preventDefault();
@@ -985,7 +1002,6 @@
                         return;
                     }
                     
-                    console.log('Form submitting...');
                     // If both validations pass, the form will submit normally
                 });
             });

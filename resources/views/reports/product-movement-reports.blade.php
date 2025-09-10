@@ -9,7 +9,7 @@
 @endphp
 
 <!-- REVENUE AND STOCK STATS -->
-<div class="container flex items-start justify-between place-content-evenly w-auto gap-x-4 text-white mr-auto mb-4 pl-0 p-4">
+<div class="container flex items-start justify-start place-content-start w-auto gap-x-4 text-white mr-auto mb-4 pl-0 p-4">
     <div class="container flex flex-col px-6 py-3 w-48 text-start rounded-md bg-[#5C717B]">
         <span class="font-semibold text-xl">{{ number_format($totalStockIn) }}</span>
         <span class="text-xs">Total Stock In</span>
