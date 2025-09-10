@@ -232,6 +232,11 @@
                 3 => ['name' => 'Shipped', 'desc' => 'Order has left the warehouse'], 
                 4 => ['name' => 'Delivered', 'desc' => 'Order successfully delivered']
             ];
+            
+            // Get last update information
+            $lastUpdated = $delivery ? $delivery->status_updated_at : null;
+            $lastUpdatedBy = $delivery ? $delivery->last_updated_by : 'System';
+            $totalItems = $order->items->sum('quantity');
         @endphp
         <x-modal.createModal x-ref="viewOrderDetails{{ $order->id}}" class="w-4/5">
             <x-slot:dialogTitle>DELIVERY ID: {{ $deliveryId }}</x-slot:dialogTitle>            
@@ -248,21 +253,45 @@
                         
                         {{-- Order Information Boxes --}}
                         <div class="grid grid-cols-2 gap-3 mb-5">
+                            
+                            <!-- Status Information Cards -->
+                            <div class="bg-gray-50 p-3 rounded-md">
+                                <p class="font-semibold text-sm">PURCHASE ORDER</p>
+                                <p class="text-sm">{{ $order->orderNumber }}</p>
+                            </div>
                             <div class="bg-gray-50 p-3 rounded-md">
                                 <p class="font-semibold text-sm">ORDER DATE</p>
                                 <p class="text-sm">{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y')}}</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-md">
+                                <p class="font-semibold text-sm">PAYMENT TERMS</p>
+                                <p class="text-sm">{{ $order->paymentTerms}}</p>
                             </div>
                             <div class="bg-gray-50 p-3 rounded-md">
                                 <p class="font-semibold text-sm">DELIVERY DATE</p>
                                 <p class="text-sm">{{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}</p>
                             </div>
                             <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-sm">PAYMENT TERMS</p>
-                                <p class="text-sm">{{ $order->paymentTerms}}</p>
+                                <p class="font-semibold text-sm">TOTAL ITEMS</p>
+                                <p class="text-sm">{{ $totalItems }}</p>
                             </div>
                             <div class="bg-gray-50 p-3 rounded-md text-center">
                                 <p class="font-semibold text-sm">TOTAL AMOUNT</p>
-                                <p class="text-sm font-semibold">₱{{ number_format($order->totalAmount, 2) }} ({{ $order->items->sum('quantity') }})</p>
+                                <p class="text-sm">₱{{ number_format($order->totalAmount, 2) }} ({{ $totalItems }})</p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-md">
+                                <p class="font-semibold text-sm">LAST UPDATED</p>
+                                <p class="text-sm">
+                                    @if($lastUpdated)
+                                        {{ \Carbon\Carbon::parse($lastUpdated)->format('M d, Y') }}
+                                    @else
+                                        Not updated
+                                    @endif
+                                </p>
+                            </div>
+                            <div class="bg-gray-50 p-3 rounded-md">
+                                <p class="font-semibold text-sm">UPDATED BY</p>
+                                <p class="text-sm">{{ $lastUpdatedBy }}</p>
                             </div>
                         </div>
 
@@ -289,26 +318,6 @@
                                 </tbody>
                             </table>
                         </div>
-
-                        <!-- Order Status Form -->
-                        <form action="{{ route('delivery-management.updateStatus')}}" method="POST" class="w-full">
-                            @csrf
-                            <input type="hidden" name="order_id" value="{{ $order->id }}">
-                            
-                            <div class="w-full">
-                                <label for="orderStatus{{ $order->id }}" class="block text-sm font-medium mb-1">Order Status</label>
-                                <select name="status" id="orderStatus{{ $order->id }}" class="w-full px-3 py-2 border rounded-sm border-black" required>
-                                    <option value="Pending" {{ $deliveryStatus === 'Pending' ? 'selected' : '' }}>Pending</option>
-                                    <option value="Confirmed" {{ $deliveryStatus === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
-                                    <option value="Delivered" {{ $deliveryStatus === 'Delivered' ? 'selected' : '' }}>Delivered</option>
-                                    <option value="Cancelled" {{ $deliveryStatus === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                                </select>
-                                
-                                <button type="submit" class="mt-2 w-full px-4 py-2  bg-button-save text-white rounded-md hover:bg-green-600 transition-colors duration-200">
-                                    Update Status
-                                </button>
-                            </div>
-                        </form>
                     </div>
 
                     {{-- SUPPLIER INFORMATION SECTION --}}
@@ -332,6 +341,26 @@
                                 <p class="pl-2 text-sm font-md">Cuatro Patee</p>
                             </div>
                         </div>
+
+                        <!-- Order Status Form -->
+                        <form action="{{ route('delivery-management.updateStatus')}}" method="POST" class="w-full mt-4" id="statusForm{{ $order->id }}">
+                            @csrf
+                            <input type="hidden" name="order_id" value="{{ $order->id }}">
+                            
+                            <div class="w-full">
+                                <label for="orderStatus{{ $order->id }}" class="block text-sm font-medium mb-1">Update Order Status</label>
+                                <select name="status" id="orderStatus{{ $order->id }}" class="w-full px-3 py-2 border rounded-sm border-black" required>
+                                    <option value="Pending" {{ $deliveryStatus === 'Pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="Confirmed" {{ $deliveryStatus === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
+                                    <option value="Delivered" {{ $deliveryStatus === 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                                    <option value="Cancelled" {{ $deliveryStatus === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                </select>
+                                
+                                <button type="submit" class="mt-2 w-full px-4 py-2 bg-button-save text-white rounded-md hover:bg-green-600 transition-colors duration-200">
+                                    Update Status
+                                </button>
+                            </div>
+                        </form>
                     </div>
 
                     {{-- ESTIMATED PROGRESS SECTION --}}
@@ -356,7 +385,7 @@
                             <div class="flex justify-between text-xs text-gray-500">
                                 <span>{{ $daysPassed }} day{{ $daysPassed != 1 ? 's' : '' }} passed</span>
                                 @if($isDelivered)
-                                    <span class="text-green-600">Delivered</span>
+                                    <span class="text-green-600 text-xs">Delivered on {{ $deliveryDate->format('M d, Y') }}</span>
                                 @elseif($isDelayed)
                                     <span class="text-red-600">{{ abs($daysRemaining) }} day{{ abs($daysRemaining) != 1 ? 's' : '' }} delayed</span>
                                 @else

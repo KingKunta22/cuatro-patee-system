@@ -11,7 +11,9 @@ class Delivery extends Model
     protected $fillable = [
         'deliveryId',
         'orderStatus',
-        'purchase_order_id'
+        'purchase_order_id',
+        'last_updated_by', // Add this
+        'status_updated_at' // Add this
     ];
 
     protected static function boot()
@@ -21,6 +23,23 @@ class Delivery extends Model
         static::creating(function ($model) {
             if (empty($model->deliveryId)) {
                 $model->deliveryId = self::generateDeliveryId();
+            }
+            
+            // Set initial values
+            if (empty($model->last_updated_by)) {
+                $model->last_updated_by = 'System';
+            }
+            
+            if (empty($model->status_updated_at)) {
+                $model->status_updated_at = now();
+            }
+        });
+
+        // Add this to track status changes
+        static::updating(function ($model) {
+            if ($model->isDirty('orderStatus')) {
+                $model->status_updated_at = now();
+                $model->last_updated_by = auth()->check() ? auth()->user()->name : 'System';
             }
         });
     }
