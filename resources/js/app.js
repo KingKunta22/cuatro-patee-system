@@ -1,4 +1,5 @@
 import './bootstrap';
+import './alerts';
 
 // Gets ID and inputted password
 const showValue = document.getElementById('showValue');

@@ -252,7 +252,7 @@
                     <!-- PREVIEW TABLE FOR ADDED SALES/PRODUCTS -->
                     <div class="border w-auto rounded-md border-solid border-black col-span-7">
                         <table class="w-full">
-                            <thead class="rounded-lg bg-main text-white px-3 py-1">
+                            <thead class="rounded-lg bg-main text-white px-2 py-1">
                                 <tr class="rounded-lg text-sm">
                                     <th class="bg-main px-2 py-2">Item/s</th>
                                     <th class="bg-main px-2 py-2">Quantity</th>
@@ -718,14 +718,14 @@
                 const originalStock = productOriginal ? productOriginal.productStock : 0;
 
                 if (!inventoryId || quantity <= 0) {
-                    alert('Please select a product and enter a valid quantity');
+                    Toast.error('Please select a product and enter a valid quantity');
                     return;
                 }
 
                 // Check if customer is filled
                 const customerName = document.getElementById('customerName').value;
                 if (!customerName) {
-                    alert('Please select a customer first');
+                    Toast.error('Please select a customer first');
                     return;
                 }
 
@@ -736,7 +736,7 @@
 
                 // Compare against original stock
                 if (totalRequested > originalStock) {
-                    alert(`Total quantity cannot exceed available stock (${originalStock})`);
+                    Toast.error(`Total quantity cannot exceed available stock (${originalStock})`);
                     return;
                 }
 
@@ -906,19 +906,19 @@
                 const salesCash = document.getElementById('salesCash').value;
                 
                 if (!salesCash || parseFloat(salesCash) <= 0) {
-                    alert('Please enter a valid cash amount before saving');
+                    Toast.error('Please enter a valid cash amount before saving');
                     return false;
                 }
                 
                 const cash = parseFloat(salesCash);
                 
                 if (cash < cartTotal) {
-                    alert('Cash amount cannot be less than the total amount to pay');
+                    Toast.error('Cash amount cannot be less than the total amount to pay');
                     return false;
                 }
                 
                 if (cart.length === 0) {
-                    alert('Please add at least one item to the cart');
+                    Toast.error('Please add at least one item to the cart');
                     return false;
                 }
                 
@@ -973,7 +973,7 @@
 
             function validateCartBeforeSubmit() {
                 if (cart.length === 0) {
-                    alert('Please add at least one item to proceed');
+                    Toast.error('Please add at least one item to proceed');
                     return false;
                 }
                 
@@ -988,14 +988,14 @@
                     const originalProduct = originalProducts.find(p => p.id == inventoryId);
                     
                     if (!originalProduct) {
-                        alert(`One of your products is no longer available`);
+                        Toast.error('One of your products is no longer available');
                         return false;
                     }
                     
                     // CRITICAL: Check TOTAL quantity against stock
                     if (totalQuantity > originalProduct.productStock) {
                         const productName = cart.find(item => item.inventory_id == inventoryId).name;
-                        alert(`Not enough stock for ${productName}. Available: ${originalProduct.productStock}, Requested: ${totalQuantity}`);
+                        Toast.error(`Not enough stock for ${productName}. Available: ${originalProduct.productStock}, Requested: ${totalQuantity}`);
                         return false;
                     }
                 }
