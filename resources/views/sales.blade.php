@@ -177,7 +177,7 @@
                             @input="open = true"
                             @click.outside="open = false"
                             placeholder="Type to search products..."
-                            class="px-4 py-3 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
+                            class="px-3 py-2 border border-gray-300 w-full transition-all duration-200 shadow-sm"
                             autocomplete="off"
                         >
 
@@ -237,7 +237,7 @@
                     <!-- Hidden fields for sale items -->
                     <div id="saleItemsContainer" class="hidden"></div>
     
-                    <div class="px-5 py-2 w-full font-bold border border-black text-2xl uppercase col-span-4 flex flex-row items-between place-content-between">
+                    <div class="px-5 py-2 w-full font-bold border border-black text-2xl uppercase col-span-5 flex flex-row items-between place-content-between">
                         <span>Total:</span>
                         <span id="cartTotal" class="ml-2">₱0.00</span>
                     </div>
@@ -250,10 +250,10 @@
                     </div>
 
                     <!-- PREVIEW TABLE FOR ADDED SALES/PRODUCTS -->
-                    <div class="border w-auto rounded-md border-solid border-black my-2 col-span-7">
+                    <div class="border w-auto rounded-md border-solid border-black col-span-7">
                         <table class="w-full">
-                            <thead class="rounded-lg bg-main text-white px-4 py-2">
-                                <tr class="rounded-lg text-md">
+                            <thead class="rounded-lg bg-main text-white px-3 py-1">
+                                <tr class="rounded-lg text-sm">
                                     <th class="bg-main px-2 py-2">Item/s</th>
                                     <th class="bg-main px-2 py-2">Quantity</th>
                                     <th class="bg-main px-2 py-2">Price</th>
@@ -271,10 +271,31 @@
                         </table>
                     </div>
                     
-                    <div class="container grid grid-cols-7 col-span-7 mx-auto place-content-evenly justify-evenly content-evenly">
-                        <x-form.form-input label="Cash on Hand (₱)" name="salesCash" id="salesCash" type="number" step="0.01" value="" class="col-span-2" required oninput="calculateChange()"/>
-                        <x-form.form-input label="Change (₱)" name="salesChange" id="salesChange" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
+                    <!-- Payment Section -->
+                    <div class="col-span-7 flex justify-center gap-12">
+                        <x-form.form-input 
+                            label="Cash on Hand (₱)" 
+                            name="salesCash" 
+                            id="salesCash" 
+                            type="number" 
+                            step="0.01" 
+                            value="" 
+                            class="w-64"
+                            required 
+                            oninput="calculateChange()"
+                        />
+                        <x-form.form-input 
+                            label="Change (₱)" 
+                            name="salesChange" 
+                            id="salesChange" 
+                            type="number" 
+                            step="0.01" 
+                            value="0.00" 
+                            class="w-64" 
+                            readonly
+                        />
                     </div>
+
 
                     <!-- FORM BUTTONS -->
                     <div class="flex justify-end items-center w-full relative col-span-7">
