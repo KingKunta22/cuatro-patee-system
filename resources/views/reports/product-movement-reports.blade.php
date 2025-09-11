@@ -41,7 +41,7 @@
                 <th class="px-4 py-3 text-center">Product</th>
                 <th class="px-4 py-3 text-center">Quantity</th>
                 <th class="px-4 py-3 text-center">Type</th>
-                <th class="px-4 py-3 text-center">Remarks</th>
+                <th class="px-4 py-3 text-center">From</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">

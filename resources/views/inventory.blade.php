@@ -86,13 +86,13 @@
                     </div>
 
                     <!-- Search Button -->
-                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                    <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-all duration-100 ease-in-out">
                         Search
                     </button>
 
                     <!-- Clear Button (only show when filters are active) -->
                     @if(request('search') || (request('category') && request('category') != 'all') || (request('brand') && request('brand') != 'all'))
-                        <a href="{{ route('inventory.index') }}" class="text-white px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                        <a href="{{ route('inventory.index') }}" class="text-white px-4 py-2 hover:bg-gray-300 rounded-md bg-gray-400 transition-all duration-100 ease-in-out">
                             Clear
                         </a>
                     @endif

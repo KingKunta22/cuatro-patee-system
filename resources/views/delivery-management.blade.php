@@ -291,7 +291,7 @@
                             </div>
                             <div class="bg-gray-50 p-1 rounded-md">
                                 <p class="font-semibold text-xs">TOTAL AMOUNT</p>
-                                <p class="text-xs">₱{{ number_format($order->totalAmount, 2) }} ({{ $totalItems }})</p>
+                                <p class="text-xs">₱{{ number_format($order->totalAmount, 2) }}</p>
                             </div>
                             <div class="bg-gray-50 p-1 rounded-md">
                                 <p class="font-semibold text-xs">LAST UPDATED</p>
@@ -450,7 +450,7 @@
                             @if($isDelivered)
                                 <p class="text-md font-medium text-green-900">{{ $phases[4]['name'] }}</p>
                                 <p class="text-sm text-green-700 mt-1">{{ $phases[4]['desc'] }}</p>
-                                <p class="text-xs text-green-600 mt-2">Delivery completed on {{ $deliveryDate->format('M d, Y') }}</p>
+                                <p class="text-xs text-green-600 mt-2">Delivery completed on {{ \Carbon\Carbon::parse($delivery->status_updated_at)->format('M d, Y') }}</p>
                             @elseif($isDelayed)
                                 <p class="text-md font-medium text-red-900">Delayed</p>
                                 <p class="text-sm text-red-700 mt-1">Expected delivery was {{ abs($daysRemaining) }} day{{ abs($daysRemaining) != 1 ? 's' : '' }} ago</p>

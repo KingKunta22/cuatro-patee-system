@@ -166,7 +166,7 @@
                                 calculateAmount();
                             }
                         }"
-                        class="relative w-full col-span-4"
+                        class="relative w-full col-span-3"
                     >
                         <label for="productName" class="text-sm font-medium text-gray-700 mb-1">Product Name</label>
                         <input 
@@ -195,8 +195,6 @@
                                         <div>
                                             <div class="font-medium text-gray-900" x-text="product.productName"></div>
                                             <div class="text-sm text-gray-500 mt-1">
-                                                <span class="bg-gray-100 px-2 py-1 rounded text-xs" x-text="product.productSKU"></span>
-                                                <span class="mx-2">•</span>
                                                 <span class="text-gray-600" x-text="product.productBrand"></span>
                                             </div>
                                         </div>
@@ -217,8 +215,8 @@
                     </div>
                     
                     <!-- Customer Dropdown -->
-                    <div class="container text-start flex col-span-3 w-full flex-col">
-                        <label for="customerName">Customer Name</label>
+                    <div class="container text-start flex col-span-2 w-full flex-col">
+                        <label for="customerName">Customer</label>
                         <select name="customerName" id="customerName" class="px-3 py-2 border rounded-sm border-black" required>
                             <option value="" disabled selected>Select Customer</option>
                             @foreach($customers as $customer)
@@ -228,14 +226,12 @@
                     </div>
 
                     <!-- Other inputs (unchanged) -->
-                    <x-form.form-input label="Product Brand" name="productBrand" type="text" class="col-span-2" readonly/>
                     <x-form.form-input label="Product SKU" name="productSKU" type="text" class="col-span-2" readonly/>
+                    <x-form.form-input label="Product Brand" name="productBrand" type="text" class="col-span-2" readonly/>
                     <x-form.form-input label="Stocks" name="availableStocks" type="number" class="col-span-1" readonly/>
-                    <x-form.form-input label="Measurement" name="itemMeasurement" type="text" class="col-span-2" readonly/>
+                    <x-form.form-input label="UOM" name="itemMeasurement" type="text" class="col-span-1" readonly/>
                     <x-form.form-input label="Quantity" name="quantity" type="number" value="1" min="1" class="col-span-1" required oninput="calculateAmount()"/>
-                    <x-form.form-input label="Cash on Hand (₱)" name="salesCash" id="salesCash" type="number" step="0.01" value="" class="col-span-2" required oninput="calculateChange()"/>
                     <x-form.form-input label="Unit Price (₱)" name="salesPrice" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
-                    <x-form.form-input label="Change (₱)" name="salesChange" id="salesChange" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
 
                     
                     <!-- Hidden fields for sale items -->
@@ -273,6 +269,11 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <div class="container grid grid-cols-7 col-span-7 mx-auto place-content-evenly justify-evenly content-evenly">
+                        <x-form.form-input label="Cash on Hand (₱)" name="salesCash" id="salesCash" type="number" step="0.01" value="" class="col-span-2" required oninput="calculateChange()"/>
+                        <x-form.form-input label="Change (₱)" name="salesChange" id="salesChange" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
                     </div>
 
                     <!-- FORM BUTTONS -->
