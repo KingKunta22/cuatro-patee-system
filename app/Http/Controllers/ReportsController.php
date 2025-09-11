@@ -22,11 +22,18 @@ class ReportsController extends Controller
                         ->paginate(10);
 
         // Data for PO tab
-        $purchaseOrders = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems', 'notes'])
+        $purchaseOrders = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems', 'notes', 'deliveries'])
             ->whereHas('deliveries', function($query) {
                 $query->where('orderStatus', 'Delivered');
             })
-            ->orderBy('created_at', 'DESC')
+            ->orderByDesc(function($query) {
+                $query->select('status_updated_at')
+                    ->from('deliveries')
+                    ->whereColumn('purchase_orders.id', 'deliveries.purchase_order_id')
+                    ->where('orderStatus', 'Delivered')
+                    ->orderBy('status_updated_at', 'desc')
+                    ->limit(1);
+            })
             ->paginate(10);
 
         // Data for Sales tab

@@ -109,6 +109,7 @@
                 </thead>
                 <tbody>
                     @foreach( $purchaseOrder as $order)
+
                     @php
                         $orderDate = \Carbon\Carbon::parse($order->created_at)->startOfDay();
                         $deliveryDate = \Carbon\Carbon::parse($order->deliveryDate)->startOfDay();
@@ -118,10 +119,8 @@
                         $delivery = $order->deliveries->first();
                         $deliveryStatus = $delivery ? $delivery->orderStatus : 'Pending';
                         $deliveryId = $delivery ? $delivery->deliveryId : 'N/A';
-                        
-                        $isDelayed = $daysLeft < 0 && $deliveryStatus !== 'Delivered';
-                        $displayStatus = $isDelayed ? 'Delayed' : $deliveryStatus;
                     @endphp
+                    
                     <tr class="border-b">
                         <td class="truncate px-2 py-3 text-center" title="{{ $deliveryId }}">
                             {{ $deliveryId }}
@@ -146,7 +145,16 @@
                         {{-- Estimated Time of Arrival Column --}}
                         <td class="truncate px-2 py-3 text-center">
                             @if($deliveryStatus === 'Delivered')
-                                <span class="text-green-600 text-xs">Delivered on {{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}</span>
+                                <div class="flex flex-col items-center">
+                                    <span class="text-green-600 text-xs font-medium">Delivered on</span>
+                                    <span class="text-green-500 text-2xs">
+                                        @if($delivery && $delivery->status_updated_at)
+                                            {{ \Carbon\Carbon::parse($delivery->status_updated_at)->format('M d, Y') }}
+                                        @else
+                                            {{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}
+                                        @endif
+                                    </span>
+                                </div>
                             @elseif($daysLeft > 0)
                                 <span>{{ $daysLeft }} {{ \Illuminate\Support\Str::plural('day', $daysLeft) }} left</span>
                             @elseif($daysLeft === 0)
@@ -159,13 +167,13 @@
                         {{-- Delivery Status Column --}}
                         <td class="truncate px-2 py-3 text-center" title="">                                
                             <span class="px-2 py-1 text-sm font-semibold rounded-full 
-                                    @if($isDelayed) text-red-400 bg-red-300/40
-                                    @elseif($displayStatus === 'Pending') text-yellow-400 bg-yellow-300/40
-                                    @elseif($displayStatus === 'Confirmed') text-teal-400 bg-teal-200/40
-                                    @elseif($displayStatus === 'Delivered') text-button-save bg-button-save/40
-                                    @else text-button-delete bg-button-delete/30  @endif"
-                                    title="This order is {{ $displayStatus }}">
-                                    {{ $displayStatus }}
+                                    @if($deliveryStatus === 'Pending') text-yellow-400 bg-yellow-300/40
+                                    @elseif($deliveryStatus === 'Confirmed') text-teal-400 bg-teal-200/40
+                                    @elseif($deliveryStatus === 'Delivered') text-button-save bg-button-save/40
+                                    @elseif($deliveryStatus === 'Cancelled') text-button-delete bg-button-delete/30
+                                    @else text-gray-400 bg-gray-300/40 @endif"
+                                    title="This order is {{ $deliveryStatus }}">
+                                    {{ $deliveryStatus }}
                             </span>
                         </td>
 
@@ -269,7 +277,13 @@
                             </div>
                             <div class="bg-gray-50 p-1 rounded-md">
                                 <p class="font-semibold text-xs">DELIVERY DATE</p>
-                                <p class="text-xs">{{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}</p>
+                                <p class="text-xs">
+                                    @if($deliveryStatus === 'Delivered' && $delivery && $delivery->status_updated_at)
+                                        {{ \Carbon\Carbon::parse($delivery->status_updated_at)->format('M d, Y') }}
+                                    @else
+                                        Not delivered yet
+                                    @endif
+                                </p>
                             </div>
                             <div class="bg-gray-50 p-1 rounded-md">
                                 <p class="font-semibold text-xs">TOTAL ITEMS</p>
@@ -385,7 +399,19 @@
                             <div class="flex justify-between text-xs text-gray-500">
                                 <span>{{ $daysPassed }} day{{ $daysPassed != 1 ? 's' : '' }} passed</span>
                                 @if($isDelivered)
-                                    <span class="text-green-600 text-xs">Delivered on {{ $deliveryDate->format('M d, Y') }}</span>
+                                    <div class="flex items-center text-green-600">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        <span>
+                                            Delivered on 
+                                            @if($delivery && $delivery->status_updated_at)
+                                                {{ \Carbon\Carbon::parse($delivery->status_updated_at)->format('M d, Y') }}
+                                            @else
+                                                {{ $deliveryDate->format('M d, Y') }}
+                                            @endif
+                                        </span>
+                                    </div>
                                 @elseif($isDelayed)
                                     <span class="text-red-600">{{ abs($daysRemaining) }} day{{ abs($daysRemaining) != 1 ? 's' : '' }} delayed</span>
                                 @else

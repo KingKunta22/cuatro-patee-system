@@ -42,17 +42,35 @@
                     }
                 @endphp
                 <tr class="border-b">
+                    <!-- Purchase Order Number column -->
                     <td class="px-2 py-2 text-center font-semibold">{{ $po->orderNumber }}</td>
+                    <!-- Supplier Name column -->
                     <td class="px-2 py-2 text-center">{{ $po->supplier->supplierName ?? 'N/A' }}</td>
+                    <!-- Date Received column -->
                     <td class="px-2 py-2 text-center">
-                        @if($po->deliveries->first())
-                            {{ $po->deliveries->first()->created_at->format('M d, Y') }}
+                        @php
+                            $delivery = $po->deliveries->first();
+                            $deliveryDate = null;
+                            
+                            if ($delivery && $delivery->orderStatus === 'Delivered') {
+                                // Convert string to Carbon object if needed
+                                $deliveryDate = is_string($delivery->status_updated_at) 
+                                    ? \Carbon\Carbon::parse($delivery->status_updated_at)
+                                    : $delivery->status_updated_at;
+                            }
+                        @endphp
+                        
+                        @if($deliveryDate)
+                            {{ $deliveryDate->format('M d, Y') }}
                         @else
                             <span class="text-gray-400">Not delivered</span>
                         @endif
                     </td>
+                    <!-- Total Items column -->
                     <td class="px-2 py-2 text-center">{{ $totalItems }}</td>
+                    <!-- Good Items Items column -->
                     <td class="px-2 py-2 text-center text-green-600 font-semibold">{{ $goodItemsCount }}</td>
+                    <!-- Defect column -->
                     <td class="px-2 py-2 text-center">
                         @if($defectiveCount > 0)
                             <span class="text-red-600 font-semibold">
@@ -62,11 +80,13 @@
                             <span class="text-gray-500">0</span>
                         @endif
                     </td>
+                    <!-- Status column -->
                     <td class="px-2 py-2 text-center">
                         <span class="text-sm font-semibold {{ $statusClass }} px-2 py-1 rounded-xl">
                             {{ $status }}
                         </span>
                     </td>
+                    <!-- View Details Button -->
                     <td class="px-2 py-2 text-center flex place-content-center">
                         <button onclick="document.getElementById('poDetails{{ $po->id }}').showModal()" 
                             class="flex rounded-md bg-gray-400 px-3 py-2 text-white items-center content-center hover:bg-gray-400/70 transition duration-100 ease-in font-semibold">

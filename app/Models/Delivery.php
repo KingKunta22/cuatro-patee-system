@@ -13,8 +13,7 @@ class Delivery extends Model
         'orderStatus',
         'purchase_order_id',
         'last_updated_by',
-        'status_updated_at',
-        'actual_delivery_date' // Add this
+        'status_updated_at'
     ];
 
     protected static function boot()
@@ -40,17 +39,8 @@ class Delivery extends Model
         static::updating(function ($model) {
             if ($model->isDirty('orderStatus')) {
                 $model->status_updated_at = now();
-                $model->last_updated_by = auth()->check() ? auth()->user()->name : 'System';
                 
-                // If status is changed to Delivered, set the actual delivery date
-                if ($model->orderStatus === 'Delivered') {
-                    $model->actual_delivery_date = now();
-                }
-                
-                // If status is changed from Delivered to something else, clear the actual delivery date
-                if ($model->getOriginal('orderStatus') === 'Delivered' && $model->orderStatus !== 'Delivered') {
-                    $model->actual_delivery_date = null;
-                }
+                $model->last_updated_by = optional(auth()->user())->name ?? 'System';
             }
         });
     }

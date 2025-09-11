@@ -220,7 +220,25 @@
                         <div class="bg-gray-100 rounded p-4">
                             <h4 class="font-bold mb-1 text-lg">Order Information</h4>
                             <p><strong>Supplier:</strong> {{ $po->supplier->supplierName ?? 'N/A' }}</p>
-                            <p><strong>Order Date:</strong> {{ $po->created_at->format('M d, Y') }}</p>
+                            <p><strong>Order Date:</strong>
+                                @php
+                                    $delivery = $po->deliveries->first();
+                                    $deliveryDate = null;
+                                    
+                                    if ($delivery && $delivery->orderStatus === 'Delivered') {
+                                        // Convert string to Carbon object if needed
+                                        $deliveryDate = is_string($delivery->status_updated_at) 
+                                            ? \Carbon\Carbon::parse($delivery->status_updated_at)
+                                            : $delivery->status_updated_at;
+                                    }
+                                @endphp
+                                
+                                @if($deliveryDate)
+                                    {{ $deliveryDate->format('M d, Y') }}
+                                @else
+                                    <span class="text-gray-400">Not delivered</span>
+                                @endif
+                            </p>
                             <p><strong>Status:</strong> 
                                 <span class="font-semibold text-sm {{ $statusClass }} px-2 py-1 rounded-xl">
                                     {{ $status }}
