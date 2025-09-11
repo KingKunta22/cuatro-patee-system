@@ -146,7 +146,7 @@
                         {{-- Estimated Time of Arrival Column --}}
                         <td class="truncate px-2 py-3 text-center">
                             @if($deliveryStatus === 'Delivered')
-                                <span class="text-green-600">Delivered</span>
+                                <span class="text-green-600 text-xs">Delivered on {{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}</span>
                             @elseif($daysLeft > 0)
                                 <span>{{ $daysLeft }} {{ \Illuminate\Support\Str::plural('day', $daysLeft) }} left</span>
                             @elseif($daysLeft === 0)
@@ -241,9 +241,9 @@
         <x-modal.createModal x-ref="viewOrderDetails{{ $order->id}}" class="w-4/5">
             <x-slot:dialogTitle>DELIVERY ID: {{ $deliveryId }}</x-slot:dialogTitle>            
             <div class="container">
-                <div class="container grid grid-cols-6 p-4">
+                <div class="container grid grid-cols-6 px-2 py-4">
                     {{-- ORDER DETAILS SECTION --}}
-                    <div class="container col-span-2 px-6 py-1">
+                    <div class="container col-span-2 px-4 py-1">
                         <h1 class="flex items-start font-bold text-lg mb-4">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
@@ -255,33 +255,33 @@
                         <div class="grid grid-cols-2 gap-3 mb-5">
                             
                             <!-- Status Information Cards -->
-                            <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-sm">PURCHASE ORDER</p>
-                                <p class="text-sm">{{ $order->orderNumber }}</p>
+                            <div class="bg-gray-50 p-1 rounded-md">
+                                <p class="font-semibold text-xs">PURCHASE ORDER</p>
+                                <p class="text-xs">{{ $order->orderNumber }}</p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-sm">ORDER DATE</p>
-                                <p class="text-sm">{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y')}}</p>
+                            <div class="bg-gray-50 p-1 rounded-md">
+                                <p class="font-semibold text-xs">ORDER DATE</p>
+                                <p class="text-xs">{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y')}}</p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-sm">PAYMENT TERMS</p>
-                                <p class="text-sm">{{ $order->paymentTerms}}</p>
+                            <div class="bg-gray-50 p-1 rounded-md">
+                                <p class="font-semibold text-xs">PAYMENT TERMS</p>
+                                <p class="text-xs">{{ $order->paymentTerms}}</p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-sm">DELIVERY DATE</p>
-                                <p class="text-sm">{{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}</p>
+                            <div class="bg-gray-50 p-1 rounded-md">
+                                <p class="font-semibold text-xs">DELIVERY DATE</p>
+                                <p class="text-xs">{{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}</p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-sm">TOTAL ITEMS</p>
-                                <p class="text-sm">{{ $totalItems }}</p>
+                            <div class="bg-gray-50 p-1 rounded-md">
+                                <p class="font-semibold text-xs">TOTAL ITEMS</p>
+                                <p class="text-xs">{{ $totalItems }}</p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-md text-center">
-                                <p class="font-semibold text-sm">TOTAL AMOUNT</p>
-                                <p class="text-sm">₱{{ number_format($order->totalAmount, 2) }} ({{ $totalItems }})</p>
+                            <div class="bg-gray-50 p-1 rounded-md">
+                                <p class="font-semibold text-xs">TOTAL AMOUNT</p>
+                                <p class="text-xs">₱{{ number_format($order->totalAmount, 2) }} ({{ $totalItems }})</p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-sm">LAST UPDATED</p>
-                                <p class="text-sm">
+                            <div class="bg-gray-50 p-1 rounded-md">
+                                <p class="font-semibold text-xs">LAST UPDATED</p>
+                                <p class="text-xs">
                                     @if($lastUpdated)
                                         {{ \Carbon\Carbon::parse($lastUpdated)->format('M d, Y') }}
                                     @else
@@ -289,15 +289,15 @@
                                     @endif
                                 </p>
                             </div>
-                            <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-sm">UPDATED BY</p>
-                                <p class="text-sm">{{ $lastUpdatedBy }}</p>
+                            <div class="bg-gray-50 p-1 rounded-md">
+                                <p class="font-semibold text-xs">UPDATED BY</p>
+                                <p class="text-xs">{{ $lastUpdatedBy }}</p>
                             </div>
                         </div>
 
                         {{-- Items Table --}}
                         <div class="border w-full rounded-md border-solid border-black p-1 mb-4">
-                            <table class="w-full">
+                            <table class="w-full table-fixed">
                                 <thead class="rounded-lg bg-main text-white">
                                     <tr>
                                         <th class="px-1 py-1 text-sm">Item Name</th>
@@ -309,15 +309,35 @@
                                 <tbody>
                                     @foreach($order->items as $item)
                                     <tr class="border-b">
-                                        <td class="px-2 py-2 text-center text-xs">{{ $item->productName }}</td>
-                                        <td class="px-2 py-2 text-center text-xs">{{ $item->quantity }}</td>
-                                        <td class="px-2 py-2 text-center text-xs">₱{{ number_format($item->unitPrice, 2) }}</td>
-                                        <td class="px-2 py-2 text-center text-xs">{{ $item->itemMeasurement }}</td>
+                                        <td class="px-2 py-2 text-center text-xs truncate" title="{{ $item->productName }}">{{ $item->productName }}</td>
+                                        <td class="px-2 py-2 text-center text-xs truncate" title="{{ $item->quantity }}">{{ $item->quantity }}</td>
+                                        <td class="px-2 py-2 text-center text-xs truncate" title="{{ number_format($item->unitPrice, 2) }}">₱{{ number_format($item->unitPrice, 2) }}</td>
+                                        <td class="px-2 py-2 text-center text-xs truncate" title="{{ $item->itemMeasurement }}">{{ $item->itemMeasurement }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Order Status Form -->
+                        <form action="{{ route('delivery-management.updateStatus')}}" method="POST" class="w-full" id="statusForm{{ $order->id }}">
+                            @csrf
+                            <input type="hidden" name="order_id" value="{{ $order->id }}">
+                            
+                            <div class="w-full">
+                                <label for="orderStatus{{ $order->id }}" class="block text-xs font-medium mb-1">Update Order Status</label>
+                                <select name="status" id="orderStatus{{ $order->id }}" class="w-full px-2 py-1 text-sm border rounded-xs border-black" required>
+                                    <option value="Pending" {{ $deliveryStatus === 'Pending' ? 'selected' : '' }}>Pending</option>
+                                    <option value="Confirmed" {{ $deliveryStatus === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
+                                    <option value="Delivered" {{ $deliveryStatus === 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                                    <option value="Cancelled" {{ $deliveryStatus === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                </select>
+                                
+                                <button type="submit" class="mt-2 w-full uppercase px-2 py-2 font-bold text-xs bg-button-save text-white rounded-sm hover:bg-green-600 transition-colors duration-200">
+                                    Update Status
+                                </button>
+                            </div>
+                        </form>
                     </div>
 
                     {{-- SUPPLIER INFORMATION SECTION --}}
@@ -329,7 +349,7 @@
                             Supplier Information
                         </h1>
 
-                        <div class="grid grid-cols-1 gap-3 mb-5">
+                        <div class="grid grid-cols-1 gap-3">
                             <div class="bg-gray-50 p-3 rounded-md">
                                 <p class="font-semibold text-md pb-2">FROM</p>
                                 <p class="pl-2 text-sm">{{ $order->supplier->supplierAddress}}</p>
@@ -341,26 +361,6 @@
                                 <p class="pl-2 text-sm font-md">Cuatro Patee</p>
                             </div>
                         </div>
-
-                        <!-- Order Status Form -->
-                        <form action="{{ route('delivery-management.updateStatus')}}" method="POST" class="w-full mt-4" id="statusForm{{ $order->id }}">
-                            @csrf
-                            <input type="hidden" name="order_id" value="{{ $order->id }}">
-                            
-                            <div class="w-full">
-                                <label for="orderStatus{{ $order->id }}" class="block text-sm font-medium mb-1">Update Order Status</label>
-                                <select name="status" id="orderStatus{{ $order->id }}" class="w-full px-3 py-2 border rounded-sm border-black" required>
-                                    <option value="Pending" {{ $deliveryStatus === 'Pending' ? 'selected' : '' }}>Pending</option>
-                                    <option value="Confirmed" {{ $deliveryStatus === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
-                                    <option value="Delivered" {{ $deliveryStatus === 'Delivered' ? 'selected' : '' }}>Delivered</option>
-                                    <option value="Cancelled" {{ $deliveryStatus === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                                </select>
-                                
-                                <button type="submit" class="mt-2 w-full px-4 py-2 bg-button-save text-white rounded-md hover:bg-green-600 transition-colors duration-200">
-                                    Update Status
-                                </button>
-                            </div>
-                        </form>
                     </div>
 
                     {{-- ESTIMATED PROGRESS SECTION --}}
