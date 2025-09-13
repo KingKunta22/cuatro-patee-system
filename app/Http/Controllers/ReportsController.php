@@ -16,57 +16,22 @@ class ReportsController extends Controller
     {
         $timePeriod = $request->timePeriod ?? 'all';
         
-        // Data for inventory tab
-        $inventories = Inventory::with(['category', 'brand'])
-                        ->orderBy('created_at', 'DESC')
-                        ->paginate(10, ['*'], 'inventory_page');
+        // Data for inventory tab with time period filtering
+        $inventories = $this->getInventoryData($timePeriod);
 
-        // Data for PO tab - Filter based on your requirements
-        $purchaseOrders = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems', 'notes', 'deliveries'])
-            ->whereHas('deliveries', function($query) {
-                $query->where(function($q) {
-                    // Include Delivered POs
-                    $q->where('orderStatus', 'Delivered')
-                    // Include Cancelled POs
-                    ->orWhere('orderStatus', 'Cancelled')
-                    // Include Confirmed POs only if they are delayed
-                    ->orWhere(function($confirmedQuery) {
-                        $confirmedQuery->where('orderStatus', 'Confirmed')
-                                        ->whereHas('purchaseOrder', function($poQuery) {
-                                            $poQuery->where('deliveryDate', '<', now()->startOfDay());
-                                        });
-                    });
-                });
-            })
-            ->orderByDesc(function($query) {
-                $query->select('status_updated_at')
-                    ->from('deliveries')
-                    ->whereColumn('purchase_orders.id', 'deliveries.purchase_order_id')
-                    ->orderBy('status_updated_at', 'desc')
-                    ->limit(1);
-            })
-            ->paginate(10, ['*'], 'po_page');
+        // Data for PO tab with time period filtering
+        $purchaseOrders = $this->getPurchaseOrderData($timePeriod);
 
-        // Data for Sales tab
-        $sales = Sale::with(['items', 'items.inventory'])
-            ->orderBy('created_at', 'DESC')
-            ->paginate(10, ['*'], 'sales_page');
+        // Data for Sales tab with time period filtering
+        $sales = $this->getSalesData($timePeriod);
 
-        // Calculate stock totals for inventory reports (only count delivered POs for stock)
-        $totalStockIn = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
-                $query->where('orderStatus', 'Delivered');
-            })
-            ->sum('quantity');
+        // Calculate stock totals with time period filtering
+        list($totalStockIn, $totalStockOut) = $this->getStockTotals($timePeriod);
 
-        $totalStockOut = SaleItem::sum('quantity');
+        // Calculate revenue stats with time period filtering
+        list($totalRevenue, $totalCost, $totalProfit) = $this->getRevenueStats($timePeriod);
 
-        // Calculate revenue stats for sales reports
-        $totalRevenue = SaleItem::sum(DB::raw('quantity * unit_price'));
-        $totalCost = SaleItem::join('inventories', 'sale_items.inventory_id', '=', 'inventories.id')
-            ->sum(DB::raw('sale_items.quantity * inventories.productCostPrice'));
-        $totalProfit = $totalRevenue - $totalCost;
-
-        // Get product movements data for the default tab
+        // Get product movements data
         $productMovements = $this->getProductMovementsData($timePeriod);
 
         return view('reports', compact(
@@ -78,22 +43,143 @@ class ReportsController extends Controller
             'totalRevenue', 
             'totalCost', 
             'totalProfit',
-            'productMovements', // Pass the product movements data
+            'productMovements',
             'timePeriod'
         ));
     }
 
+    private function getInventoryData($timePeriod)
+    {
+        $query = Inventory::with(['category', 'brand']);
+        
+        $this->applyTimeFilter($query, $timePeriod, 'created_at');
+        
+        return $query->orderBy('created_at', 'DESC')
+                    ->paginate(10, ['*'], 'inventory_page');
+    }
+
+
+
+    private function getPurchaseOrderData($timePeriod)
+    {
+        $query = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems', 'notes', 'deliveries'])
+            ->whereHas('deliveries', function($query) {
+                $query->where(function($q) {
+                    $q->where('orderStatus', 'Delivered')
+                    ->orWhere('orderStatus', 'Cancelled')
+                    ->orWhere(function($confirmedQuery) {
+                        $confirmedQuery->where('orderStatus', 'Confirmed')
+                                        ->whereHas('purchaseOrder', function($poQuery) {
+                                            $poQuery->where('deliveryDate', '<', now()->startOfDay());
+                                        });
+                    });
+                });
+            });
+        
+        $this->applyTimeFilter($query, $timePeriod, 'created_at');
+        
+        return $query->orderByDesc(function($query) {
+                $query->select('status_updated_at')
+                    ->from('deliveries')
+                    ->whereColumn('purchase_orders.id', 'deliveries.purchase_order_id')
+                    ->orderBy('status_updated_at', 'desc')
+                    ->limit(1);
+            })
+            ->paginate(10, ['*'], 'po_page');
+    }
+
+
+
+    private function getSalesData($timePeriod)
+    {
+        $query = Sale::with(['items', 'items.inventory']);
+        
+        $this->applyTimeFilter($query, $timePeriod, 'sale_date');
+        
+        return $query->orderBy('sale_date', 'DESC')
+                    ->paginate(10, ['*'], 'sales_page');
+    }
+
+
+
+
+    private function getStockTotals($timePeriod)
+    {
+        $stockInQuery = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
+            $query->where('orderStatus', 'Delivered');
+        });
+        
+        $stockOutQuery = SaleItem::query();
+        
+        $this->applyTimeFilter($stockInQuery, $timePeriod, 'purchase_order_items.created_at');
+        $this->applyTimeFilter($stockOutQuery, $timePeriod, 'sale_items.created_at', 'sale');
+        
+        $totalStockIn = $stockInQuery->sum('quantity');
+        $totalStockOut = $stockOutQuery->sum('quantity');
+        
+        return [$totalStockIn, $totalStockOut];
+    }
+
+
+    private function getRevenueStats($timePeriod)
+    {
+        $revenueQuery = Sale::query();
+        $costQuery = SaleItem::join('inventories', 'sale_items.inventory_id', '=', 'inventories.id');
+        
+        $this->applyTimeFilter($revenueQuery, $timePeriod, 'sale_date');
+        $this->applyTimeFilter($costQuery, $timePeriod, 'sale_date', 'sale');
+        
+        $totalRevenue = $revenueQuery->sum('total_amount');
+        $totalCost = $costQuery->sum(DB::raw('sale_items.quantity * inventories.productCostPrice'));
+        $totalProfit = $totalRevenue - $totalCost;
+        
+        return [$totalRevenue, $totalCost, $totalProfit];
+    }
+
+
+    private function applyTimeFilter($query, $timePeriod, $dateField, $relation = null)
+    {
+        if ($timePeriod !== 'all') {
+            if ($relation) {
+                // For relationships, use whereHas with the time condition
+                $query->whereHas($relation, function($q) use ($timePeriod, $dateField) {
+                    $this->applyTimeCondition($q, $timePeriod, $dateField);
+                });
+            } else {
+                // For direct queries, apply the time condition directly
+                $this->applyTimeCondition($query, $timePeriod, $dateField);
+            }
+        }
+    }
+
+
+    private function applyTimeCondition($query, $timePeriod, $dateField)
+    {
+        switch ($timePeriod) {
+            case 'today':
+                $query->whereDate($dateField, today());
+                break;
+            case 'lastWeek':
+                $query->whereBetween($dateField, [now()->subDays(7), now()]);
+                break;
+            case 'lastMonth':
+                $query->whereBetween($dateField, [now()->subDays(30), now()]);
+                break;
+        }
+    }
+
+
     private function getProductMovementsData($timePeriod)
     {
-        // Get sales data for outflow
-        $sales = Sale::with(['items', 'items.inventory'])
-            ->orderBy('sale_date', 'DESC')
-            ->get();
+        // Get sales data for outflow with time filtering
+        $salesQuery = Sale::with(['items', 'items.inventory']);
+        $this->applyTimeFilter($salesQuery, $timePeriod, 'sale_date');
+        $sales = $salesQuery->orderBy('sale_date', 'DESC')->get();
         
-        // Get inventory changes for inflow (ACTUAL inventory additions)
-        $inventoryChanges = Inventory::with(['category', 'brand'])
-                            ->orderBy('created_at', 'DESC')
-                            ->get();
+        // Get inventory changes for inflow with time filtering
+        $inventoryQuery = Inventory::with(['category', 'brand']);
+        $this->applyTimeFilter($inventoryQuery, $timePeriod, 'created_at');
+        $inventoryChanges = $inventoryQuery->orderBy('created_at', 'DESC')->get();
         
         $movements = [];
         
@@ -147,7 +233,7 @@ class ReportsController extends Controller
                     'product_name' => $inventory->productName,
                     'quantity' => $inventory->productStock,
                     'type' => 'inflow',
-                    'remarks' => $source // From column shows source type only
+                    'remarks' => $source
                 ];
             }
         }
@@ -179,17 +265,9 @@ class ReportsController extends Controller
             ]
         );
         
-        // Update stats calculations to use actual inventory data
-        // Only count delivered POs for stock in calculations
-        $totalStockIn = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
-            $query->where('orderStatus', 'Delivered');
-        })->sum('quantity');
-        
-        $totalStockOut = SaleItem::sum('quantity');
-        $totalRevenue = SaleItem::sum(DB::raw('quantity * unit_price'));
-        $totalCost = SaleItem::join('inventories', 'sale_items.inventory_id', '=', 'inventories.id')
-            ->sum(DB::raw('sale_items.quantity * inventories.productCostPrice'));
-        $totalProfit = $totalRevenue - $totalCost;
+        // Use the same time-filtered stats methods as other tabs
+        list($totalStockIn, $totalStockOut) = $this->getStockTotals($timePeriod);
+        list($totalRevenue, $totalCost, $totalProfit) = $this->getRevenueStats($timePeriod);
         
         return [
             'movementsPaginator' => $movementsPaginator,

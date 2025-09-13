@@ -90,24 +90,7 @@ Route::delete('subcategories/{id}', [ProductClassification::class, 'destroySubca
 
 
 // MAIN ROUTE FOR REPORTS - use a more specific path
-Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
-
-// Group all report-type specific routes
-Route::prefix('reports')->name('reports.')->middleware('auth')->group(function () {
-
-    // Product Movements Routes
-    Route::get('/product-movements', [ProductMovementReportsController::class, 'index'])->name('product-movements.index');
-
-    // PO Reports Routes
-    Route::get('/purchase-orders', [PurchaseOrderReportsController::class, 'index'])->name('purchase-orders.index');
-    Route::put('/purchase-orders/update-defective-status/{item}', [PurchaseOrderReportsController::class, 'updateDefectiveStatus'])->name('purchase-orders.update-defective-status');
-
-    // Inventory Reports Routes
-    Route::get('/inventory', [InventoryReportsController::class, 'index'])->name('inventory.index');
-
-    // Sales Reports Routes
-    Route::get('/sales', [SalesReportsController::class, 'index'])->name('sales.index');
-});
+Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index')->middleware('auth');
 
 
 Route::resource('po-notes', PONotesController::class);
