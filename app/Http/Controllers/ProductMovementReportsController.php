@@ -155,7 +155,7 @@ private function getProductNameForPOItem($item)
     private function paginateMovements($movements, $request)
     {
         $perPage = 10;
-        $currentPage = $request->get('page', 1);
+        $currentPage = $request->get('product_page', 1);
         $offset = ($currentPage - 1) * $perPage;
         $paginatedMovements = array_slice($movements, $offset, $perPage);
 
@@ -164,7 +164,11 @@ private function getProductNameForPOItem($item)
             count($movements),
             $perPage,
             $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
+            [
+                'path' => $request->url(), 
+                'query' => $request->query(),
+                'pageName' => 'product_page'
+            ]
         );
     }
 }

@@ -30,7 +30,9 @@ class SalesReportsController extends Controller
             }
         }
         
-        $sales = $salesQuery->orderBy('sale_date', 'DESC')->paginate(10);
+        // sales_page parameter instead of page
+        $sales = $salesQuery->orderBy('sale_date', 'DESC')
+            ->paginate(10, ['*'], 'sales_page');
         
         // Calculate stats
         $revenueQuery = Sale::query();

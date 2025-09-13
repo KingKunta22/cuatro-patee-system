@@ -31,8 +31,9 @@ class InventoryReportsController extends Controller
             }
         }
 
+        // inventory_page parameter instead of page
         $inventories = $query->orderBy('created_at', 'DESC')
-            ->paginate(10)
+            ->paginate(10, ['*'], 'inventory_page') // Add this parameter
             ->withQueryString();
 
         // Debug: Check what's in the database
@@ -40,10 +41,6 @@ class InventoryReportsController extends Controller
         $deliveredPOs = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
             $query->where('orderStatus', 'Delivered');
         })->get();
-        
-        // Debug output
-        // \Log::info("All Purchase Items Count: " . $allPurchaseItems->count());
-        // \Log::info("Delivered PO Items Count: " . $deliveredPOs->count());
         
         // Calculate total stock in (from purchase orders)
         $stockInQuery = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {

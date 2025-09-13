@@ -19,7 +19,8 @@ class ReportsController extends Controller
         // Data for inventory tab
         $inventories = Inventory::with(['category', 'brand'])
                         ->orderBy('created_at', 'DESC')
-                        ->paginate(10);
+                        ->paginate(10, ['*'], 'inventory_page');
+
 
         // Data for PO tab
         $purchaseOrders = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems', 'notes', 'deliveries'])
@@ -34,12 +35,16 @@ class ReportsController extends Controller
                     ->orderBy('status_updated_at', 'desc')
                     ->limit(1);
             })
-            ->paginate(10);
+            ->paginate(10, ['*'], 'po_page');
+
 
         // Data for Sales tab
         $sales = Sale::with(['items', 'items.inventory'])
             ->orderBy('created_at', 'DESC')
-            ->paginate(10);
+            ->paginate(10, ['*'], 'sales_page');
+
+
+
 
         // Calculate stock totals for inventory reports
         $totalStockIn = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
@@ -55,7 +60,7 @@ class ReportsController extends Controller
             ->sum(DB::raw('sale_items.quantity * inventories.productCostPrice'));
         $totalProfit = $totalRevenue - $totalCost;
 
-        // 🎯 ADD THIS: Get product movements data for the default tab
+        // Get product movements data for the default tab
         $productMovements = $this->getProductMovementsData($timePeriod);
 
         return view('reports', compact(
@@ -67,7 +72,7 @@ class ReportsController extends Controller
             'totalRevenue', 
             'totalCost', 
             'totalProfit',
-            'productMovements', // 🎯 Pass the product movements data
+            'productMovements', // Pass the product movements data
             'timePeriod'
         ));
     }
@@ -138,19 +143,24 @@ class ReportsController extends Controller
         
         // Paginate movements (simple version)
         $perPage = 10;
-        $currentPage = request()->get('page', 1);
+        $currentPage = request()->get('product_page', 1);
         $offset = ($currentPage - 1) * $perPage;
         $paginatedMovements = array_slice($movements, $offset, $perPage);
         
+        // FIX: Add the pageName parameter to the paginator
         $movementsPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
             $paginatedMovements,
             count($movements),
             $perPage,
             $currentPage,
-            ['path' => request()->url(), 'query' => request()->query()]
+            [
+                'path' => request()->url(), 
+                'query' => request()->query(),
+                'pageName' => 'product_page'
+            ]
         );
         
-        // 🎯 ADD THESE CALCULATIONS INSIDE THE METHOD:
+        // ADD THESE CALCULATIONS INSIDE THE METHOD:
         $totalStockIn = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
             $query->where('orderStatus', 'Delivered');
         })->sum('quantity');

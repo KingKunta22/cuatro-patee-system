@@ -48,7 +48,7 @@
 
     @if($movementsPaginator->total() > 0)
         <div class="mt-4 px-4 py-2 bg-gray-50 border-t">
-            {{ $movementsPaginator->links() }}
+            {{ $movementsPaginator->appends(['tab' => 'product'])->links() }}
         </div>
     @endif
 </section>

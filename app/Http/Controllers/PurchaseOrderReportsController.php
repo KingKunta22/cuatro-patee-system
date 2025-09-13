@@ -29,12 +29,13 @@ class PurchaseOrderReportsController extends Controller
                     break;
                 case 'monthly':
                     $query->whereMonth('created_at', now()->month)
-                         ->whereYear('created_at', now()->year);
+                        ->whereYear('created_at', now()->year);
                     break;
             }
         }
 
         // Order by delivery status update time (most recent delivered first)
+        // Use po_page parameter instead of page
         $purchaseOrders = $query->orderByDesc(function($query) {
                 $query->select('status_updated_at')
                     ->from('deliveries')
@@ -43,7 +44,7 @@ class PurchaseOrderReportsController extends Controller
                     ->orderBy('status_updated_at', 'desc')
                     ->limit(1);
             })
-            ->paginate(10);
+            ->paginate(10, ['*'], 'po_page'); // Add this parameter
 
         return view('reports.purchase-order-reports', compact('purchaseOrders'));
     }

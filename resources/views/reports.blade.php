@@ -135,18 +135,25 @@
                     'totalRevenue' => $productMovements['totalRevenue'],
                     'totalCost' => $productMovements['totalCost'],
                     'totalProfit' => $productMovements['totalProfit'],
-                    'timePeriod' => $timePeriod
+                    'timePeriod' => $timePeriod,
+                    'currentPage' => request('product_page', 1)
                 ])
             </div>
+
             <div x-show="activeTab === 'sales'">
-                @include('reports.sales-reports', ['timePeriod' => $timePeriod ?? 'all'])
+                @include('reports.sales-reports', [
+                    'timePeriod' => $timePeriod ?? 'all',
+                    'sales' => $sales
+                ])
             </div>
+
             <div x-show="activeTab === 'inventory'">
                 @include('reports.inventory-reports', [
                     'inventories' => $inventories, 
                     'timePeriod' => $timePeriod ?? 'all'
                 ])
             </div>
+
             <div x-show="activeTab === 'po'">
                 @include('reports.purchase-order-reports', [
                     'purchaseOrders' => $purchaseOrders, 

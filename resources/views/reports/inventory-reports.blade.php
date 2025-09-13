@@ -70,6 +70,6 @@
     </table>
 
     <div class="mt-4 px-4 py-2 bg-gray-50">
-        {{ $inventories->links() }}
+        {{ $inventories->appends(['tab' => 'inventory'])->links() }}
     </div>
 </section>

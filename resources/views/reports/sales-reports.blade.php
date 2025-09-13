@@ -54,11 +54,9 @@
         </tbody>
     </table>
 
-    @if($sales->count() > 0)
-        <div class="mt-4 px-4 py-2 bg-gray-50 border-t">
-            {{ $sales->links() }}
-        </div>
-    @endif
+    <div class="mt-4 px-4 py-2 bg-gray-50 border-t">
+        {{ $sales->appends(['tab' => 'sales'])->links() }}
+    </div>
 </section>
 
 @foreach($sales as $sale)

@@ -105,6 +105,6 @@
     </table>
 
     <div class="mt-4 px-4 py-2 bg-gray-50">
-        {{ $purchaseOrders->links() }}
+        {{ $purchaseOrders->appends(['tab' => 'po'])->links() }}
     </div>
 </section>
