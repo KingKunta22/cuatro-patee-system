@@ -64,11 +64,11 @@ class ProductMovementReportsController extends Controller
                 
                 $movements[] = [
                     'date' => $sale->sale_date,
-                    'reference_number' => $sale->invoice_number,
+                    'reference_number' => $sale->invoice_number, // Keep invoice number for sales
                     'product_name' => $productName,
                     'quantity' => -$item->quantity,
                     'type' => 'outflow',
-                    'remarks' => 'Sale'
+                    'remarks' => 'Sale' // From column shows "Sale"
                 ];
             }
         }
@@ -77,13 +77,28 @@ class ProductMovementReportsController extends Controller
         foreach ($inventoryChanges as $inventory) {
             // Only show as inflow if product was actually added to inventory
             if ($inventory->productStock > 0) {
+                $source = 'Manual Addition';
+                $referenceNumber = 'Manually added (' . ($inventory->productSKU ?? 'No SKU') . ')';
+                
+                // Check if this inventory came from a purchase order by matching product names
+                $purchaseOrderItem = PurchaseOrderItem::where('productName', $inventory->productName)->first();
+                    
+                if ($purchaseOrderItem && $purchaseOrderItem->purchaseOrder) {
+                    $po = $purchaseOrderItem->purchaseOrder;
+                    // Check if the PO was actually delivered
+                    if ($po->deliveries()->where('orderStatus', 'Delivered')->exists()) {
+                        $source = 'Purchase Order';
+                        $referenceNumber = $po->orderNumber; // Use PO number as reference
+                    }
+                }
+                
                 $movements[] = [
                     'date' => $inventory->created_at,
-                    'reference_number' => 'INV-' . $inventory->id,
+                    'reference_number' => $referenceNumber,
                     'product_name' => $inventory->productName,
                     'quantity' => $inventory->productStock,
                     'type' => 'inflow',
-                    'remarks' => $this->getInventorySource($inventory)
+                    'remarks' => $source // From column shows source type only
                 ];
             }
         }

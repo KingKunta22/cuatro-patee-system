@@ -118,6 +118,7 @@ class ReportsController extends Controller
             // Only show as inflow if product was actually added to inventory
             if ($inventory->productStock > 0) {
                 $source = 'Manual Addition';
+                $referenceNumber = 'Manually added (' . ($inventory->productSKU ?? 'No SKU') . ')';
                 
                 // Check if from purchase order by matching product names
                 $purchaseOrderItem = PurchaseOrderItem::where('productName', $inventory->productName)->first();
@@ -125,17 +126,18 @@ class ReportsController extends Controller
                 if ($purchaseOrderItem && $purchaseOrderItem->purchaseOrder) {
                     $po = $purchaseOrderItem->purchaseOrder;
                     if ($po->deliveries()->where('orderStatus', 'Delivered')->exists()) {
-                        $source = 'Purchase Order: ' . $po->orderNumber;
+                        $source = 'Purchase Order';
+                        $referenceNumber = $po->orderNumber; // Use PO number as reference
                     }
                 }
                 
                 $movements[] = [
                     'date' => $inventory->created_at,
-                    'reference_number' => 'INV-' . $inventory->id,
+                    'reference_number' => $referenceNumber,
                     'product_name' => $inventory->productName,
                     'quantity' => $inventory->productStock,
                     'type' => 'inflow',
-                    'remarks' => $source
+                    'remarks' => $source // From column shows source type only
                 ];
             }
         }
