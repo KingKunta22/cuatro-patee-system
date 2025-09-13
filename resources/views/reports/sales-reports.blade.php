@@ -30,13 +30,25 @@
         <tbody class="divide-y divide-gray-200">
             @forelse($sales as $sale)
                 <tr>
-                    <td class="px-2 py-2 text-center truncate">{{ $sale->invoice_number }}</td>
-                    <td class="px-2 py-2 text-center truncate">{{ $sale->customer_name ?? 'Walk-in Customer' }}</td>
-                    <td class="px-2 py-2 text-center truncate">{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</td>
-                    <td class="px-2 py-2 text-center truncate">{{ $sale->items->count() }} items</td>
-                    <td class="px-2 py-2 text-center truncate">₱{{ number_format($sale->total_amount, 2) }}</td>
-                    <td class="px-2 py-2 text-center truncate">{{ $sale->processed_by }}</td>
-                    <td class="truncate px-2 py-2 text-center flex place-content-center">
+                    <td class="px-2 py-2 text-center truncate" title="Invoice number: {{ $sale->invoice_number }}">
+                        {{ $sale->invoice_number }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" title="{{ $sale->customer_name ?? 'Walk-in Customer' }}">
+                        {{ $sale->customer_name ?? 'Walk-in Customer' }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" title="Processed on {{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}">
+                        {{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" title="Processed {{ $sale->items->count() }} items">
+                        {{ $sale->items->count() }} items
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" title="{{ number_format($sale->total_amount, 2) }} pesos total sale">
+                        ₱{{ number_format($sale->total_amount, 2) }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" title="This sale was processed by {{ $sale->processed_by }}">
+                        {{ $sale->processed_by }}
+                    </td>
+                    <td class="truncate px-2 py-2 text-center flex place-content-center" title="Click here to view more details">
                         <button onclick="document.getElementById('viewSaleDetails{{ $sale->id }}').showModal()" 
                             class="flex rounded-md bg-gray-400 px-2 py-1 text-sm w-auto text-white items-center content-center 
                                 hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">

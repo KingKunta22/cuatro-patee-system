@@ -22,19 +22,33 @@
         <tbody class="divide-y divide-gray-200">
             @forelse($movementsPaginator as $movement)
                 <tr>
-                    <td class="px-2 py-2 text-center">{{ \Carbon\Carbon::parse($movement['date'])->format('M d, Y') }}</td>
-                    <td class="px-2 py-2 text-center">{{ $movement['reference_number'] }}</td>
-                    <td class="px-2 py-2 text-center truncate">{{ $movement['product_name'] }}</td>
-                    <td class="px-2 py-2 text-center {{ $movement['quantity'] < 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold' }}">
-                        {{ $movement['quantity'] > 0 ? '+' : '' }}{{ $movement['quantity'] }}
+                    <td class="px-2 py-2 text-center truncate" 
+                    title="{{ \Carbon\Carbon::parse($movement['date'])->format('M d, Y') }}">
+                        {{ \Carbon\Carbon::parse($movement['date'])->format('M d, Y') }}
                     </td>
-                    <td class="px-2 py-2 text-center">
-                        <span class="text-xs font-semibold px-2 py-1 rounded-xl 
-                            {{ $movement['type'] === 'inflow' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100' }}">
-                            {{ ucfirst($movement['type']) }}
-                        </span>
+                    <td class="px-2 py-2 text-center truncate" 
+                        title="{{ $movement['reference_number'] }}">
+                        {{ $movement['reference_number'] }}
                     </td>
-                    <td class="px-2 py-2 text-center">{{ $movement['remarks'] }}</td>
+                    <td class="px-2 py-2 text-center truncate" 
+                        title="{{ $movement['product_name'] }}">
+                        {{ $movement['product_name'] }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate {{ $movement['quantity'] < 0 ? 'text-red-600 font-semibold' : 'text-green-600 font-semibold' }}" 
+                        title="{{ $movement['quantity'] > 0 ? '+' : '' }}{{ $movement['quantity'] }}">
+                            {{ $movement['quantity'] > 0 ? '+' : '' }}{{ $movement['quantity'] }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" 
+                        title="{{ ucfirst($movement['type']) }}">
+                            <span class="text-xs font-semibold px-2 py-1 rounded-xl 
+                                {{ $movement['type'] === 'inflow' ? 'text-green-600 bg-green-100' : 'text-red-600 bg-red-100' }}">
+                                {{ ucfirst($movement['type']) }}
+                            </span>
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" 
+                        title="{{ $movement['remarks'] }}">
+                        {{ $movement['remarks'] }}
+                    </td>
                 </tr>
             @empty
                 <tr>

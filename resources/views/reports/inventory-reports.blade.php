@@ -34,13 +34,25 @@
         <tbody class="divide-y divide-gray-200">
             @forelse($inventories as $inventory)
                 <tr class="border-b">
-                    <td class="px-2 py-2 text-center">{{ $inventory->productName }}</td>
-                    <td class="px-2 py-2 text-center">{{ $inventory->productCategory }}</td>
-                    <td class="px-2 py-2 text-center">{{ $inventory->productSKU }}</td>
-                    <td class="px-2 py-2 text-center">{{ $inventory->productBrand }}</td>
-                    <td class="px-2 py-2 text-center">₱{{ number_format($inventory->productSellingPrice, 2) }}</td>
-                    <td class="px-2 py-2 text-center">{{ $inventory->productStock }}</td>
-                    <td class="px-2 py-2 text-center text-sm font-semibold">
+                    <td class="px-2 py-2 text-center truncate" title="{{ $inventory->productName }}">
+                        {{ $inventory->productName }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" title="{{ $inventory->productCategory }}">
+                        {{ $inventory->productCategory }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" title="{{ $inventory->productSKU }}">
+                        {{ $inventory->productSKU }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" title="{{ $inventory->productBrand }}">
+                        {{ $inventory->productBrand }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" title="₱{{ number_format($inventory->productSellingPrice, 2) }}">
+                        ₱{{ number_format($inventory->productSellingPrice, 2) }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate" title="{{ $inventory->productStock }}">
+                        {{ $inventory->productStock }}
+                    </td>
+                    <td class="px-2 py-2 text-center truncate text-sm font-semibold">
                         @if ($inventory->productStock == 0)
                             <span class="text-red-600 bg-red-100 px-2 py-1 rounded-xl" title="This item is out of stock (0 units available)">
                                 Out of Stock

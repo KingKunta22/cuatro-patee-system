@@ -127,14 +127,16 @@ class ProductMovementReportsController extends Controller
     // NEW HELPER METHOD FOR SALE ITEMS
     private function getProductNameForSaleItem($item)
     {
-        // Priority 1: Use sale item's product_name if available
+        // Priority 1: Use sale item's product_name if available (without SKU)
         if (!empty($item->product_name)) {
-            return $item->product_name;
+            // Remove any SKU information in parentheses if it exists
+            return preg_replace('/\s*\([^)]*\)\s*$/', '', $item->product_name);
         }
         
-        // Priority 2: Use inventory productName if relationship exists
+        // Priority 2: Use inventory productName if relationship exists (without SKU)
         if ($item->inventory && !empty($item->inventory->productName)) {
-            return $item->inventory->productName;
+            // Remove any SKU information in parentheses if it exists
+            return preg_replace('/\s*\([^)]*\)\s*$/', '', $item->inventory->productName);
         }
         
         // Priority 3: Fallback to inventory ID

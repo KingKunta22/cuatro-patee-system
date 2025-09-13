@@ -95,10 +95,13 @@ class ReportsController extends Controller
         foreach ($sales as $sale) {
             foreach ($sale->items as $item) {
                 $productName = $item->product_name;
-                if (empty($productName) && $item->inventory) {
-                    $productName = $item->inventory->productName;
-                }
-                if (empty($productName)) {
+                
+                // Clean up product name by removing SKU if it exists
+                if (!empty($productName)) {
+                    $productName = preg_replace('/\s*\([^)]*\)\s*$/', '', $productName);
+                } elseif ($item->inventory && !empty($item->inventory->productName)) {
+                    $productName = preg_replace('/\s*\([^)]*\)\s*$/', '', $item->inventory->productName);
+                } else {
                     $productName = 'Product #' . $item->inventory_id;
                 }
                 
