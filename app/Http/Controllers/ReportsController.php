@@ -21,32 +21,38 @@ class ReportsController extends Controller
                         ->orderBy('created_at', 'DESC')
                         ->paginate(10, ['*'], 'inventory_page');
 
-
-        // Data for PO tab
+        // Data for PO tab - Filter based on your requirements
         $purchaseOrders = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems', 'notes', 'deliveries'])
             ->whereHas('deliveries', function($query) {
-                $query->where('orderStatus', 'Delivered');
+                $query->where(function($q) {
+                    // Include Delivered POs
+                    $q->where('orderStatus', 'Delivered')
+                    // Include Cancelled POs
+                    ->orWhere('orderStatus', 'Cancelled')
+                    // Include Confirmed POs only if they are delayed
+                    ->orWhere(function($confirmedQuery) {
+                        $confirmedQuery->where('orderStatus', 'Confirmed')
+                                        ->whereHas('purchaseOrder', function($poQuery) {
+                                            $poQuery->where('deliveryDate', '<', now()->startOfDay());
+                                        });
+                    });
+                });
             })
             ->orderByDesc(function($query) {
                 $query->select('status_updated_at')
                     ->from('deliveries')
                     ->whereColumn('purchase_orders.id', 'deliveries.purchase_order_id')
-                    ->where('orderStatus', 'Delivered')
                     ->orderBy('status_updated_at', 'desc')
                     ->limit(1);
             })
             ->paginate(10, ['*'], 'po_page');
-
 
         // Data for Sales tab
         $sales = Sale::with(['items', 'items.inventory'])
             ->orderBy('created_at', 'DESC')
             ->paginate(10, ['*'], 'sales_page');
 
-
-
-
-        // Calculate stock totals for inventory reports
+        // Calculate stock totals for inventory reports (only count delivered POs for stock)
         $totalStockIn = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
                 $query->where('orderStatus', 'Delivered');
             })
@@ -128,6 +134,7 @@ class ReportsController extends Controller
                     
                 if ($purchaseOrderItem && $purchaseOrderItem->purchaseOrder) {
                     $po = $purchaseOrderItem->purchaseOrder;
+                    // Only count as PO source if it was actually delivered
                     if ($po->deliveries()->where('orderStatus', 'Delivered')->exists()) {
                         $source = 'Purchase Order';
                         $referenceNumber = $po->orderNumber; // Use PO number as reference
@@ -173,7 +180,11 @@ class ReportsController extends Controller
         );
         
         // Update stats calculations to use actual inventory data
-        $totalStockIn = Inventory::sum('productStock');
+        // Only count delivered POs for stock in calculations
+        $totalStockIn = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
+            $query->where('orderStatus', 'Delivered');
+        })->sum('quantity');
+        
         $totalStockOut = SaleItem::sum('quantity');
         $totalRevenue = SaleItem::sum(DB::raw('quantity * unit_price'));
         $totalCost = SaleItem::join('inventories', 'sale_items.inventory_id', '=', 'inventories.id')

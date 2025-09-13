@@ -8,7 +8,8 @@
                 <th class="px-4 py-3 text-center">Total Items</th>
                 <th class="px-4 py-3 text-center">Good Items</th>
                 <th class="px-4 py-3 text-center">Bad Items</th>
-                <th class="px-4 py-3 text-center">Status</th>
+                <th class="px-4 py-3 text-center truncate" title="Delivery Status">Status</th>
+                <th class="px-4 py-3 text-center truncate" title="Report Status">Report</th>
                 <th class="px-4 py-3 text-center">Action</th>
             </tr>
         </thead>
@@ -32,14 +33,36 @@
                         }
                     }
 
-                    // Determine status based on defects and notes
-                    if ($hasDefective) {
+                    // Get delivery status
+                    $delivery = $po->deliveries->first();
+                    $deliveryStatus = $delivery ? $delivery->orderStatus : 'Pending';
+                    
+                    // Check if confirmed PO is delayed
+                    $isDelayed = false;
+                    if ($deliveryStatus === 'Confirmed') {
+                        $expectedDate = \Carbon\Carbon::parse($po->deliveryDate)->startOfDay();
+                        $isDelayed = now()->startOfDay()->greaterThan($expectedDate);
+                    }
+
+                    // Determine report status based on your requirements
+                    if ($deliveryStatus === 'Cancelled' || ($deliveryStatus === 'Confirmed' && $isDelayed)) {
+                        // Automatically set to Pending Review for cancelled or delayed confirmed POs
+                        $status = 'Pending Review';
+                        $statusClass = 'text-yellow-600 bg-yellow-100';
+                    } elseif ($hasDefective) {
                         $status = $hasNotes ? 'Reviewed' : 'Pending Review';
-                        $statusClass = $hasNotes ? 'text-green-600 bg-green-100' : 'text-yellow-600 bg-yellow-100';
+                        $statusClass = $hasNotes ? 'text-blue-600 bg-blue-100' : 'text-yellow-600 bg-yellow-100';
                     } else {
-                        $status = 'Completed';
+                        $status = 'Good Condition';
                         $statusClass = 'text-green-600 bg-green-100';
                     }
+
+                    $deliveryStatusClass = match($deliveryStatus) {
+                        'Delivered' => 'text-green-600 bg-green-100',
+                        'Confirmed' => $isDelayed ? 'text-red-600 bg-red-100' : 'text-blue-600 bg-blue-100',
+                        'Cancelled' => 'text-red-600 bg-red-100',
+                        default => 'text-yellow-600 bg-yellow-100'
+                    };
                 @endphp
                 <tr class="border-b">
                     <!-- Purchase Order Number column -->
@@ -53,7 +76,6 @@
                     <!-- Date Received column -->
                     <td class="px-2 py-2 text-center truncate" title="Date item was delivered">
                         @php
-                            $delivery = $po->deliveries->first();
                             $deliveryDate = null;
                             
                             if ($delivery && $delivery->orderStatus === 'Delivered') {
@@ -88,9 +110,19 @@
                             <span class="text-gray-500">0</span>
                         @endif
                     </td>
-                    <!-- Status column -->
-                    <td class="px-2 py-2 text-center truncate" title="PO's status is {{ $status }}">
-                        <span class="text-sm font-semibold {{ $statusClass }} px-2 py-1 rounded-xl">
+                    <!-- Delivery Status column -->
+                    <td class="px-2 py-2 text-center truncate" title="Delivery Status: {{ $deliveryStatus }}">
+                        <span class="text-xs font-semibold {{ $deliveryStatusClass }} px-2 py-1 rounded-xl">
+                            @if($deliveryStatus === 'Confirmed' && $isDelayed)
+                                Delayed
+                            @else
+                                {{ $deliveryStatus }}
+                            @endif
+                        </span>
+                    </td>
+                    <!-- Report Status column -->
+                    <td class="px-2 py-2 text-center truncate" title="Report Status: {{ $status }}">
+                        <span class="text-xs font-semibold {{ $statusClass }} px-2 py-1 rounded-xl">
                             {{ $status }}
                         </span>
                     </td>
@@ -104,7 +136,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="text-center py-4 text-gray-500">
+                    <td colspan="9" class="text-center py-4 text-gray-500">
                         No purchase orders found.
                     </td>
                 </tr>

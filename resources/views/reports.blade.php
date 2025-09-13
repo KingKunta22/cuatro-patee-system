@@ -191,202 +191,233 @@
         <!----------------ALL MODALS SECTION ------------>
         <!-- ======================================== --->
         
-        @foreach($purchaseOrders as $po)
-            @php
-                // Calculate totals for this PO
-                $totalItems = $po->items->sum('quantity');
-                $goodItemsCount = 0;
-                $defectiveCount = 0;
-                $hasDefective = false;
-                $hasNotes = $po->notes->count() > 0;
+        @foreach( $purchaseOrders as $po)
+        @php
+            // Calculate totals for this PO
+            $totalItems = $po->items->sum('quantity');
+            $goodItemsCount = 0;
+            $defectiveCount = 0;
+            $hasDefective = false;
+            $hasNotes = $po->notes->count() > 0;
+            
+            foreach ($po->items as $item) {
+                $goodItemsCount += $item->inventory ? $item->inventory->productStock : 0;
+                $itemDefectiveCount = $item->badItems->sum('item_count');
+                $defectiveCount += $itemDefectiveCount;
                 
-                foreach ($po->items as $item) {
-                    $goodItemsCount += $item->inventory ? $item->inventory->productStock : 0;
-                    $itemDefectiveCount = $item->badItems->sum('item_count');
-                    $defectiveCount += $itemDefectiveCount;
-                    
-                    if ($itemDefectiveCount > 0) {
-                        $hasDefective = true;
-                    }
+                if ($itemDefectiveCount > 0) {
+                    $hasDefective = true;
                 }
+            }
 
-                // Determine status based on defects and notes
-                $status = $hasDefective ? ($hasNotes ? 'Reviewed' : 'Pending Review') : 'Completed';
-                $statusClass = $hasDefective ? ($hasNotes ? 'text-green-600 bg-green-100' : 'text-yellow-600 bg-yellow-100') : 'text-green-600 bg-green-100';
-            @endphp
+            // Get delivery status
+            $delivery = $po->deliveries->first();
+            $deliveryStatus = $delivery ? $delivery->orderStatus : 'Pending';
+            
+            // Check if confirmed PO is delayed
+            $isDelayed = false;
+            if ($deliveryStatus === 'Confirmed') {
+                $expectedDate = \Carbon\Carbon::parse($po->deliveryDate)->startOfDay();
+                $isDelayed = now()->startOfDay()->greaterThan($expectedDate);
+            }
 
+            // Determine item status based on delivery status
+            $itemStatus = 'Completed'; // Default for delivered items
+            $itemStatusClass = 'text-green-600 bg-green-100';
+            
+            if ($deliveryStatus === 'Cancelled') {
+                $itemStatus = 'Cancelled';
+                $itemStatusClass = 'text-red-600 bg-red-100';
+            } elseif ($isDelayed) {
+                $itemStatus = 'Pending';
+                $itemStatusClass = 'text-yellow-600 bg-yellow-100';
+            } elseif ($hasDefective) {
+                $itemStatus = $hasNotes ? 'Reviewed' : 'Pending Review';
+                $itemStatusClass = $hasNotes ? 'text-blue-600 bg-blue-100' : 'text-yellow-600 bg-yellow-100';
+            }
 
-            <!---------------- MODALS FROM PO REPORTS SECTION ------------>
+            // Determine overall status for modal
+            $status = $deliveryStatus;
+            $statusClass = match($deliveryStatus) {
+                'Delivered' => 'text-green-600 bg-green-100',
+                'Confirmed' => $isDelayed ? 'text-red-600 bg-red-100' : 'text-blue-600 bg-blue-100',
+                'Cancelled' => 'text-red-600 bg-red-100',
+                default => 'text-yellow-600 bg-yellow-100'
+            };
+        @endphp
 
-            <!-- PO Details Modal -->
-            <x-modal.createModal x-ref="poDetails{{ $po->id }}">
-                <x-slot:dialogTitle>PO Details: {{ $po->orderNumber }}</x-slot:dialogTitle>
-                
-                <div class="px-6 py-4">
-                    <div class="grid grid-cols-2 gap-6 mb-6">
-                        <div class="bg-gray-100 rounded p-4">
-                            <h4 class="font-bold mb-1 text-lg">Order Information</h4>
-                            <p><strong>Supplier:</strong> {{ $po->supplier->supplierName ?? 'N/A' }}</p>
-                            <p><strong>Order Date:</strong>
-                                @php
-                                    $delivery = $po->deliveries->first();
-                                    $deliveryDate = null;
-                                    
-                                    if ($delivery && $delivery->orderStatus === 'Delivered') {
-                                        // Convert string to Carbon object if needed
-                                        $deliveryDate = is_string($delivery->status_updated_at) 
-                                            ? \Carbon\Carbon::parse($delivery->status_updated_at)
-                                            : $delivery->status_updated_at;
-                                    }
-                                @endphp
+        <!---------------- MODALS FROM PO REPORTS SECTION ------------>
+        <!-- PO Details Modal -->
+        <x-modal.createModal x-ref="poDetails{{ $po->id }}">
+            <x-slot:dialogTitle>PO Details: {{ $po->orderNumber }}</x-slot:dialogTitle>
+            
+            <div class="px-6 py-4">
+                <div class="grid grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gray-100 rounded p-4">
+                        <h4 class="font-bold mb-1 text-lg">Order Information</h4>
+                        <p><strong>Supplier:</strong> {{ $po->supplier->supplierName ?? 'N/A' }}</p>
+                        <p><strong>Order Date:</strong>
+                            @php
+                                $deliveryDate = null;
                                 
-                                @if($deliveryDate)
-                                    {{ $deliveryDate->format('M d, Y') }}
-                                @else
-                                    <span class="text-gray-400">Not delivered</span>
+                                if ($delivery && $delivery->orderStatus === 'Delivered') {
+                                    // Convert string to Carbon object if needed
+                                    $deliveryDate = is_string($delivery->status_updated_at) 
+                                        ? \Carbon\Carbon::parse($delivery->status_updated_at)
+                                        : $delivery->status_updated_at;
+                                }
+                            @endphp
+                            
+                            @if($deliveryDate)
+                                {{ $deliveryDate->format('M d, Y') }}
+                            @else
+                                <span class="text-gray-400">Not delivered</span>
+                            @endif
+                        </p>
+                        <p><strong>Delivery Status:</strong> 
+                            <span class="font-semibold text-sm {{ $statusClass }} px-2 py-1 rounded-xl">
+                                {{ $status }}
+                                @if($isDelayed)
+                                    (Delayed)
                                 @endif
-                            </p>
-                            <p><strong>Status:</strong> 
-                                <span class="font-semibold text-sm {{ $statusClass }} px-2 py-1 rounded-xl">
-                                    {{ $status }}
-                                </span>
-                            </p>
-                        </div>
-                        <div class="bg-gray-100 rounded p-4">
-                            <h4 class="font-bold mb-2 text-lg">Delivery Summary</h4>
-                            <p><strong>Total Items:</strong> {{ $totalItems }}</p>
-                            <p><strong>Good Items:</strong> <span class="text-green-600">{{ $goodItemsCount }}</span></p>
-                            <p><strong>Defective Items:</strong> 
-                                @if($defectiveCount > 0)
-                                    <span class="text-red-600">{{ $defectiveCount }}</span>
-                                @else
-                                    <span class="text-gray-500">0</span>
-                                @endif
-                            </p>
-                        </div>
+                            </span>
+                        </p>
                     </div>
-
-                    <h4 class="font-bold mb-3">Items Breakdown</h4>
-                    <div class="border rounded-lg mb-6">
-                        <table class="w-full text-sm">
-                            <thead class="rounded-lg bg-main text-white">
-                                <tr>
-                                    <th class="px-4 py-3 text-center">Product</th>
-                                    <th class="px-4 py-3 text-center">Ordered</th>
-                                    <th class="px-4 py-3 text-center">Good</th>
-                                    <th class="px-4 py-3 text-center">Defective</th>
-                                    <th class="px-4 py-3 text-center">Defect</th>
-                                    <th class="px-4 py-3 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($po->items as $item)
-                                    @php
-                                        $itemGoodCount = $item->inventory ? $item->inventory->productStock : 0;
-                                        $itemDefectiveCount = $item->badItems->sum('item_count');
-                                        $itemDefectType = $item->badItems->first() ? $item->badItems->first()->quality_status : '';
-                                        $badItem = $item->badItems->first();
-                                        
-                                        // Determine item status
-                                        $itemStatus = $itemDefectiveCount > 0 ? 
-                                            ($hasNotes ? 'Reviewed' : 'Pending') : 
-                                            'Completed';
-                                        $itemStatusClass = $itemDefectiveCount > 0 ? 
-                                            ($hasNotes ? 'text-green-600 bg-green-100' : 'text-yellow-600 bg-yellow-100') : 
-                                            'text-green-600 bg-green-100';
-                                    @endphp
-                                    <tr class="border-b">
-                                        <td class="px-2 py-2 text-center">{{ $item->productName }}</td>
-                                        <td class="px-2 py-2 text-center">{{ $item->quantity }}</td>
-                                        <td class="px-2 py-2 text-center text-green-600 font-semibold">{{ $itemGoodCount }}</td>
-                                        <td class="px-2 py-2 text-center">
-                                            @if($itemDefectiveCount > 0)
-                                                <span class="text-red-600 font-semibold">{{ $itemDefectiveCount }}</span>
-                                            @else
-                                                <span class="text-gray-500">0</span>
-                                            @endif
-                                        </td>
-                                        <td class="px-2 py-2 text-center">
-                                            @if($itemDefectType)
-                                                <span class="text-red-500 text-sm capitalize">{{ $itemDefectType }}</span>
-                                            @else
-                                                <span class="text-gray-400 text-sm">-</span>
-                                            @endif
-                                        </td>
-                                        <td class="px-2 py-2 text-center">
-                                            <span class="text-xs font-semibold {{ $itemStatusClass }} px-2 py-1 rounded-xl">
-                                                {{ $itemStatus }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Notes Section -->
-                    <div class="mb-6">
-                        <div class="flex justify-between items-center mb-3">
-                            <h4 class="font-bold">Notes</h4>
-                            <button onclick="document.getElementById('addNoteModal{{ $po->id }}').showModal()" 
-                                    class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
-                                Add Note
-                            </button>
-                        </div>
-                        
-                        @if($po->notes->count() > 0)
-                            <div class="border rounded-lg p-4 bg-gray-50 max-h-40 overflow-y-auto">
-                                @foreach($po->notes as $note)
-                                    <div class="mb-3 pb-3 border-b last:border-b-0 last:mb-0 last:pb-0">
-                                        <div class="flex justify-between items-start">
-                                            <p class="text-sm">{{ $note->note }}</p>
-                                            <div class="flex space-x-2">
-                                                <form action="{{ route('po-notes.destroy', $note->id) }}" method="POST" class="inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" 
-                                                            class="text-red-500 hover:text-red-700 text-xs"
-                                                            onclick="return confirm('Are you sure you want to delete this note?')">
-                                                        <x-form.deleteBtn/>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                        <p class="text-xs text-gray-500 mt-1">{{ $note->created_at->format('M d, Y h:i A') }}</p>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <p class="text-gray-500 text-sm">No notes added yet.</p>
-                        @endif
+                    <div class="bg-gray-100 rounded p-4">
+                        <h4 class="font-bold mb-2 text-lg">Delivery Summary</h4>
+                        <p><strong>Total Items:</strong> {{ $totalItems }}</p>
+                        <p><strong>Good Items:</strong> <span class="text-green-600">{{ $goodItemsCount }}</span></p>
+                        <p><strong>Defective Items:</strong> 
+                            @if($defectiveCount > 0)
+                                <span class="text-red-600">{{ $defectiveCount }}</span>
+                            @else
+                                <span class="text-gray-500">0</span>
+                            @endif
+                        </p>
                     </div>
                 </div>
-            </x-modal.createModal>
 
-            <!-- Add Note Modal -->
-            <x-modal.createModal x-ref="addNoteModal{{ $po->id }}" id="addNoteModal{{ $po->id }}">
-                <x-slot:dialogTitle>Add Note for PO: {{ $po->orderNumber }}</x-slot:dialogTitle>
-                
-                <form action="{{ route('po-notes.store') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="purchase_order_id" value="{{ $po->id }}">
-                    
-                    <div class="px-6 py-4">
-                        <div class="mb-4">
-                            <label for="note{{ $po->id }}" class="block text-sm font-medium text-gray-700 mb-1">Note</label>
-                            <textarea name="note" id="note{{ $po->id }}" rows="4" 
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    required>
-                            </textarea>
-                        </div>
-                        
-                        <div class="flex justify-end space-x-3">
-                            <x-form.closeBtn type="button" @click="$refs.addNoteModal{{ $po->id }}.close()">Cancel</x-form.closeBtn>
-                            <x-form.saveBtn type="submit">Add Note</x-form.saveBtn>
-                        </div>
+                <h4 class="font-bold mb-3">Items Breakdown</h4>
+                <div class="border rounded-lg mb-6">
+                    <table class="w-full text-sm">
+                        <thead class="rounded-lg bg-main text-white">
+                            <tr>
+                                <th class="px-4 py-3 text-center">Product</th>
+                                <th class="px-4 py-3 text-center">Ordered</th>
+                                <th class="px-4 py-3 text-center">Good</th>
+                                <th class="px-4 py-3 text-center">Defective</th>
+                                <th class="px-4 py-3 text-center">Defect</th>
+                                <th class="px-4 py-3 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($po->items as $item)
+                                @php
+                                    $itemGoodCount = $item->inventory ? $item->inventory->productStock : 0;
+                                    $itemDefectiveCount = $item->badItems->sum('item_count');
+                                    $itemDefectType = $item->badItems->first() ? $item->badItems->first()->quality_status : '';
+                                    
+                                    // Determine individual item status based on delivery status
+                                    $individualItemStatus = $itemStatus;
+                                    $individualItemStatusClass = $itemStatusClass;
+                                    
+                                    // Override for defective items if not cancelled/delayed
+                                    if ($deliveryStatus === 'Delivered' && $itemDefectiveCount > 0) {
+                                        $individualItemStatus = $hasNotes ? 'Reviewed' : 'Pending Review';
+                                        $individualItemStatusClass = $hasNotes ? 'text-blue-600 bg-blue-100' : 'text-yellow-600 bg-yellow-100';
+                                    }
+                                @endphp
+                                <tr class="border-b">
+                                    <td class="px-2 py-2 text-center">{{ $item->productName }}</td>
+                                    <td class="px-2 py-2 text-center">{{ $item->quantity }}</td>
+                                    <td class="px-2 py-2 text-center text-green-600 font-semibold">{{ $itemGoodCount }}</td>
+                                    <td class="px-2 py-2 text-center">
+                                        @if($itemDefectiveCount > 0)
+                                            <span class="text-red-600 font-semibold">{{ $itemDefectiveCount }}</span>
+                                        @else
+                                            <span class="text-gray-500">0</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-2 py-2 text-center">
+                                        @if($itemDefectType)
+                                            <span class="text-red-500 text-sm capitalize">{{ $itemDefectType }}</span>
+                                        @else
+                                            <span class="text-gray-400 text-sm">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-2 py-2 text-center">
+                                        <span class="text-xs font-semibold {{ $individualItemStatusClass }} px-2 py-1 rounded-xl">
+                                            {{ $individualItemStatus }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Notes Section -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="font-bold">Notes</h4>
+                        <button onclick="document.getElementById('addNoteModal{{ $po->id }}').showModal()" 
+                                class="px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600">
+                            Add Note
+                        </button>
                     </div>
-                </form>
-            </x-modal.createModal>
+                    
+                    @if($po->notes->count() > 0)
+                        <div class="border rounded-lg p-4 bg-gray-50 max-h-40 overflow-y-auto">
+                            @foreach($po->notes as $note)
+                                <div class="mb-3 pb-3 border-b last:border-b-0 last:mb-0 last:pb-0">
+                                    <div class="flex justify-between items-start">
+                                        <p class="text-sm">{{ $note->note }}</p>
+                                        <div class="flex space-x-2">
+                                            <form action="{{ route('po-notes.destroy', $note->id) }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" 
+                                                        class="text-red-500 hover:text-red-700 text-xs"
+                                                        onclick="return confirm('Are you sure you want to delete this note?')">
+                                                    <x-form.deleteBtn/>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1">{{ $note->created_at->format('M d, Y h:i A') }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-gray-500 text-sm">No notes added yet.</p>
+                    @endif
+                </div>
+            </div>
+        </x-modal.createModal>
+
+        <!-- Add Note Modal -->
+        <x-modal.createModal x-ref="addNoteModal{{ $po->id }}" id="addNoteModal{{ $po->id }}">
+            <x-slot:dialogTitle>Add Note for PO: {{ $po->orderNumber }}</x-slot:dialogTitle>
+            
+            <form action="{{ route('po-notes.store') }}" method="POST">
+                @csrf
+                <input type="hidden" name="purchase_order_id" value="{{ $po->id }}">
+                
+                <div class="px-6 py-4">
+                    <div class="mb-4">
+                        <label for="note{{ $po->id }}" class="block text-sm font-medium text-gray-700 mb-1">Note</label>
+                        <textarea name="note" id="note{{ $po->id }}" rows="4" 
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                required></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <x-form.closeBtn type="button" @click="$refs.addNoteModal{{ $po->id }}.close()">Cancel</x-form.closeBtn>
+                        <x-form.saveBtn type="submit">Add Note</x-form.saveBtn>
+                    </div>
+                </div>
+            </form>
+        </x-modal.createModal>
         @endforeach
     </div>
 </x-layout>
