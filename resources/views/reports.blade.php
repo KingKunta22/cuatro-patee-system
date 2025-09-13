@@ -254,9 +254,9 @@
         <x-modal.createModal x-ref="poDetails{{ $po->id }}">
             <x-slot:dialogTitle>PO Details: {{ $po->orderNumber }}</x-slot:dialogTitle>
             
-            <div class="px-6 py-4">
-                <div class="grid grid-cols-2 gap-6 mb-6">
-                    <div class="bg-gray-100 rounded p-4">
+            <div class="px-6 py-3">
+                <div class="grid grid-cols-2 gap-4 mb-5">
+                    <div class="bg-gray-100 rounded py-2 px-4 text-sm flex flex-col gap-y-1">
                         <h4 class="font-bold mb-1 text-lg">Order Information</h4>
                         <p><strong>Supplier:</strong> {{ $po->supplier->supplierName ?? 'N/A' }}</p>
                         <p><strong>Order Date:</strong>
@@ -286,7 +286,7 @@
                             </span>
                         </p>
                     </div>
-                    <div class="bg-gray-100 rounded p-4">
+                    <div class="bg-gray-100 rounded py-2 px-4 text-sm flex flex-col gap-y-1">
                         <h4 class="font-bold mb-2 text-lg">Delivery Summary</h4>
                         <p><strong>Total Items:</strong> {{ $totalItems }}</p>
                         <p><strong>Good Items:</strong> <span class="text-green-600">{{ $goodItemsCount }}</span></p>
@@ -300,8 +300,8 @@
                     </div>
                 </div>
 
-                <h4 class="font-bold mb-3">Items Breakdown</h4>
-                <div class="border rounded-lg mb-6">
+                <h4 class="font-bold mb-2">Items Breakdown</h4>
+                <div class="border rounded-lg mb-5">
                     <table class="w-full text-sm">
                         <thead class="rounded-lg bg-main text-white">
                             <tr>
@@ -331,24 +331,30 @@
                                     }
                                 @endphp
                                 <tr class="border-b">
-                                    <td class="px-2 py-2 text-center">{{ $item->productName }}</td>
-                                    <td class="px-2 py-2 text-center">{{ $item->quantity }}</td>
-                                    <td class="px-2 py-2 text-center text-green-600 font-semibold">{{ $itemGoodCount }}</td>
-                                    <td class="px-2 py-2 text-center">
+                                    <td class="px-2 py-2 text-center truncate" title="{{ $item->productName }}">
+                                        {{ $item->productName }}
+                                    </td>
+                                    <td class="px-2 py-2 text-center truncate" title="{{ $item->quantity }}</">
+                                        {{ $item->quantity }}
+                                    </td>
+                                    <td class="px-2 py-2 text-center truncate text-green-600 font-semibold" title="{{ $itemGoodCount }}">
+                                        {{ $itemGoodCount }}
+                                    </td>
+                                    <td class="px-2 py-2 text-center truncate" title="{{ $itemDefectiveCount }}">
                                         @if($itemDefectiveCount > 0)
                                             <span class="text-red-600 font-semibold">{{ $itemDefectiveCount }}</span>
                                         @else
                                             <span class="text-gray-500">0</span>
                                         @endif
                                     </td>
-                                    <td class="px-2 py-2 text-center">
+                                    <td class="px-2 py-2 text-center truncate" title="{{ $itemDefectType }}">
                                         @if($itemDefectType)
                                             <span class="text-red-500 text-sm capitalize">{{ $itemDefectType }}</span>
                                         @else
                                             <span class="text-gray-400 text-sm">-</span>
                                         @endif
                                     </td>
-                                    <td class="px-2 py-2 text-center">
+                                    <td class="px-2 py-2 text-center truncate" title="{{ $individualItemStatus }}">
                                         <span class="text-xs font-semibold {{ $individualItemStatusClass }} px-2 py-1 rounded-xl">
                                             {{ $individualItemStatus }}
                                         </span>
@@ -360,7 +366,7 @@
                 </div>
 
                 <!-- Notes Section -->
-                <div class="mb-6">
+                <div class="mb-4">
                     <div class="flex justify-between items-center mb-3">
                         <h4 class="font-bold">Notes</h4>
                         <button onclick="document.getElementById('addNoteModal{{ $po->id }}').showModal()" 
@@ -372,23 +378,42 @@
                     @if($po->notes->count() > 0)
                         <div class="border rounded-lg p-4 bg-gray-50 max-h-40 overflow-y-auto">
                             @foreach($po->notes as $note)
-                                <div class="mb-3 pb-3 border-b last:border-b-0 last:mb-0 last:pb-0">
+                                <div class="mb-3 pb-1 border-b last:border-b-0 last:mb-0 last:pb-0">
                                     <div class="flex justify-between items-start">
                                         <p class="text-sm">{{ $note->note }}</p>
                                         <div class="flex space-x-2">
+                                            <button type="button" 
+                                                    onclick="document.getElementById('deleteNoteModal{{ $po->id }}_{{ $note->id }}').showModal()"
+                                                    class="text-red-500 hover:text-red-700 text-xs">
+                                                <x-form.deleteBtn/>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-gray-500">{{ $note->created_at->format('M d, Y h:i A') }}</p>
+                                </div>
+
+                                <!-- Delete Confirmation Modal for this specific note -->
+                                <x-modal.createModal id="deleteNoteModal{{ $po->id }}_{{ $note->id }}">
+                                    <x-slot:dialogTitle>Confirm Delete</x-slot:dialogTitle>
+                                    
+                                    <div class="px-6 py-4">
+                                        <p class="mb-4">Are you sure you want to delete this note?</p>
+                                        <div class="flex justify-end space-x-3">
+                                            <button type="button" onclick="document.getElementById('deleteNoteModal{{ $po->id }}_{{ $note->id }}').close()" 
+                                                class="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500">
+                                                Cancel
+                                            </button>
                                             <form action="{{ route('po-notes.destroy', $note->id) }}" method="POST" class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
-                                                        class="text-red-500 hover:text-red-700 text-xs"
-                                                        onclick="return confirm('Are you sure you want to delete this note?')">
-                                                    <x-form.deleteBtn/>
+                                                    class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                                                    Delete Note
                                                 </button>
                                             </form>
                                         </div>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-1">{{ $note->created_at->format('M d, Y h:i A') }}</p>
-                                </div>
+                                </x-modal.createModal>
                             @endforeach
                         </div>
                     @else
