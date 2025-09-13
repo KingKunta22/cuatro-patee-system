@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Inventory;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use Illuminate\Http\Request;
@@ -15,21 +16,18 @@ class ProductMovementReportsController extends Controller
     {
         $timePeriod = $request->timePeriod ?? 'all';
         
-        // Get sales data
+        // Get sales data for outflow
         $sales = Sale::with(['items', 'items.inventory'])
                     ->orderBy('sale_date', 'DESC')
                     ->get();
         
-        // Get purchase orders data
-        $purchaseOrders = PurchaseOrder::with(['items', 'items.inventory'])
-                    ->whereHas('deliveries', function($query) {
-                        $query->where('orderStatus', 'Delivered');
-                    })
-                    ->orderBy('created_at', 'DESC')
-                    ->get();
+        // Get inventory changes for inflow (ACTUAL inventory additions)
+        $inventoryChanges = Inventory::with(['category', 'brand'])
+                            ->orderBy('created_at', 'DESC')
+                            ->get();
         
         // Combine data into movements array
-        $movements = $this->combineMovements($sales, $purchaseOrders);
+        $movements = $this->combineMovements($sales, $inventoryChanges);
         
         // Sort movements by date (newest first)
         usort($movements, function($a, $b) {
@@ -55,7 +53,7 @@ class ProductMovementReportsController extends Controller
         ]));
     }
     
-    private function combineMovements($sales, $purchaseOrders)
+    private function combineMovements($sales, $inventoryChanges)
     {
         $movements = [];
 
@@ -75,18 +73,17 @@ class ProductMovementReportsController extends Controller
             }
         }
         
-        // Process purchase orders (inflow)
-        foreach ($purchaseOrders as $po) {
-            foreach ($po->items as $item) {
-                $productName = $this->getProductNameForPOItem($item);
-                
+        // Process inventory additions (inflow) - ACTUAL inventory changes
+        foreach ($inventoryChanges as $inventory) {
+            // Only show as inflow if product was actually added to inventory
+            if ($inventory->productStock > 0) {
                 $movements[] = [
-                    'date' => $po->created_at,
-                    'reference_number' => $po->orderNumber,
-                    'product_name' => $productName,
-                    'quantity' => $item->quantity,
+                    'date' => $inventory->created_at,
+                    'reference_number' => 'INV-' . $inventory->id,
+                    'product_name' => $inventory->productName,
+                    'quantity' => $inventory->productStock,
                     'type' => 'inflow',
-                    'remarks' => 'Purchase Order'
+                    'remarks' => $this->getInventorySource($inventory)
                 ];
             }
         }
@@ -94,59 +91,53 @@ class ProductMovementReportsController extends Controller
         return $movements;
     }
 
-// NEW HELPER METHOD FOR SALE ITEMS
-private function getProductNameForSaleItem($item)
-{
-    // Priority 1: Use sale item's product_name if available
-    if (!empty($item->product_name)) {
-        return $item->product_name;
+    // Determine the source of inventory addition
+    private function getInventorySource($inventory)
+    {
+        // Check if this inventory came from a purchase order by matching product names
+        $purchaseOrderItem = PurchaseOrderItem::where('productName', $inventory->productName)->first();
+            
+        if ($purchaseOrderItem && $purchaseOrderItem->purchaseOrder) {
+            $po = $purchaseOrderItem->purchaseOrder;
+            // Check if the PO was actually delivered
+            if ($po->deliveries()->where('orderStatus', 'Delivered')->exists()) {
+                return 'Purchase Order: ' . $po->orderNumber;
+            }
+        }
+        
+        // If not from PO, it's a manual addition
+        return 'Manual Addition';
     }
-    
-    // Priority 2: Use inventory productName if relationship exists
-    if ($item->inventory && !empty($item->inventory->productName)) {
-        return $item->inventory->productName;
-    }
-    
-    // Priority 3: Fallback to inventory ID
-    return 'Product #' . $item->inventory_id;
-}
 
-// NEW HELPER METHOD FOR PO ITEMS  
-private function getProductNameForPOItem($item)
-{
-    // Priority 1: Use PO item's productName (should always exist)
-    if (!empty($item->productName)) {
-        return $item->productName;
+    // NEW HELPER METHOD FOR SALE ITEMS
+    private function getProductNameForSaleItem($item)
+    {
+        // Priority 1: Use sale item's product_name if available
+        if (!empty($item->product_name)) {
+            return $item->product_name;
+        }
+        
+        // Priority 2: Use inventory productName if relationship exists
+        if ($item->inventory && !empty($item->inventory->productName)) {
+            return $item->inventory->productName;
+        }
+        
+        // Priority 3: Fallback to inventory ID
+        return 'Product #' . $item->inventory_id;
     }
-    
-    // Priority 2: Use inventory productName if relationship exists
-    if ($item->inventory && !empty($item->inventory->productName)) {
-        return $item->inventory->productName;
-    }
-    
-    // Priority 3: Fallback to item ID
-    return 'Product from PO Item #' . $item->id;
-}
     
     private function calculateStats($timePeriod)
     {
-        // Calculate total stock in (from purchase orders)
-        $stockInQuery = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
-            $query->where('orderStatus', 'Delivered');
-        });
+        // Calculate total stock in (actual inventory additions)
+        $totalStockIn = Inventory::sum('productStock');
 
         // Calculate total stock out (from sales)
-        $stockOutQuery = SaleItem::query();
-
-        $totalStockIn = $stockInQuery->sum('quantity');
-        $totalStockOut = $stockOutQuery->sum('quantity');
+        $totalStockOut = SaleItem::sum('quantity');
         
         // Calculate revenue and cost
-        $revenueQuery = SaleItem::query();
-        $costQuery = SaleItem::join('inventories', 'sale_items.inventory_id', '=', 'inventories.id');
-
-        $totalRevenue = $revenueQuery->sum(DB::raw('quantity * unit_price'));
-        $totalCost = $costQuery->sum(DB::raw('sale_items.quantity * inventories.productCostPrice'));
+        $totalRevenue = SaleItem::sum(DB::raw('quantity * unit_price'));
+        $totalCost = SaleItem::join('inventories', 'sale_items.inventory_id', '=', 'inventories.id')
+            ->sum(DB::raw('sale_items.quantity * inventories.productCostPrice'));
         $totalProfit = $totalRevenue - $totalCost;
 
         return compact('totalStockIn', 'totalStockOut', 'totalRevenue', 'totalCost', 'totalProfit');

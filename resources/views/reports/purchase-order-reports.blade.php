@@ -43,11 +43,11 @@
                 @endphp
                 <tr class="border-b">
                     <!-- Purchase Order Number column -->
-                    <td class="px-2 py-2 text-center font-semibold">{{ $po->orderNumber }}</td>
+                    <td class="px-2 py-2 text-center truncate font-semibold">{{ $po->orderNumber }}</td>
                     <!-- Supplier Name column -->
-                    <td class="px-2 py-2 text-center">{{ $po->supplier->supplierName ?? 'N/A' }}</td>
+                    <td class="px-2 py-2 text-center truncate">{{ $po->supplier->supplierName ?? 'N/A' }}</td>
                     <!-- Date Received column -->
-                    <td class="px-2 py-2 text-center">
+                    <td class="px-2 py-2 text-center truncate">
                         @php
                             $delivery = $po->deliveries->first();
                             $deliveryDate = null;
@@ -67,11 +67,11 @@
                         @endif
                     </td>
                     <!-- Total Items column -->
-                    <td class="px-2 py-2 text-center">{{ $totalItems }}</td>
+                    <td class="px-2 py-2 text-center truncate">{{ $totalItems }}</td>
                     <!-- Good Items Items column -->
-                    <td class="px-2 py-2 text-center text-green-600 font-semibold">{{ $goodItemsCount }}</td>
+                    <td class="px-2 py-2 text-center truncate text-green-600 font-semibold">{{ $goodItemsCount }}</td>
                     <!-- Defect column -->
-                    <td class="px-2 py-2 text-center">
+                    <td class="px-2 py-2 text-center truncate">
                         @if($defectiveCount > 0)
                             <span class="text-red-600 font-semibold">
                                 {{ $defectiveCount }}
@@ -81,7 +81,7 @@
                         @endif
                     </td>
                     <!-- Status column -->
-                    <td class="px-2 py-2 text-center">
+                    <td class="px-2 py-2 text-center truncate">
                         <span class="text-sm font-semibold {{ $statusClass }} px-2 py-1 rounded-xl">
                             {{ $status }}
                         </span>
@@ -89,7 +89,7 @@
                     <!-- View Details Button -->
                     <td class="px-2 py-2 text-center flex place-content-center">
                         <button onclick="document.getElementById('poDetails{{ $po->id }}').showModal()" 
-                            class="flex rounded-md bg-gray-400 px-3 py-2 text-white items-center content-center hover:bg-gray-400/70 transition duration-100 ease-in font-semibold">
+                            class="flex rounded-md bg-gray-400 px-2 py-1 text-sm text-white items-center content-center hover:bg-gray-400/70 transition duration-100 ease-in font-semibold">
                             View Details
                         </button>
                     </td>

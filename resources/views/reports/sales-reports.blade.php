@@ -29,16 +29,16 @@
         </thead>
         <tbody class="divide-y divide-gray-200">
             @forelse($sales as $sale)
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="px-2 py-2 text-center">{{ $sale->invoice_number }}</td>
-                    <td class="px-2 py-2 text-center">{{ $sale->customer_name ?? 'Walk-in Customer' }}</td>
-                    <td class="px-2 py-2 text-center">{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</td>
-                    <td class="px-2 py-2 text-center">{{ $sale->items->count() }} items</td>
-                    <td class="px-2 py-2 text-center">₱{{ number_format($sale->total_amount, 2) }}</td>
-                    <td class="px-2 py-2 text-center">{{ $sale->processed_by }}</td>
+                <tr>
+                    <td class="px-2 py-2 text-center truncate">{{ $sale->invoice_number }}</td>
+                    <td class="px-2 py-2 text-center truncate">{{ $sale->customer_name ?? 'Walk-in Customer' }}</td>
+                    <td class="px-2 py-2 text-center truncate">{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</td>
+                    <td class="px-2 py-2 text-center truncate">{{ $sale->items->count() }} items</td>
+                    <td class="px-2 py-2 text-center truncate">₱{{ number_format($sale->total_amount, 2) }}</td>
+                    <td class="px-2 py-2 text-center truncate">{{ $sale->processed_by }}</td>
                     <td class="truncate px-2 py-2 text-center flex place-content-center">
                         <button onclick="document.getElementById('viewSaleDetails{{ $sale->id }}').showModal()" 
-                            class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center 
+                            class="flex rounded-md bg-gray-400 px-2 py-1 text-sm w-auto text-white items-center content-center 
                                 hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">
                             View Details
                         </button>
