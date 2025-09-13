@@ -155,12 +155,28 @@
                                         @endif
                                     </span>
                                 </div>
-                            @elseif($daysLeft > 0)
-                                <span>{{ $daysLeft }} {{ \Illuminate\Support\Str::plural('day', $daysLeft) }} left</span>
-                            @elseif($daysLeft === 0)
-                                <span class="text-yellow-600 text-xs">Today</span>
-                            @else
-                                <span class="text-red-600">{{ abs($daysLeft) }} {{ \Illuminate\Support\Str::plural('day', abs($daysLeft)) }} delayed</span>
+                            @elseif($deliveryStatus === 'Cancelled')
+                                <div class="flex flex-col items-center">
+                                    <span class="text-red-600 text-xs font-medium">Cancelled on</span>
+                                    <span class="text-red-500 text-2xs">
+                                        @if($delivery && $delivery->status_updated_at)
+                                            {{ \Carbon\Carbon::parse($delivery->status_updated_at)->format('M d, Y') }}
+                                        @else
+                                            {{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}
+                                        @endif
+                                    </span>
+                                </div>
+                            @elseif($deliveryStatus === 'Pending')
+                                <span class="text-gray-500 text-sm">Not yet confirmed</span>
+                            @elseif($deliveryStatus === 'Confirmed')
+                                {{-- Only show days left/delayed for Confirmed status --}}
+                                @if($daysLeft > 0)
+                                    <span>{{ $daysLeft }} {{ \Illuminate\Support\Str::plural('day', $daysLeft) }} left</span>
+                                @elseif($daysLeft === 0)
+                                    <span class="text-yellow-600 text-xs">Today</span>
+                                @else
+                                    <span class="text-red-600">{{ abs($daysLeft) }} {{ \Illuminate\Support\Str::plural('day', abs($daysLeft)) }} delayed</span>
+                                @endif
                             @endif
                         </td>
 
