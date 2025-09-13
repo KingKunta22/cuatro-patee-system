@@ -85,7 +85,7 @@
 
                     <!-- Clear Button -->
                     @if(request('search') || (request('status') && request('status') !== 'all'))                        
-                        <a href="{{ route('delivery-management.index') }}" class="text-white px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">
+                        <a href="{{ route('delivery-management.index') }}" class="text-white px-4 py-2 hover:bg-gray-300 rounded-md bg-gray-400 transition-all duration-100 ease-in-out">
                             Clear
                         </a>
                     @endif
