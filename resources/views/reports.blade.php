@@ -221,17 +221,20 @@
                 $isDelayed = now()->startOfDay()->greaterThan($expectedDate);
             }
 
-            // Determine item status based on delivery status
+            // Determine item status based on delivery status AND notes
             $itemStatus = 'Completed'; // Default for delivered items
             $itemStatusClass = 'text-green-600 bg-green-100';
             
             if ($deliveryStatus === 'Cancelled') {
-                $itemStatus = 'Cancelled';
-                $itemStatusClass = 'text-red-600 bg-red-100';
+                // For cancelled orders, check if notes exist
+                $itemStatus = $hasNotes ? 'Reviewed' : 'Pending Review';
+                $itemStatusClass = $hasNotes ? 'text-blue-600 bg-blue-100' : 'text-yellow-600 bg-yellow-100';
             } elseif ($isDelayed) {
-                $itemStatus = 'Pending';
-                $itemStatusClass = 'text-yellow-600 bg-yellow-100';
+                // For delayed orders, check if notes exist
+                $itemStatus = $hasNotes ? 'Reviewed' : 'Pending Review';
+                $itemStatusClass = $hasNotes ? 'text-blue-600 bg-blue-100' : 'text-yellow-600 bg-yellow-100';
             } elseif ($hasDefective) {
+                // For defective items, check if notes exist
                 $itemStatus = $hasNotes ? 'Reviewed' : 'Pending Review';
                 $itemStatusClass = $hasNotes ? 'text-blue-600 bg-blue-100' : 'text-yellow-600 bg-yellow-100';
             }
@@ -317,11 +320,11 @@
                                     $itemDefectiveCount = $item->badItems->sum('item_count');
                                     $itemDefectType = $item->badItems->first() ? $item->badItems->first()->quality_status : '';
                                     
-                                    // Determine individual item status based on delivery status
+                                    // Determine individual item status based on delivery status AND notes
                                     $individualItemStatus = $itemStatus;
                                     $individualItemStatusClass = $itemStatusClass;
                                     
-                                    // Override for defective items if not cancelled/delayed
+                                    // For delivered items with defects, check if notes exist
                                     if ($deliveryStatus === 'Delivered' && $itemDefectiveCount > 0) {
                                         $individualItemStatus = $hasNotes ? 'Reviewed' : 'Pending Review';
                                         $individualItemStatusClass = $hasNotes ? 'text-blue-600 bg-blue-100' : 'text-yellow-600 bg-yellow-100';
@@ -396,7 +399,7 @@
         </x-modal.createModal>
 
         <!-- Add Note Modal -->
-        <x-modal.createModal x-ref="addNoteModal{{ $po->id }}" id="addNoteModal{{ $po->id }}">
+        <x-modal.createModal id="addNoteModal{{ $po->id }}">
             <x-slot:dialogTitle>Add Note for PO: {{ $po->orderNumber }}</x-slot:dialogTitle>
             
             <form action="{{ route('po-notes.store') }}" method="POST">
@@ -412,8 +415,14 @@
                     </div>
                     
                     <div class="flex justify-end space-x-3">
-                        <x-form.closeBtn type="button" @click="$refs.addNoteModal{{ $po->id }}.close()">Cancel</x-form.closeBtn>
-                        <x-form.saveBtn type="submit">Add Note</x-form.saveBtn>
+                        <button type="button" @click="document.getElementById('addNoteModal{{ $po->id }}').close()" 
+                            class="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                            class="px-4 py-2 bg-button-save text-white rounded-md hover:bg-green-600">
+                            Add Note
+                        </button>
                     </div>
                 </div>
             </form>

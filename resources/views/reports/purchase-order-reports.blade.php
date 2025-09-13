@@ -46,9 +46,9 @@
 
                     // Determine report status based on your requirements
                     if ($deliveryStatus === 'Cancelled' || ($deliveryStatus === 'Confirmed' && $isDelayed)) {
-                        // Automatically set to Pending Review for cancelled or delayed confirmed POs
-                        $status = 'Pending Review';
-                        $statusClass = 'text-yellow-600 bg-yellow-100';
+                        // For cancelled or delayed orders, check if notes exist
+                        $status = $hasNotes ? 'Reviewed' : 'Pending Review';
+                        $statusClass = $hasNotes ? 'text-blue-600 bg-blue-100' : 'text-yellow-600 bg-yellow-100';
                     } elseif ($hasDefective) {
                         $status = $hasNotes ? 'Reviewed' : 'Pending Review';
                         $statusClass = $hasNotes ? 'text-blue-600 bg-blue-100' : 'text-yellow-600 bg-yellow-100';
