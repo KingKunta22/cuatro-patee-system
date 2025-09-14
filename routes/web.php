@@ -9,6 +9,7 @@ use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ProductClassification;
 use App\Http\Controllers\SalesReportsController;
@@ -25,9 +26,7 @@ Route::post('/login', [UserController::class, 'login']);
 
 
 // The middleware method doesn't allow unlogged users to open this URL
-Route::get('/main', function() {
-    return view('main');
-})->middleware('auth');
+Route::get('/main', [DashboardController::class, 'index'])->name('main')->middleware('auth');
 
 
 // The function is inside the UserController.php for cleaner code

@@ -72,19 +72,19 @@
         <!-- REVENUE STATS -->
         <div class="container flex w-full gap-x-6 text-white mr-auto mb-4 py-4">
             <div class="container w-full flex flex-col px-6 py-4 text-start rounded-md bg-[#5C717B]">
-                <span class="font-semibold text-2xl">₱</span>
+                <span class="font-semibold text-2xl">₱{{ number_format($totalSales, 2) }}</span>
                 <span class="text-sm">Total Sales</span>
             </div>
             <div class="container w-full flex flex-col px-6 py-4 text-start rounded-md bg-[#5C717B]">
-                <span class="font-semibold text-2xl">₱</span>
+                <span class="font-semibold text-2xl">₱{{ number_format($totalCost, 2) }}</span>
                 <span class="text-sm">Total Cost</span>
             </div>
             <div class="container w-full flex flex-col px-6 py-4 text-start rounded-md bg-[#5C717B]">
-                <span class="font-semibold text-2xl">₱</span>
+                <span class="font-semibold text-2xl">{{ $productsSold }}</span>
                 <span class="text-sm">Products Sold</span>
             </div>
             <div class="container w-full flex flex-col px-6 py-4 text-start rounded-md bg-[#2C3747]">
-                <span class="font-semibold text-2xl">₱</span>
+                <span class="font-semibold text-2xl">{{ $totalTransactions }}</span>
                 <span class="text-sm">Total Transactions</span>
             </div>
         </div>
@@ -94,22 +94,65 @@
             <!--STOCK LEVEL CONTAINER -->
             <div class="container shadow-md px-6 py-3 w-full rounded-md">
                 <h1 class="font-semibold text-md">Stock Level</h1>
+                <div class="mt-3 space-y-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" class="rounded text-blue-500" checked disabled>
+                        <span class="ml-2">In Stock {{ $inStock }} products</span>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" class="rounded text-yellow-500" checked disabled>
+                        <span class="ml-2">Low Stock {{ $lowStock }} products</span>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" class="rounded text-red-500" checked disabled>
+                        <span class="ml-2">Out of Stock {{ $outOfStock }} products</span>
+                    </div>
+                </div>
             </div>
+            
             <!--LOW STOCK PRODUCTS CONTAINER -->
             <div class="container shadow-md px-6 py-3 w-full rounded-md">
                 <h1 class="font-semibold text-md">Low Stock Products</h1>
+                <div class="mt-3 space-y-2">
+                    @forelse($lowStockProducts as $product)
+                        <div class="text-sm">
+                            {{ $product->productName }} - Stock: {{ $product->productStock }}
+                        </div>
+                    @empty
+                        <div class="text-sm text-gray-500">No low stock products</div>
+                    @endforelse
+                </div>
             </div>
+            
             <!--EXPIRING PRODUCTS CONTAINER -->
             <div class="container shadow-md px-6 py-3 w-full rounded-md">
                 <h1 class="font-semibold text-md">Expiring Products</h1>
+                <div class="mt-3">
+                    @forelse($expiringProducts as $product)
+                        <div class="text-sm mb-2">
+                            {{ $product->productName }} - 
+                            Expires: {{ \Carbon\Carbon::parse($product->productExpirationDate)->format('M d, Y') }}
+                        </div>
+                    @empty
+                        <div class="text-sm text-gray-500">No products expiring soon</div>
+                    @endforelse
+                </div>
             </div>
         </section>
 
         <!-- CONTAINER FOR TOP SELLING PRODUCTS-->
-        <section>
-            <!-- 3-ITEM CAROUSEL -->
+        <section class="w-full mt-6">
             <div class="container shadow-md px-6 py-3 w-full rounded-md">
-                <h1 class="font-semibold text-md">Top Selling Products</h1>
+                <h1 class="font-semibold text-md mb-3">Top Selling Products</h1>
+                <div class="space-y-2">
+                    @forelse($topSellingProducts as $product)
+                        <div class="text-sm">
+                            {{ $product->product_name }} - Sold: {{ $product->total_sold }}
+                        </div>
+                    @empty
+                        <div class="text-sm text-gray-500">No sales data available</div>
+                    @endforelse
+                </div>
             </div>
         </section>
     </main>
