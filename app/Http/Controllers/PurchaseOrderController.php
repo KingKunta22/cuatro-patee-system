@@ -92,7 +92,7 @@ class PurchaseOrderController extends Controller
         $items = session('purchase_order_items', []);
 
         if (empty($items)) {
-            return back();
+            return back()->with('error', 'Add at least one item first before proceeding');
         }
 
         $firstItem = $items[0];

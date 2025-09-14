@@ -46,6 +46,30 @@
                     }
                 });
             </script>
+
+            @if(session('error'))
+            <div id="error-message" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-red-100 border border-red-400 text-red-700 rounded shadow-lg">
+                <p>{{ session('error') }}</p>
+            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const errorMessage = document.getElementById('error-message');
+                    if (errorMessage) {
+                        setTimeout(() => {
+                            errorMessage.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                            errorMessage.style.opacity = '0';
+                            errorMessage.style.transform = 'translate(-50%, -20px)';
+                            setTimeout(() => {
+                                errorMessage.remove();
+                            }, 500);
+                        }, 3000);
+                    }
+                });
+            </script>
+            @endif
+
+
+
             
             <!-- SEARCH BAR AND CREATE BUTTON -->
             <div class="container flex items-center place-content-between">
@@ -271,8 +295,10 @@
 
                             </div>
                     
-                            <x-form.saveBtn type="button" @click="$refs.confirmSubmit.showModal()">Save</x-form.saveBtn>
-
+<x-form.saveBtn type="button" 
+    @click="{{ count(session('purchase_order_items', [])) > 0 ? '$refs.confirmSubmit.showModal()' : 'Toast.error(\'Add at least one item first before proceeding\')' }}">
+    Save
+</x-form.saveBtn>
 
                         </form>
 
