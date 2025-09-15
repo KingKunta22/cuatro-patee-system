@@ -1,11 +1,11 @@
 <x-layout>
     <x-sidebar/>
-    <main x-data="{ activeTab: 'overview' }" class="w-auto ml-64 px-8 pt-6 pb-6 flex flex-col min-h-screen bg-gray-50">
+    <main x-data="{ activeTab: 'overview', salesTrendPeriod: 'lastMonth' }" class="w-auto ml-64 px-8 pt-6 pb-6 flex flex-col min-h-screen bg-gray-50">
         <!-- Notification Messages -->
         @if(session('success'))
             <div id="success-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg shadow-lg flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 极6zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                 </svg>
                 <p>{{ session('success') }}</p>
             </div>
@@ -14,7 +14,7 @@
         @if(session('error'))
             <div id="error-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg shadow-lg flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    <path fill-rule="evenodd" d="M10 18a8 8极 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                 </svg>
                 <p>{{ session('error') }}</p>
             </div>
@@ -56,7 +56,7 @@
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            <path stroke-line极="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </div>
                 </form>
@@ -70,7 +70,7 @@
                 <div class="flex items-center">
                     <div class="p-3 rounded-lg bg-blue-50">
                         <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8极1.11 0 2.08.402 2.599 1M12 8V7m极 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
                     <div class="ml-4">
@@ -85,11 +85,11 @@
                 <div class="flex items-center">
                     <div class="p-3 rounded-lg bg-purple-50">
                         <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0极"></path>
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <h2 class="text-sm font-medium text-gray-500">Total Cost</h2>
+                        <h2 class极="text-sm font-medium text-gray-500">Total Cost</h2>
                         <p class="text-2xl font-bold text-gray-800">₱{{ number_format($totalCost, 2) }}</p>
                     </div>
                 </div>
@@ -105,7 +105,7 @@
                     </div>
                     <div class="ml-4">
                         <h2 class="text-sm font-medium text-gray-500">Products Sold</h2>
-                        <p class="text-2xl font-bold text-gray-800">{{ $productsSold }}</p>
+                        <p class="text-2xl font-bold text-gray-800">{{ $productsSold }}</极>
                     </div>
                 </div>
             </div>
@@ -115,7 +115,7 @@
                 <div class="flex items-center">
                     <div class="p-3 rounded-lg bg-indigo-50">
                         <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2极2a2 2 0 002-2M9 5a2 2 极 012-2h2a2 2 0 012 2"></path>
                         </svg>
                     </div>
                     <div class="ml-4">
@@ -126,42 +126,16 @@
             </div>
         </div>
 
-        <!-- Simplified Sales Trends Section -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-8">
-            <h2 class="text-lg font-semibold text-gray-800 mb-6">Sales Trends (Last 6 Months)</h2>
-            <canvas id="salesTrendChart" height="120"></canvas>
-        </div>
-
         <!-- Middle Section: Stock Levels, Low Stock, Expiring -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Stock Level -->
+            <!-- Stock Level Pie Chart -->
             <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">Stock Level</h2>
                     <span class="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">{{ $inStock + $lowStock + $outOfStock }} products</span>
                 </div>
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 rounded-full bg-green-500 mr-3"></div>
-                            <span class="text-sm text-gray-600">In Stock</span>
-                        </div>
-                        <span class="text-sm font-semibold">{{ $inStock }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 rounded-full bg-yellow-500 mr-3"></div>
-                            <span class="text-sm text-gray-600">Low Stock</span>
-                        </div>
-                        <span class="text-sm font-semibold">{{ $lowStock }}</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-3 h-3 rounded-full bg-red-500 mr-3"></div>
-                            <span class="text-sm text-gray-600">Out of Stock</span>
-                        </div>
-                        <span class="text-sm font-semibold">{{ $outOfStock }}</span>
-                    </div>
+                <div class="h-64 w-full">
+                    <canvas id="stockLevelChart"></canvas>
                 </div>
             </div>
 
@@ -177,7 +151,7 @@
                         <div class="flex items-center">
                             <div class="w-8 h-8 rounded-md bg-amber-100 flex items-center justify-center mr-3">
                                 <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9极2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                                 </svg>
                             </div>
                             <div>
@@ -233,12 +207,12 @@
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-gray-800">Top Selling Products</h2>
                 <div class="flex space-x-2">
-                    <button class="top-selling-prev p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                    <button id="prevButton" class="top-selling-prev p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
                         <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
                         </svg>
                     </button>
-                    <button class="top-selling-next p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                    <button id="nextButton" class="top-selling-next p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
                         <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
@@ -249,13 +223,13 @@
             <div class="relative">
                 <div class="top-selling-carousel overflow-hidden">
                     <div class="flex -mx-3">
-                        @forelse($topSellingProducts as $product)
+                        @forelse($topSellingProducts as $index => $product)
                         <div class="w-full md:w-1/2 lg:w-1/3 px-3 carousel-item">
                             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
                                 <div class="flex items-center mb-3">
                                     <div class="w-12 h-12 rounded-md bg-gray-200 flex items-center justify-center overflow-hidden">
-                                        @if($product->productImage && Storage::exists('public/' . $product->productImage))
-                                            <img src="{{ asset('storage/' . $product->productImage) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover">
+                                        @if($product->inventory && $product->inventory->productImage)
+                                            <img src="{{ asset('storage/' . $product->inventory->productImage) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover">
                                         @else
                                             <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -264,7 +238,7 @@
                                     </div>
                                     <div class="ml-3">
                                         <h3 class="text-sm font-medium text-gray-800">{{ $product->product_name }}</h3>
-                                        <p class="text-xs text-gray-500">SKU: {{ $product->product_sku ?? 'N/A' }}</p>
+                                        <p class="text-xs text-gray-500">SKU: {{ $product->inventory->productSKU ?? 'N/A' }}</p>
                                     </div>
                                 </div>
                                 <div class="flex justify-between items-center">
@@ -272,7 +246,7 @@
                                         Sold: {{ $product->total_sold }}
                                     </span>
                                     <span class="text-sm font-semibold text-gray-800">
-                                        ₱{{ number_format($product->price ?? 0, 2) }}
+                                        ₱{{ number_format($product->unit_price ?? 0, 2) }}
                                     </span>
                                 </div>
                             </div>
@@ -288,69 +262,164 @@
                 </div>
             </div>
         </div>
+
+        <!-- Sales Trends Section -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-semibold text-gray-800">Sales Trends</h2>
+                <div class="relative">
+                    <select x-model="salesTrendPeriod" class="pl-3 pr-10 py-2 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none" @change="updateSalesTrendChart($event.target.value)">
+                        <option value="lastWeek">Past Week</option>
+                        <option value="lastMonth">Past Month</option>
+                        <option value="last6Months">Past 6 Months</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-极-7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="h-64">
+                <canvas id="salesTrendChart"></canvas>
+            </div>
+        </div>
     </main>
 
     <!-- Include Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- Carousel Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Simple carousel functionality
-            const carousel = document.querySelector('.top-selling-carousel');
-            const items = document.querySelectorAll('.carousel-item');
-            const prevBtn = document.querySelector('.top-selling-prev');
-            const nextBtn = document.querySelector('.top-selling-next');
+            // Initialize carousel with button disabling logic
+            initCarousel();
             
-            if (items.length > 0) {
-                let currentIndex = 0;
-                const itemWidth = items[0].offsetWidth + 24; // width + margin
-                
-                function updateCarousel() {
-                    carousel.querySelector('.flex').style.transform = `translateX(-${currentIndex * itemWidth}px)`;
-                }
-                
-                nextBtn.addEventListener('click', function() {
-                    if (currentIndex < items.length - 3) {
-                        currentIndex++;
-                        updateCarousel();
-                    }
-                });
-                
-                prevBtn.addEventListener('click', function() {
-                    if (currentIndex > 0) {
-                        currentIndex--;
-                        updateCarousel();
-                    }
-                });
-                
-                // Initialize carousel
-                carousel.querySelector('.flex').style.transition = 'transform 0.3s ease';
-            }
-
-            // Initialize simplified chart
-            initChart();
+            // Initialize charts
+            initStockLevelChart();
+            initSalesTrendChart('lastMonth');
         });
 
-        function initChart() {
-            // Simplified Sales Trend Chart
-            const salesTrendCtx = document.getElementById('salesTrendChart').getContext('2d');
-            new Chart(salesTrendCtx, {
-                type: 'line',
+        function initCarousel() {
+            const carousel = document.querySelector('.top-selling-carousel');
+            const items = document.querySelectorAll('.carousel-item');
+            const prevBtn = document.getElementById('prevButton');
+            const nextBtn = document.getElementById('nextButton');
+            
+            if (items.length <= 3) {
+                // Disable buttons if 3 or fewer items
+                prevBtn.disabled = true;
+                nextBtn.disabled = true;
+                prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+            
+            let currentIndex = 0;
+            const itemsToShow = 3;
+            const itemWidth = items[0].offsetWidth + 24; // width + margin
+            
+            function updateCarousel() {
+                carousel.querySelector('.flex').style.transform = `translateX(-${currentIndex * itemWidth}px)`;
+                
+                // Disable/enable buttons based on position
+                prevBtn.disabled = currentIndex === 0;
+                nextBtn.disabled = currentIndex >= items.length - itemsToShow;
+                
+                prevBtn.classList.toggle('opacity-50', currentIndex === 0);
+                prevBtn.classList.toggle('cursor-not-allowed', currentIndex === 0);
+                nextBtn.classList.toggle('opacity-50', currentIndex >= items.length - itemsToShow);
+                nextBtn.classList.toggle('cursor-not-allowed', currentIndex >= items.length - itemsToShow);
+            }
+            
+            nextBtn.addEventListener('click', function() {
+                if (currentIndex < items.length - itemsToShow) {
+                    currentIndex++;
+                    updateCarousel();
+                }
+            });
+            
+            prevBtn.addEventListener('click', function() {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateCarousel();
+                }
+            });
+            
+            // Initialize carousel
+            carousel.querySelector('.flex').style.transition = 'transform 0.3s ease';
+            updateCarousel();
+        }
+
+        function initStockLevelChart() {
+            const ctx = document.getElementById('stockLevelChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    labels: ['In Stock', 'Low Stock', 'Out of Stock'],
                     datasets: [{
-                        label: 'Sales',
-                        data: [65, 59, 80, 81, 56, 72],
-                        borderColor: 'rgb(79, 70, 229)',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                        tension: 0.3,
-                        fill: true
+                        data: [{{ $inStock }}, {{ $lowStock }}, {{ $outOfStock }}],
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderWidth: 1
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+        }
+
+        function initSalesTrendChart(period) {
+            const ctx = document.getElementById('salesTrendChart').getContext('2d');
+            
+            // This would be replaced with actual data from your controller
+            // For now, using sample data
+            let labels, data;
+            
+            switch(period) {
+                case 'lastWeek':
+                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                    data = [1200, 1900, 1500, 2100, 1800, 2500, 2200];
+                    break;
+                case 'lastMonth':
+                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                    data = [8500, 9200, 7800, 9500];
+                    break;
+                case 'last6Months':
+                    labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+                    data = [32000, 28500, 31000, 29500, 33000, 35000];
+                    break;
+            }
+            
+            window.salesTrendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Sales',
+                        data: data,
+                        borderColor: 'rgb(79, 70, 229)',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                        pointBackgroundColor: 'rgb(79, 70, 229)',
+                        pointBorderColor: '#fff',
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         legend: {
                             display: false
@@ -360,7 +429,7 @@
                         y: {
                             beginAtZero: true,
                             grid: {
-                                display: false
+                                display: true
                             }
                         },
                         x: {
@@ -371,6 +440,13 @@
                     }
                 }
             });
+        }
+
+        function updateSalesTrendChart(period) {
+            if (window.salesTrendChart) {
+                window.salesTrendChart.destroy();
+            }
+            initSalesTrendChart(period);
         }
     </script>
 </x-layout>
