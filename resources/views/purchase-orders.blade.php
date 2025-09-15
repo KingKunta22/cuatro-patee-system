@@ -295,10 +295,10 @@
 
                             </div>
                     
-<x-form.saveBtn type="button" 
-    @click="{{ count(session('purchase_order_items', [])) > 0 ? '$refs.confirmSubmit.showModal()' : 'Toast.error(\'Add at least one item first before proceeding\')' }}">
-    Save
-</x-form.saveBtn>
+                        <x-form.saveBtn type="button" 
+                            @click="{{ count(session('purchase_order_items', [])) > 0 ? '$refs.confirmSubmit.showModal()' : 'Toast.error(\'Add at least one item first before proceeding\')' }}">
+                            Save
+                        </x-form.saveBtn>
 
                         </form>
 

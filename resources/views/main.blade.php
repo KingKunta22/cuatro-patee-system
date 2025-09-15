@@ -126,6 +126,12 @@
             </div>
         </div>
 
+        <!-- Simplified Sales Trends Section -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-8">
+            <h2 class="text-lg font-semibold text-gray-800 mb-6">Sales Trends (Last 6 Months)</h2>
+            <canvas id="salesTrendChart" height="120"></canvas>
+        </div>
+
         <!-- Middle Section: Stock Levels, Low Stock, Expiring -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <!-- Stock Level -->
@@ -248,7 +254,7 @@
                             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
                                 <div class="flex items-center mb-3">
                                     <div class="w-12 h-12 rounded-md bg-gray-200 flex items-center justify-center overflow-hidden">
-                                        @if(isset($product->productImage) && $product->productImage)
+                                        @if($product->productImage && Storage::exists('public/' . $product->productImage))
                                             <img src="{{ asset('storage/' . $product->productImage) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover">
                                         @else
                                             <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,6 +290,9 @@
         </div>
     </main>
 
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <!-- Carousel Script -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -318,6 +327,50 @@
                 // Initialize carousel
                 carousel.querySelector('.flex').style.transition = 'transform 0.3s ease';
             }
+
+            // Initialize simplified chart
+            initChart();
         });
+
+        function initChart() {
+            // Simplified Sales Trend Chart
+            const salesTrendCtx = document.getElementById('salesTrendChart').getContext('2d');
+            new Chart(salesTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Sales',
+                        data: [65, 59, 80, 81, 56, 72],
+                        borderColor: 'rgb(79, 70, 229)',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
     </script>
 </x-layout>
