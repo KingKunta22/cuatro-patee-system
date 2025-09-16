@@ -181,10 +181,9 @@ class InventoryController extends Controller
 
             // Calculate profit margin
             $profitMargin = 0;
-            if ($inventoryData['productCostPrice'] > 0) {
-                $profitMargin = ($inventoryData['productSellingPrice'] - $inventoryData['productCostPrice']);
-            }
-            $inventoryData['productProfitMargin'] = $profitMargin;
+            // Calculate profit (absolute amount)
+            $profitMargin = $inventoryData['productSellingPrice'] - $inventoryData['productCostPrice'];
+            $inventoryData['productProfitMargin'] = round($profitMargin, 2);
 
             // Save to database
             $inventory = Inventory::create($inventoryData);
@@ -257,9 +256,8 @@ class InventoryController extends Controller
         $updatedCostPrice = $validated['productCostPrice'];
         $updatedSellingPrice = $validated['productSellingPrice'];
 
-        if ($updatedCostPrice > 0) {
-            $updatedProfitMargin = round((($updatedSellingPrice - $updatedCostPrice) / $updatedCostPrice) * 100, 2);
-        }
+        $updatedProfitMargin = round($updatedSellingPrice - $updatedCostPrice, 2);
+
 
         // Update the fields
         $inventory->update([
