@@ -3,10 +3,7 @@
     <main x-data="{ activeTab: 'overview', salesTrendPeriod: 'lastMonth' }" class="w-auto ml-64 px-8 pt-6 pb-6 flex flex-col min-h-screen bg-gray-50">
         <!-- Notification Messages -->
         @if(session('success'))
-            <div id="success-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg shadow-lg flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 极6zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                </svg>
+            <div id="success-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded shadow-lg">
                 <p>{{ session('success') }}</p>
             </div>
         @endif
@@ -14,7 +11,7 @@
         @if(session('error'))
             <div id="error-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg shadow-lg flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8极 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                 </svg>
                 <p>{{ session('error') }}</p>
             </div>
@@ -56,7 +53,7 @@
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-line极="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </div>
                 </form>
@@ -66,12 +63,10 @@
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <!-- Total Sales -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div class="flex items-center">
-                    <div class="p-3 rounded-lg bg-blue-50">
-                        <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8极1.11 0 2.08.402 2.599 1M12 8V7m极 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
+                    <div class="p-3 rounded-lg text-lg text-blue-400 bg-blue-50">
+                        ₱
                     </div>
                     <div class="ml-4">
                         <h2 class="text-sm font-medium text-gray-500">Total Sales</h2>
@@ -81,22 +76,28 @@
             </div>
 
             <!-- Total Cost -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div class="flex items-center">
                     <div class="p-3 rounded-lg bg-purple-50">
-                        <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0极"></path>
+                        <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" 
+                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 
+                                3 .895 3 2-1.343 2-3 2m0-8
+                                c1.11 0 2.08.402 2.599 1M12 8V7
+                                m0 1v8m0 0v1
+                                m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <h2 class极="text-sm font-medium text-gray-500">Total Cost</h2>
+                        <h2 class="text-sm font-medium text-gray-500">Total Cost</h2>
                         <p class="text-2xl font-bold text-gray-800">₱{{ number_format($totalCost, 2) }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Products Sold -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div class="flex items-center">
                     <div class="p-3 rounded-lg bg-green-50">
                         <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,17 +106,17 @@
                     </div>
                     <div class="ml-4">
                         <h2 class="text-sm font-medium text-gray-500">Products Sold</h2>
-                        <p class="text-2xl font-bold text-gray-800">{{ $productsSold }}</极>
+                        <p class="text-2xl font-bold text-gray-800">{{ $productsSold }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Total Transactions -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                 <div class="flex items-center">
                     <div class="p-3 rounded-lg bg-indigo-50">
                         <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2极2a2 2 0 002-2M9 5a2 2 极 012-2h2a2 2 0 012 2"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
                         </svg>
                     </div>
                     <div class="ml-4">
@@ -127,31 +128,31 @@
         </div>
 
         <!-- Middle Section: Stock Levels, Low Stock, Expiring -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8" style="min-height: 380px;">
             <!-- Stock Level Pie Chart -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">Stock Level</h2>
                     <span class="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">{{ $inStock + $lowStock + $outOfStock }} products</span>
                 </div>
-                <div class="h-64 w-full">
-                    <canvas id="stockLevelChart"></canvas>
+                <div class="flex-1 flex items-center justify-center">
+                    <canvas id="stockLevelChart" class="w-full h-full"></canvas>
                 </div>
             </div>
 
             <!-- Low Stock Products -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">Low Stock Products</h2>
                     <span class="text-xs font-medium px-2 py-1 rounded-full bg-amber-100 text-amber-800">Attention needed</span>
                 </div>
-                <div class="space-y-3">
+                <div class="flex-1 overflow-y-auto space-y-3">
                     @forelse($lowStockProducts as $product)
                     <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg">
                         <div class="flex items-center">
                             <div class="w-8 h-8 rounded-md bg-amber-100 flex items-center justify-center mr-3">
                                 <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9极2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2 0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                                 </svg>
                             </div>
                             <div>
@@ -170,17 +171,17 @@
             </div>
 
             <!-- Expiring Products -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">Expiring Products</h2>
                     <span class="text-xs font-medium px-2 py-1 rounded-full bg-blue-100 text-blue-800">Soon</span>
                 </div>
-                <div class="space-y-3">
+                <div class="flex-1 overflow-y-auto space-y-3">
                     @forelse($expiringProducts as $product)
                     <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg">
                         <div class="flex items-center">
                             <div class="w-8 h-8 rounded-md bg-blue-100 flex items-center justify-center mr-3">
-                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                 </svg>
                             </div>
@@ -223,12 +224,13 @@
             <div class="relative">
                 <div class="top-selling-carousel overflow-hidden">
                     <div class="flex -mx-3">
-                        @forelse($topSellingProducts as $index => $product)
+                        @php $displayedProducts = $topSellingProducts->take(5); @endphp
+                        @forelse($displayedProducts as $index => $product)
                         <div class="w-full md:w-1/2 lg:w-1/3 px-3 carousel-item">
-                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow h-32">
                                 <div class="flex items-center mb-3">
                                     <div class="w-12 h-12 rounded-md bg-gray-200 flex items-center justify-center overflow-hidden">
-                                        @if($product->inventory && $product->inventory->productImage)
+                                        @if($product->inventory && $product->inventory->productImage && file_exists(storage_path('app/public/' . $product->inventory->productImage)))
                                             <img src="{{ asset('storage/' . $product->inventory->productImage) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover">
                                         @else
                                             <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,8 +239,17 @@
                                         @endif
                                     </div>
                                     <div class="ml-3">
-                                        <h3 class="text-sm font-medium text-gray-800">{{ $product->product_name }}</h3>
-                                        <p class="text-xs text-gray-500">SKU: {{ $product->inventory->productSKU ?? 'N/A' }}</p>
+                                        @php
+                                            $productName = $product->product_name;
+                                            if (preg_match('/\((INV-\d+-\d+)\)/', $productName, $matches)) {
+                                                $sku = $matches[1];
+                                                $productName = trim(str_replace("($sku)", "", $productName));
+                                            } else {
+                                                $sku = $product->inventory->productSKU ?? 'N/A';
+                                            }
+                                        @endphp
+                                        <h3 class="text-sm font-medium text-gray-800">{{ $productName }}</h3>
+                                        <p class="text-xs text-gray-500">SKU: {{ $sku }}</p>
                                     </div>
                                 </div>
                                 <div class="flex justify-between items-center">
@@ -246,7 +257,7 @@
                                         Sold: {{ $product->total_sold }}
                                     </span>
                                     <span class="text-sm font-semibold text-gray-800">
-                                        ₱{{ number_format($product->unit_price ?? 0, 2) }}
+                                        ₱{{ number_format($product->unit_price ?? ($product->inventory->unit_price ?? 0), 2) }}
                                     </span>
                                 </div>
                             </div>
@@ -275,7 +286,7 @@
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-极-7"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                         </svg>
                     </div>
                 </div>
@@ -355,7 +366,7 @@
             new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['In Stock', 'Low Stock', 'Out of Stock'],
+                    labels: ['In Stock (>10)', 'Low Stock (1-10)', 'Out of Stock (0)'],
                     datasets: [{
                         data: [{{ $inStock }}, {{ $lowStock }}, {{ $outOfStock }}],
                         backgroundColor: [
@@ -363,15 +374,22 @@
                             'rgba(245, 158, 11, 0.8)',
                             'rgba(239, 68, 68, 0.8)'
                         ],
-                        borderWidth: 1
+                        borderWidth: 2,
+                        borderColor: '#fff'
                     }]
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: false,
+                    maintainAspectRatio: true,
                     plugins: {
                         legend: {
                             position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 11
+                                },
+                                padding: 15
+                            }
                         }
                     }
                 }
@@ -430,6 +448,11 @@
                             beginAtZero: true,
                             grid: {
                                 display: true
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '₱' + value.toLocaleString();
+                                }
                             }
                         },
                         x: {
