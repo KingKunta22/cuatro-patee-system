@@ -285,7 +285,7 @@
                             profitMargin: 0,
                             calculateProfitMargin() {
                                 if (this.costPrice > 0 && this.sellingPrice > 0) {
-                                    this.profitMargin = '₱' + (this.sellingPrice - this.costPrice);
+                                    this.profitMargin = '₱' + (this.sellingPrice - this.costPrice).toFixed(2);
                                 } else {
                                     this.profitMargin = '₱' + 0;
                                 }
@@ -415,7 +415,7 @@
                                 
                                 calculateProfitMargin() {
                                     if (this.costPrice > 0 && this.sellingPrice > 0) {
-                                        this.profitMargin = '₱' + (this.sellingPrice - this.costPrice);
+                                        this.profitMargin = '₱' + (this.sellingPrice - this.costPrice).toFixed(2);
                                     } else {
                                         this.profitMargin = '₱' + 0;
                                     }
@@ -622,7 +622,7 @@
                             profitMargin: '{{ $item->productProfitMargin }}',
                             calculateProfitMargin() {
                                 if (this.costPrice > 0 && this.sellingPrice > 0) {
-                                    this.profitMargin = '₱' + this.sellingPrice - this.costPrice;
+                                    this.profitMargin = '₱' + (this.sellingPrice - this.costPrice).toFixed(2);
                                 } else {
                                     this.profitMargin = '₱' + 0;
                                 }
