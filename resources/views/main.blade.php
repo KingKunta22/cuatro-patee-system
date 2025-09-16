@@ -229,7 +229,7 @@
                             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow h-32">
                                 <div class="flex items-center mb-3">
                                     <div class="w-12 h-12 rounded-md bg-gray-200 flex items-center justify-center overflow-hidden">
-                                        @if($product->inventory && $product->inventory->productImage && file_exists(storage_path('app/public/' . $product->inventory->productImage)))
+                                        @if($product->inventory && $product->inventory->productImage && Storage::disk('public')->exists($product->inventory->productImage))
                                             <img src="{{ asset('storage/' . $product->inventory->productImage) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover">
                                         @else
                                             <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -67,8 +67,9 @@ class DashboardController extends Controller
         $topSellingProducts = SaleItem::whereHas('sale', function($query) {
                 $query->where('sale_date', '>=', now()->subDays(30));
             })
-            ->select('product_name', DB::raw('SUM(quantity) as total_sold'))
-            ->groupBy('product_name')
+            ->with('inventory') // Eager load inventory relationship
+            ->select('product_name', 'inventory_id', DB::raw('SUM(quantity) as total_sold'))
+            ->groupBy('product_name', 'inventory_id')
             ->orderBy('total_sold', 'desc')
             ->limit(5)
             ->get();
