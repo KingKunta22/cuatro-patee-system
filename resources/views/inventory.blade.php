@@ -205,7 +205,7 @@
                             </div>
                             <div class="bg-gray-50 col-span-2 p-3 rounded-md">
                                 <p class="font-semibold text-md">Profit Margin</p>
-                                <p class="text-sm">{{ $item->productProfitMargin }}%</p>
+                                <p class="text-sm">{{ $item->productProfitMargin }}</p>
                             </div>
                             <div class="bg-gray-50 col-span-3 p-3 rounded-md">
                                 <p class="font-semibold text-md">Expiration Date</p>
@@ -285,9 +285,9 @@
                             profitMargin: 0,
                             calculateProfitMargin() {
                                 if (this.costPrice > 0 && this.sellingPrice > 0) {
-                                    this.profitMargin = ((this.sellingPrice - this.costPrice) / this.costPrice * 100).toFixed(2) + '%';
+                                    this.profitMargin = '₱' + (this.sellingPrice - this.costPrice);
                                 } else {
-                                    this.profitMargin = 0;
+                                    this.profitMargin = '₱' + 0;
                                 }
                             },
                         }" >
@@ -331,7 +331,7 @@
                                             x-model="costPrice"
                                             @input="calculateProfitMargin()"/>
 
-                        <x-form.form-input label="Profit Margin (%)" name="" type="text" value="" 
+                        <x-form.form-input label="Profit (₱)" name="" type="text" value="" 
                                             class="col-span-2" 
                                             readonly
                                             x-model="profitMargin"/>
@@ -367,7 +367,7 @@
                                 poId: null,
                                 sellingPrice: 0,
                                 costPrice: 0,
-                                profitMargin: '0%',
+                                profitMargin: '0',
                                 productName: '',
                                 productStock: 0,
                                 originalStock: 0,
@@ -415,11 +415,11 @@
                                 
                                 calculateProfitMargin() {
                                     if (this.costPrice > 0 && this.sellingPrice > 0) {
-                                        const margin = ((this.sellingPrice - this.costPrice) / this.costPrice * 100);
-                                        this.profitMargin = margin.toFixed(2) + '%';
+                                        this.profitMargin = '₱' + (this.sellingPrice - this.costPrice);
                                     } else {
-                                        this.profitMargin = '0%';
+                                        this.profitMargin = '₱' + 0;
                                     }
+
                                 },
                                 
                                 updateStockBasedOnQuality() {
@@ -521,7 +521,7 @@
                                                 class="col-span-2" readonly
                                                 x-model="costPrice"/>
 
-                            <x-form.form-input label="Profit Margin (%)" name="productProfitMargin" type="text" value="" 
+                            <x-form.form-input label="Profit (₱)" name="productProfitMargin" type="text" value="" 
                                                 class="col-span-2" readonly
                                                 x-model="profitMargin"/>
 
@@ -619,12 +619,12 @@
                         x-data="{
                             sellingPrice: {{ $item->productSellingPrice }},
                             costPrice: {{ $item->productCostPrice }},
-                            profitMargin: '{{ $item->productProfitMargin }}%',
+                            profitMargin: '{{ $item->productProfitMargin }}',
                             calculateProfitMargin() {
                                 if (this.costPrice > 0 && this.sellingPrice > 0) {
-                                    this.profitMargin = ((this.sellingPrice - this.costPrice) / this.costPrice * 100).toFixed(2) + '%';
+                                    this.profitMargin = '₱' + this.sellingPrice - this.costPrice;
                                 } else {
-                                    this.profitMargin = '0%';
+                                    this.profitMargin = '₱' + 0;
                                 }
                             }
                         }">
@@ -697,7 +697,7 @@
                             @input="calculateProfitMargin()"/>
 
                         <x-form.form-input label="Profit Margin (%)" name="productProfitMargin" 
-                            :value="$item->productProfitMargin . '%'" class="col-span-2" 
+                            :value="$item->productProfitMargin" class="col-span-2" 
                             type="text" readonly
                             x-model="profitMargin"/>
 

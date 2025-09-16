@@ -182,7 +182,7 @@ class InventoryController extends Controller
             // Calculate profit margin
             $profitMargin = 0;
             if ($inventoryData['productCostPrice'] > 0) {
-                $profitMargin = round(($inventoryData['productSellingPrice'] - $inventoryData['productCostPrice']) / $inventoryData['productCostPrice'] * 100, 2);
+                $profitMargin = ($inventoryData['productSellingPrice'] - $inventoryData['productCostPrice']);
             }
             $inventoryData['productProfitMargin'] = $profitMargin;
 
