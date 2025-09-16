@@ -78,7 +78,7 @@ class DashboardController extends Controller
             ->where('productExpirationDate', '<=', now()->addDays(30))
             ->orderBy('productExpirationDate', 'asc')
             ->limit(5)
-            ->get(['productName', 'productExpirationDate']);
+            ->get(['productName', 'productExpirationDate', 'productSKU']);
         
         return view('main', compact(
             'totalSales',

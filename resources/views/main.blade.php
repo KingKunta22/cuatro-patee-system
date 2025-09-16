@@ -48,8 +48,8 @@
                     <select name="timePeriod" class="pl-3 pr-10 py-2.5 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none" onchange="this.form.submit()">
                         <option value="all" {{ ($timePeriod ?? 'all') == 'all' ? 'selected' : '' }}>All Time</option>
                         <option value="today" {{ ($timePeriod ?? 'all') == 'today' ? 'selected' : '' }}>Today</option>
-                        <option value="lastWeek" {{ ($timePeriod ?? 'all') == 'lastWeek' ? 'selected' : '' }}>Last 7 Days</option>
-                        <option value="lastMonth" {{ ($timePeriod ?? 'all') == 'lastMonth' ? 'selected' : '' }}>Last Month</option>
+                        <option value="lastWeek" {{ ($timePeriod ?? 'all') == 'lastWeek' ? 'selected' : '' }}>This Week</option>
+                        <option value="lastMonth" {{ ($timePeriod ?? 'all') == 'lastMonth' ? 'selected' : '' }}>This Month</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,12 +155,11 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2 0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                                 </svg>
                             </div>
-                            <div>
+                            <div class='w-5/6'>
                                 <h3 class="text-sm font-medium text-gray-800">{{ $product->productName }}</h3>
-                                <p class="text-xs text-gray-500">Stock: {{ $product->productStock }}</p>
                             </div>
                         </div>
-                        <span class="text-xs font-medium px-2 py-1 rounded-full bg-red-100 text-red-800">Low</span>
+                        <p class="text-xs text-red-400">{{ $product->productStock }} stocks left</p>
                     </div>
                     @empty
                     <div class="text-center py-4 text-gray-500">
@@ -187,10 +186,10 @@
                             </div>
                             <div>
                                 <h3 class="text-sm font-medium text-gray-800">{{ $product->productName }}</h3>
-                                <p class="text-xs text-gray-500">Expires: {{ \Carbon\Carbon::parse($product->productExpirationDate)->format('M d, Y') }}</p>
+                                <p class="text-xs text-gray-500">{{ $product->productSKU }}</p>
                             </div>
                         </div>
-                        <span class="text-xs font-medium text-blue-600">
+                        <span class="text-xs font-medium text-blue-600" title="Expires on {{ \Carbon\Carbon::parse($product->productExpirationDate)->format('M d, Y') }}">
                             {{ \Carbon\Carbon::parse($product->productExpirationDate)->diffForHumans() }}
                         </span>
                     </div>
