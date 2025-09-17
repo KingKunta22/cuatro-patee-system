@@ -36,7 +36,7 @@
         <!-- SEARCH BAR AND CREATE BUTTON -->
         <div class="w-full flex items-center justify-between mb-4">
             <!-- PAGE TITLE -->
-            <div class="font-bold text-xl text-gray-800 whitespace-nowrap"
+            <div class="font-bold text-2xl text-gray-800 whitespace-nowrap"
                 x-text="activeTab === 'product' ? 'Product Movements Report'
                     : activeTab === 'sales' ? 'Sales Report'
                     : activeTab === 'inventory' ? 'Inventory Report'
@@ -90,6 +90,9 @@
                 class="w-40 text-center font-bold text-xs py-3 uppercase rounded transition">
                     PO Reports
                 </a>
+            </div>
+            <div class="">
+                <span>PRINT BTN HERE</span>
             </div>
         </div>
 

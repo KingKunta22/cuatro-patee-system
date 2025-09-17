@@ -10,7 +10,6 @@ class Sale extends Model
 {
     protected $fillable = [
         'invoice_number',
-        'customer_id',
         'customer_name',
         'sale_date',
         'total_amount',
@@ -41,10 +40,5 @@ class Sale extends Model
         
         // Fallback to a default value
         return 'System';
-    }
-
-    public function customer(): BelongsTo
-    {
-        return $this->belongsTo(Customer::class);
     }
 }

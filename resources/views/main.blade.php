@@ -436,7 +436,7 @@
             ctx.textAlign = 'center';
             ctx.fillText('Loading sales data...', ctx.canvas.width / 2, ctx.canvas.height / 2);
             
-            // Fetch actual data from your server - UPDATED URL
+            // CORRECTED URL - Use the web route instead of API route
             fetch(`/dashboard/sales-trends?period=${period}`)
                 .then(response => {
                     if (!response.ok) {

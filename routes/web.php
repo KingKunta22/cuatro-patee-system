@@ -6,7 +6,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\PONotesController;
 use App\Http\Controllers\ReportsController;
-use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\DashboardController;
@@ -98,9 +97,6 @@ Route::resource('po-notes', PONotesController::class);
 // ROUTE FOR SUPPLIERS
 Route::resource('suppliers', SupplierController::class)->middleware('auth');
 
-
-// ROUTE FOR CUSTOMERS
-Route::resource('customers', CustomerController::class)->middleware('auth');
 
 
 
