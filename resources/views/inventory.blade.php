@@ -275,18 +275,7 @@
                     <!-- MANUAL SECTION -->
                     <section class="grid grid-cols-6 col-span-6 justify-end gap-4" 
                             x-show="addMethod === 'manual'"
-                            x-data="{
-                            sellingPrice: 0,
-                            costPrice: 0,
-                            profitMargin: 0,
-                            calculateProfitMargin() {
-                                if (this.costPrice > 0 && this.sellingPrice > 0) {
-                                    this.profitMargin = '₱' + (this.sellingPrice - this.costPrice).toFixed(2);
-                                } else {
-                                    this.profitMargin = '₱' + 0;
-                                }
-                            },
-                        }" >
+                            x-data>
                         <!-- ALL MANUAL FIELDS -->
                         <x-form.form-input label="Product Name"  name="manual_productName" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'manual'"/>
                         <!-- Brand Dropdown in Add Form -->
@@ -397,7 +386,6 @@
                                     const item = this.items.find(i => i.id == itemId);
                                     if (item) {
                                         this.costPrice = item.unitPrice || 0;
-                                        this.calculateProfitMargin();
                                         this.productName = item.productName;
                                         this.productStock = item.quantity;
                                         this.originalStock = item.quantity;
@@ -405,14 +393,6 @@
                                     }
                                 },
                                 
-                                calculateProfitMargin() {
-                                    if (this.costPrice > 0 && this.sellingPrice > 0) {
-                                        this.profitMargin = '₱' + (this.sellingPrice - this.costPrice).toFixed(2);
-                                    } else {
-                                        this.profitMargin = '₱' + 0;
-                                    }
-
-                                },
                                 
                                 updateStockBasedOnQuality() {
                                     if (this.selectedQuality === 'goodCondition') {
