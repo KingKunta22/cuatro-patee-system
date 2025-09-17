@@ -203,10 +203,6 @@
                                 <p class="font-semibold text-md">Cost Price</p>
                                 <p class="text-sm">₱{{ number_format($item->productCostPrice, 2) }}</p>
                             </div>
-                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                <p class="font-semibold text-md">Profit Margin</p>
-                                <p class="text-sm">{{ $item->productProfitMargin }}</p>
-                            </div>
                             <div class="bg-gray-50 col-span-3 p-3 rounded-md">
                                 <p class="font-semibold text-md">Expiration Date</p>
                                 <p class="text-sm">
