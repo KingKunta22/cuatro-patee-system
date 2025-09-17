@@ -13,8 +13,8 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Get time period filter
-        $timePeriod = $request->get('timePeriod', 'all');
+        // Get time period filter - default to 'today'
+        $timePeriod = $request->get('timePeriod', 'today');
         
         // Calculate date range based on time period
         $dateRange = $this->getDateRange($timePeriod);
@@ -67,9 +67,11 @@ class DashboardController extends Controller
         $topSellingProducts = SaleItem::whereHas('sale', function($query) {
                 $query->where('sale_date', '>=', now()->subDays(30));
             })
-            ->with('inventory') // Eager load inventory relationship
-            ->select('product_name', 'inventory_id', DB::raw('SUM(quantity) as total_sold'))
-            ->groupBy('product_name', 'inventory_id')
+            ->with(['inventory' => function($query) {
+                $query->select('id', 'productSellingPrice', 'productSKU', 'productImage');
+            }])
+            ->select('product_name', 'inventory_id', 'unit_price', DB::raw('SUM(quantity) as total_sold'))
+            ->groupBy('product_name', 'inventory_id', 'unit_price')
             ->orderBy('total_sold', 'desc')
             ->limit(5)
             ->get();
@@ -106,16 +108,82 @@ class DashboardController extends Controller
                 ];
             case 'lastWeek':
                 return [
-                    'start' => now()->subDays(7)->startOfDay(),
+                    'start' => now()->subWeek()->startOfDay(),
                     'end' => now()->endOfDay()
                 ];
             case 'lastMonth':
                 return [
-                    'start' => now()->subDays(30)->startOfDay(),
+                    'start' => now()->subMonth()->startOfDay(),
+                    'end' => now()->endOfDay()
+                ];
+            case 'lastYear':
+                return [
+                    'start' => now()->subYear()->startOfDay(),
                     'end' => now()->endOfDay()
                 ];
             default: // 'all'
                 return null;
         }
     }
+
+    public function getSalesTrends(Request $request)
+    {
+        $period = $request->get('period', 'lastMonth');
+        
+        switch ($period) {
+            case 'lastWeek':
+                // Get sales data for the last week
+                $salesData = Sale::selectRaw('DAYNAME(sale_date) as day, SUM(total_amount) as total')
+                    ->whereBetween('sale_date', [now()->subWeek(), now()])
+                    ->groupBy('day')
+                    ->orderByRaw("FIELD(day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')")
+                    ->get();
+                
+                $labels = $salesData->pluck('day');
+                $data = $salesData->pluck('total');
+                break;
+                
+            case 'lastMonth':
+                // Get sales data for the last month by weeks
+                $salesData = Sale::selectRaw('WEEK(sale_date, 1) as week, SUM(total_amount) as total')
+                    ->whereBetween('sale_date', [now()->subMonth(), now()])
+                    ->groupBy('week')
+                    ->orderBy('week')
+                    ->get();
+                
+                $labels = $salesData->map(function($item) {
+                    return 'Week ' . $item->week;
+                });
+                
+                $data = $salesData->pluck('total');
+                break;
+                
+            case 'last6Months':
+                // Get sales data for the last 6 months
+                $salesData = Sale::selectRaw('MONTHNAME(sale_date) as month, YEAR(sale_date) as year, SUM(total_amount) as total')
+                    ->whereBetween('sale_date', [now()->subMonths(6), now()])
+                    ->groupBy('year', 'month')
+                    ->orderBy('year')
+                    ->orderByRaw('MONTH(STR_TO_DATE(month, "%M"))')
+                    ->get();
+                
+                $labels = $salesData->map(function($item) {
+                    return $item->month . ' ' . $item->year;
+                });
+                
+                $data = $salesData->pluck('total');
+                break;
+                
+            default:
+                $labels = [];
+                $data = [];
+        }
+        
+        return response()->json([
+            'labels' => $labels,
+            'data' => $data
+        ]);
+    }
+
+
 }

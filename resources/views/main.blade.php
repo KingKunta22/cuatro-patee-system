@@ -46,10 +46,10 @@
                 <form method="GET" class="flex">
                     <input type="hidden" name="tab" x-model="activeTab">
                     <select name="timePeriod" class="pl-3 pr-10 py-2.5 text-sm rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none" onchange="this.form.submit()">
-                        <option value="all" {{ ($timePeriod ?? 'all') == 'all' ? 'selected' : '' }}>All Time</option>
-                        <option value="today" {{ ($timePeriod ?? 'all') == 'today' ? 'selected' : '' }}>Today</option>
-                        <option value="lastWeek" {{ ($timePeriod ?? 'all') == 'lastWeek' ? 'selected' : '' }}>This Week</option>
-                        <option value="lastMonth" {{ ($timePeriod ?? 'all') == 'lastMonth' ? 'selected' : '' }}>This Month</option>
+                        <option value="today" {{ ($timePeriod ?? 'today') == 'today' ? 'selected' : '' }}>Today</option>
+                        <option value="lastWeek" {{ ($timePeriod ?? 'today') == 'lastWeek' ? 'selected' : '' }}>This Week</option>
+                        <option value="lastMonth" {{ ($timePeriod ?? 'today') == 'lastMonth' ? 'selected' : '' }}>This Month</option>
+                        <option value="lastYear" {{ ($timePeriod ?? 'today') == 'lastYear' ? 'selected' : '' }}>This Year</option>
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,75 +237,75 @@
             </div>
         </div>
 
-<!-- Top Selling Products Carousel -->
-<div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-8">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-lg font-semibold text-gray-800">Top Selling Products</h2>
-        <div class="flex space-x-2">
-            <button id="prevButton" class="top-selling-prev p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
-                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-            </button>
-            <button id="nextButton" class="top-selling-next p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
-                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                </svg>
-            </button>
-        </div>
-    </div>
-    
-    <div class="relative">
-        <div class="top-selling-carousel overflow-hidden">
-            <div class="flex transition-transform duration-300 ease-in-out">
-                @forelse($topSellingProducts as $index => $product)
-                <div class="w-1/3 flex-shrink-0 px-3 carousel-item">
-                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow h-48 flex flex-col">
-                        <div class="flex flex-col items-center mb-3 flex-grow">
-                            <div class="w-20 h-20 rounded-md bg-gray-200 flex items-center justify-center overflow-hidden mb-3">
-                                @if($product->inventory && $product->inventory->productImage && Storage::disk('public')->exists($product->inventory->productImage))
-                                    <img src="{{ asset('storage/' . $product->inventory->productImage) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover">
-                                @else
-                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                    </svg>
-                                @endif
-                            </div>
-                            <div class="text-center">
-                                @php
-                                    $productName = $product->product_name;
-                                    if (preg_match('/\((INV-\d+-\d+)\)/', $productName, $matches)) {
-                                        $sku = $matches[1];
-                                        $productName = trim(str_replace("($sku)", "", $productName));
-                                    } else {
-                                        $sku = $product->inventory->productSKU ?? 'N/A';
-                                    }
-                                @endphp
-                                <h3 class="text-sm font-semibold text-gray-800 mb-1">{{ \Illuminate\Support\Str::limit($productName, 30) }}</h3>
-                                <p class="text-xs text-gray-500">SKU: {{ $sku }}</p>
+        <!-- Top Selling Products Carousel -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-lg font-semibold text-gray-800">Top Selling Products</h2>
+                <div class="flex space-x-2">
+                    <button id="prevButton" class="top-selling-prev p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <button id="nextButton" class="top-selling-next p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="relative">
+                <div class="top-selling-carousel overflow-hidden">
+                    <div class="flex transition-transform duration-300 ease-in-out">
+                        @forelse($topSellingProducts as $index => $product)
+                        <div class="w-1/3 flex-shrink-0 px-3 carousel-item">
+                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow h-auto flex flex-col">
+                                <div class="flex flex-col items-center mb-3 flex-grow">
+                                    <div class="w-56 h-60 rounded-md bg-gray-200 flex items-center justify-center overflow-hidden mb-3">
+                                        @if($product->inventory && $product->inventory->productImage && Storage::disk('public')->exists($product->inventory->productImage))
+                                            <img src="{{ asset('storage/' . $product->inventory->productImage) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover">
+                                        @else
+                                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            </svg>
+                                        @endif
+                                    </div>
+                                    <div class="text-center">
+                                        @php
+                                            $productName = $product->product_name;
+                                            if (preg_match('/\((INV-\d+-\d+)\)/', $productName, $matches)) {
+                                                $sku = $matches[1];
+                                                $productName = trim(str_replace("($sku)", "", $productName));
+                                            } else {
+                                                $sku = $product->inventory->productSKU ?? 'N/A';
+                                            }
+                                        @endphp
+                                        <h3 class="text-sm font-semibold text-gray-800 mb-1">{{ \Illuminate\Support\Str::limit($productName, 30) }}</h3>
+                                        <p class="text-xs text-gray-500">SKU: {{ $sku }}</p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between items-center mt-auto">
+                                    <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                        Sold: {{ $product->total_sold }}
+                                    </span>
+                                    <span class="text-sm font-semibold text-gray-800">
+                                        ₱{{ number_format($product->unit_price ?: (isset($product->inventory) ? $product->inventory->productSellingPrice : 0), 2) }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                        <div class="flex justify-between items-center mt-auto">
-                            <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
-                                Sold: {{ $product->total_sold }}
-                            </span>
-                            <span class="text-sm font-semibold text-gray-800">
-                                ₱{{ number_format($product->unit_price ?? $product->inventory->unit_price ?? 0, 2) }}
-                            </span>
+                        @empty
+                        <div class="w-full px-3">
+                            <div class="text-center py-6 text-gray-500">
+                                <p>No sales data available</p>
+                            </div>
                         </div>
+                        @endforelse
                     </div>
                 </div>
-                @empty
-                <div class="w-full px-3">
-                    <div class="text-center py-6 text-gray-500">
-                        <p>No sales data available</p>
-                    </div>
-                </div>
-                @endforelse
             </div>
         </div>
-    </div>
-</div>
 
         <!-- Sales Trends Section -->
         <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
@@ -424,78 +424,90 @@
         }
 
 
-        // FUNCTION FOR SALES TRENDS
+        // FUNCTION FOR SALES TRENDS - USING ACTUAL DATA
         function initSalesTrendChart(period) {
             const ctx = document.getElementById('salesTrendChart').getContext('2d');
             
-            let labels, data;
+            // Show loading state
+            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.fillStyle = '#f9fafb';
+            ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.fillStyle = '#6b7280';
+            ctx.textAlign = 'center';
+            ctx.fillText('Loading sales data...', ctx.canvas.width / 2, ctx.canvas.height / 2);
             
-            switch(period) {
-                case 'lastWeek':
-                    labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                    data = [1200, 1900, 1500, 2100, 1800, 2500, 2200];
-                    break;
-                case 'lastMonth':
-                    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-                    data = [8500, 9200, 7800, 9500];
-                    break;
-                case 'last6Months':
-                    labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-                    data = [32000, 28500, 31000, 29500, 33000, 35000];
-                    break;
-            }
-            
-            window.salesTrendChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Sales',
-                        data: data,
-                        borderColor: 'rgb(79, 70, 229)',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                        tension: 0.3,
-                        fill: true,
-                        pointBackgroundColor: 'rgb(79, 70, 229)',
-                        pointBorderColor: '#fff',
-                        pointRadius: 3,
-                        pointHoverRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                display: true
+            // Fetch actual data from your server - UPDATED URL
+            fetch(`/dashboard/sales-trends?period=${period}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Clear any existing chart
+                    if (window.salesTrendChart) {
+                        window.salesTrendChart.destroy();
+                    }
+                    
+                    window.salesTrendChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Sales',
+                                data: data.data,
+                                borderColor: 'rgb(79, 70, 229)',
+                                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                                tension: 0.3,
+                                fill: true,
+                                pointBackgroundColor: 'rgb(79, 70, 229)',
+                                pointBorderColor: '#fff',
+                                pointRadius: 3,
+                                pointHoverRadius: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
                             },
-                            ticks: {
-                                callback: function(value) {
-                                    return '₱' + value.toLocaleString();
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        display: true
+                                    },
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '₱' + value.toLocaleString();
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    }
                                 }
                             }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
                         }
-                    }
-                }
-            });
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching sales trends:', error);
+                    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                    ctx.fillStyle = '#fef2f2';
+                    ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                    ctx.fillStyle = '#dc2626';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Failed to load sales data', ctx.canvas.width / 2, ctx.canvas.height / 2);
+                });
         }
 
         function updateSalesTrendChart(period) {
-            if (window.salesTrendChart) {
-                window.salesTrendChart.destroy();
-            }
             initSalesTrendChart(period);
         }
     </script>

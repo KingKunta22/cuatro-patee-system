@@ -104,6 +104,11 @@ Route::resource('customers', CustomerController::class)->middleware('auth');
 
 
 
+// API route for sales trends data
+Route::get('/dashboard/sales-trends', [DashboardController::class, 'getSalesTrends'])->name('dashboard.sales-trends')->middleware('auth');
+
+
+
 
 
 
