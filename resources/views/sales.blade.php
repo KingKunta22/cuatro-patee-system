@@ -82,7 +82,6 @@
                     <tr class="rounded-lg">
                         <th class="bg-main px-4 py-3">Invoice Number</th>
                         <th class="bg-main px-4 py-3">Date</th>
-                        <th class="bg-main px-4 py-3">Customer Name</th>
                         <th class="bg-main px-4 py-3">Total Amount</th>
                         <th class="bg-main px-4 py-3">Items</th>
                         <th class="bg-main px-4 py-3">Action</th>
@@ -93,7 +92,6 @@
                     <tr class="border-b">
                         <td class="px-2 py-2 text-center">{{ $sale->invoice_number }}</td>
                         <td class="px-2 py-2 text-center">{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</td>
-                        <td class="px-2 py-2 text-center">{{ $sale->customer_name }}</td>
                         <td class="px-2 py-2 text-center">₱{{ number_format($sale->total_amount, 2) }}</td>
                         <td class="px-2 py-2 text-center">{{ $sale->items->count() }} items</td>
                         <td class="truncate px-2 py-2 text-center flex justify-center items-center">
@@ -212,17 +210,6 @@
 
                         <!-- Hidden inventory ID -->
                         <input type="hidden" id="selectedInventoryId" name="inventory_id">
-                    </div>
-                    
-                    <!-- Customer Dropdown -->
-                    <div class="container text-start flex col-span-2 w-full flex-col">
-                        <label for="customerName">Customer</label>
-                        <select name="customerName" id="customerName" class="px-3 py-2 border rounded-sm border-black" required>
-                            <option value="" disabled selected>Select Customer</option>
-                            @foreach($customers as $customer)
-                                <option value="{{ $customer->customerName }}">{{ $customer->customerName }}</option>
-                            @endforeach
-                        </select>
                     </div>
 
                     <!-- Other inputs (unchanged) -->
@@ -364,10 +351,6 @@
                                 <p class="text-sm">{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</p>
                             </div>
                             <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-md">Customer Name</p>
-                                <p class="text-sm">{{ $sale->customer_name }}</p>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-md">
                                 <p class="font-semibold text-md">Items Count</p>
                                 <p class="text-sm">{{ $sale->items->count() }} items</p>
                             </div>
@@ -464,19 +447,6 @@
                 <form action="{{ route('sales.update', $sale->id) }}" method="POST" class="px-6 py-4 container grid grid-cols-4 gap-x-8 gap-y-6">
                     @csrf
                     @method('PUT')
-
-                    <!-- Customer -->
-                    <div class="container text-start flex col-span-2 flex-col">
-                        <label for="customerName">Customer</label>
-                        <select name="customerName" class="w-full px-3 py-2 border rounded-sm" required>
-                            <option value="" disabled>Select Customer</option>
-                            @foreach($customers as $customer)
-                                <option value="{{ $customer->customerName }}" {{ $sale->customer_name === $customer->customerName ? 'selected' : '' }}>
-                                    {{ $customer->customerName }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
 
                     <!-- Sale Date -->
                     <x-form.form-input label="Sale Date" name="sale_date" type="date"
@@ -626,34 +596,6 @@
                 }
             }
             
-            // Function to lock customer field only (not cash)
-            function lockCustomerField() {
-                if (itemsAdded) {
-                    document.getElementById('customerName').setAttribute('disabled', 'disabled');
-                    
-                    // Add hidden field to ensure customer value is submitted
-                    const customerValue = document.getElementById('customerName').value;
-                    
-                    let hiddenCustomer = document.getElementById('hiddenCustomerName');
-                    if (!hiddenCustomer) {
-                        hiddenCustomer = document.createElement('input');
-                        hiddenCustomer.type = 'hidden';
-                        hiddenCustomer.name = 'customerName';
-                        hiddenCustomer.id = 'hiddenCustomerName';
-                        document.getElementById('addSales').appendChild(hiddenCustomer);
-                    }
-                    hiddenCustomer.value = customerValue;
-                }
-            }
-            
-            // Function to unlock customer field
-            function unlockCustomerField() {
-                document.getElementById('customerName').removeAttribute('disabled');
-                
-                // Remove hidden field
-                const hiddenCustomer = document.getElementById('hiddenCustomerName');
-                if (hiddenCustomer) hiddenCustomer.remove();
-            }
             
             // Store original product data for stock management
             let originalProducts = {{ Js::from($inventories) }};
@@ -722,13 +664,6 @@
                     return;
                 }
 
-                // Check if customer is filled
-                const customerName = document.getElementById('customerName').value;
-                if (!customerName) {
-                    Toast.error('Please select a customer first');
-                    return;
-                }
-
                 // Find if item already in cart
                 const existingItemIndex = cart.findIndex(item => item.inventory_id === inventoryId);
                 const currentQuantityInCart = existingItemIndex >= 0 ? cart[existingItemIndex].quantity : 0;
@@ -769,7 +704,6 @@
                 updateSaleItemsForm();
 
                 itemsAdded = true;
-                lockCustomerField();
 
                 // Reset product selection fields
                 document.getElementById('productName').value = '';
@@ -894,11 +828,6 @@
                 // Recalculate change
                 calculateChange();
                 
-                // If cart is empty, unlock customer field
-                if (cart.length === 0) {
-                    itemsAdded = false;
-                    unlockCustomerField();
-                }
             }
             
             // Function to validate form before submission
@@ -927,8 +856,7 @@
             
             // Function to reset the form properly
             function resetForm() {
-                // Reset customer and payment fields
-                document.querySelector('[name="customerName"]').value = '';
+                // Reset payment fields
                 document.querySelector('[name="salesCash"]').value = '';
                 document.querySelector('[name="salesChange"]').value = '0.00';
                 
@@ -953,7 +881,6 @@
                 
                 // Unlock fields
                 itemsAdded = false;
-                unlockCustomerField();
                 
                 // Reset product data
                 currentProducts = JSON.parse(JSON.stringify(originalProducts));

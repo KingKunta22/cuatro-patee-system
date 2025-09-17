@@ -28,19 +28,15 @@ class SalesController extends Controller
         
         // Get inventories for the product dropdown
         $inventories = Inventory::all();
-        
-        // Get customers for the customer dropdown
-        $customers = Customer::all();
-        
-        return view('sales', compact('sales', 'totalRevenue', 'totalCost', 'totalProfit', 'inventories', 'customers'));
+
+        return view('sales', compact('sales', 'totalRevenue', 'totalCost', 'totalProfit', 'inventories'));
     }
 
     // Show form to create new sale
     public function create()
     {
         $inventories = Inventory::all();
-        $customers = Customer::all();
-        return view('sales.create', compact('inventories', 'customers'));
+        return view('sales.create', compact('inventories'));
     }
 
     // Generate sequential invoice number
@@ -162,7 +158,6 @@ class SalesController extends Controller
     public function edit($id)
     {
         $sale = Sale::with(['items.inventory', 'customer'])->findOrFail($id);
-        $customers = Customer::all();
         
         return view('sales.edit', compact('sale', 'customers'));
     }
