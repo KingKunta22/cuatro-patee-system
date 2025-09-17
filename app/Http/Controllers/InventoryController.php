@@ -56,7 +56,9 @@ class InventoryController extends Controller
             });
         }
 
-        $inventoryItems = $query->orderBy('created_at', 'DESC')
+        // Current implementation shows all batches
+        $inventoryItems = $query->orderBy('productSKU')
+            ->orderBy('productExpirationDate', 'ASC') // Show oldest first
             ->paginate(7)
             ->withQueryString();
 
@@ -91,10 +93,7 @@ class InventoryController extends Controller
 
     public function store(Request $request)
     {
-        // Generate SKU first
-        $newSKU = $this->generateSKU();
-        
-        // Determine which method we're using
+        // Determine which method will be used first
         $addMethod = $request->input('add_method');
         
         // Define base validation rules
@@ -134,6 +133,54 @@ class InventoryController extends Controller
 
         $validated = $request->validate($validationRules);
 
+        // For PO method, calculate actual stock FIRST
+        if ($addMethod === 'po') {
+            $poItem = PurchaseOrderItem::find($validated['selectedItemId']);
+            $totalQuantity = $poItem->quantity;
+            $badItemCount = ($validated['productQuality'] !== 'goodCondition') 
+                ? ($validated['badItemQuantity'] ?? 0) 
+                : 0;
+            
+            $actualStock = $totalQuantity - $badItemCount;
+            
+            if ($actualStock < 0) {
+                return back()->withInput()->withErrors([
+                    'error' => 'Bad items cannot exceed total quantity'
+                ]);
+            }
+            
+            if ($actualStock === 0) {
+                return back()->withInput()->withErrors([
+                    'error' => 'Cannot add product with zero stock'
+                ]);
+            }
+        }
+
+        // Generate SKU based on product details (AFTER validation)
+        $productName = $validated[$fieldPrefix . 'productName'];
+        $productBrand = $validated[$fieldPrefix . 'productBrand'];
+        $productCategory = $validated[$fieldPrefix . 'productCategory'];
+        
+        $newSKU = $this->generateSKU($productName, $productBrand, $productCategory);
+        
+        // Generate batch number (YYYYMMDD-XXX format)
+        $batchNumber = date('Ymd') . '-' . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+        
+        // Check if this exact batch already exists (same SKU + same expiration)
+        $existingBatch = Inventory::where('productSKU', $newSKU)
+            ->where('productExpirationDate', $validated[$fieldPrefix . 'productExpirationDate'])
+            ->first();
+        
+        if ($existingBatch) {
+            // If batch exists, update stock
+            $stockToAdd = ($addMethod === 'po') ? $actualStock : $validated[$fieldPrefix . 'productStock'];
+            $existingBatch->update([
+                'productStock' => $existingBatch->productStock + $stockToAdd
+            ]);
+            
+            return redirect()->route('inventory.index')->with('success', 'Product stock updated successfully!');
+        }
+
         // Start a database transaction
         DB::beginTransaction();
 
@@ -157,12 +204,13 @@ class InventoryController extends Controller
                 }
             }
 
-            // Map fields to database fields using the appropriate prefix
+            // Map fields to database fields
             $inventoryData = [
-                'productName' => $validated[$fieldPrefix . 'productName'],
+                'productName' => $productName,
                 'productSKU' => $newSKU,
-                'productBrand' => $validated[$fieldPrefix . 'productBrand'],
-                'productCategory' => $validated[$fieldPrefix . 'productCategory'],
+                'productBatch' => $batchNumber,
+                'productBrand' => $productBrand,
+                'productCategory' => $productCategory,
                 'productStock' => ($addMethod === 'po') ? $actualStock : $validated[$fieldPrefix . 'productStock'],
                 'productSellingPrice' => $validated[$fieldPrefix . 'productSellingPrice'],
                 'productCostPrice' => $validated[$fieldPrefix . 'productCostPrice'],
@@ -180,8 +228,6 @@ class InventoryController extends Controller
             }
 
             // Calculate profit margin
-            $profitMargin = 0;
-            // Calculate profit (absolute amount)
             $profitMargin = $inventoryData['productSellingPrice'] - $inventoryData['productCostPrice'];
             $inventoryData['productProfitMargin'] = round($profitMargin, 2);
 
@@ -217,23 +263,27 @@ class InventoryController extends Controller
     }
 
 
-    private function generateSKU()
+    private function generateSKU($productName, $productBrand, $productCategory)
     {
-        // Generate a unique SKU with format: INV-YYYYMM-XXXX
-        $date = now()->format('Ym'); // Gets current date in YYYYMM format
-        $lastInventory = Inventory::where('productSKU', 'like', "INV-{$date}-%")
-                                ->orderBy('productSKU', 'desc')
-                                ->first();
+        // Create a base SKU from product details (same for all batches of this product)
+        $base = substr(strtoupper(preg_replace('/[^a-z0-9]/i', '', $productName)), 0, 3);
+        $brand = substr(strtoupper(preg_replace('/[^a-z0-9]/i', '', $productBrand)), 0, 2);
+        $category = substr(strtoupper(preg_replace('/[^a-z0-9]/i', '', $productCategory)), 0, 2);
         
-        if ($lastInventory) {
-            // Extract the sequence number from the last SKU
-            $lastSequence = (int) substr($lastInventory->productSKU, -4);
-            $sequence = str_pad($lastSequence + 1, 4, '0', STR_PAD_LEFT);
-        } else {
-            $sequence = '0001';
+        $baseSKU = "{$base}-{$brand}-{$category}";
+        
+        // Check if this product already exists in inventory
+        $existingProduct = Inventory::where('productName', $productName)
+            ->where('productBrand', $productBrand)
+            ->where('productCategory', $productCategory)
+            ->first();
+        
+        if ($existingProduct) {
+            // Use the same SKU as existing product
+            return $existingProduct->productSKU;
         }
         
-        return "INV-{$date}-{$sequence}";
+        return $baseSKU;
     }
 
     public function update(Request $request, Inventory $inventory) 
@@ -241,8 +291,8 @@ class InventoryController extends Controller
         // Validate Requests - Use string validation instead of hardcoded in: values
         $validated = $request->validate([
             'productName' => 'required|string|max:255',
-            'productBrand' => 'required|string|max:255', // Changed from hardcoded in: values
-            'productCategory' => 'required|string|max:255', // Changed from hardcoded in: values
+            'productBrand' => 'required|string|max:255', 
+            'productCategory' => 'required|string|max:255', 
             'productStock' => 'required|numeric|min:0',
             'productSellingPrice' => 'required|numeric|min:0',
             'productCostPrice' => 'required|numeric|min:0',

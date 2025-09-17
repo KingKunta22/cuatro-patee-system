@@ -9,8 +9,9 @@ class Inventory extends Model
     protected $fillable = [
         'productName',
         'productSKU',
-        'productBrand', // Keep as text field
-        'productCategory', // Keep as text field
+        'productBatch',
+        'productBrand', // Text field
+        'productCategory', // Text field
         'productStock',
         'productSellingPrice',
         'productCostPrice',

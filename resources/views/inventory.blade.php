@@ -98,7 +98,7 @@
                     @endif
                 </form>
 
-                <!-- Your existing create button - SEPARATE FROM THE FILTER FORM -->
+                <!-- SEPARATE FROM THE FILTER FORM -->
                 <x-form.createBtn @click="$refs.addProductRef.showModal()">Add New Product</x-form.createBtn>
             </div>
         </section>
@@ -111,6 +111,7 @@
                         <th class=" bg-main px-4 py-3">Product Name</th>
                         <th class=" bg-main px-4 py-3">Category</th>
                         <th class=" bg-main px-4 py-3">SKU</th>
+                        <th class=" bg-main px-4 py-3">Batch</th>
                         <th class=" bg-main px-4 py-3">Brand</th>
                         <th class=" bg-main px-4 py-3">Price</th>
                         <th class=" bg-main px-4 py-3">Stock</th>
@@ -119,12 +120,15 @@
                         <th class=" bg-main px-4 py-3">Action</th>
                     </tr>
                 </thead>
+
                 @foreach($inventoryItems as $item)
+
                 <tbody>
                     <tr class="border-b">
                         <td class="truncate px-2 py-2 text-center" title="{{ $item->productName }}">{{ $item->productName }}</td>
                         <td class="truncate px-2 py-2 text-center" title="{{ $item->productCategory }}">{{ $item->productCategory }}</td>
                         <td class="truncate px-2 py-2 text-center" title="{{ $item->productSKU }}">{{ $item->productSKU }}</td>
+                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productBatch }}">{{ $item->productBatch }}</td>
                         <td class="truncate px-2 py-2 text-center" title="{{ $item->productBrand}}">{{ $item->productBrand}}</td>
                         <td class="truncate px-2 py-2 text-center" title="{{ $item->productSellingPrice }}">₱{{ $item->productSellingPrice }}</td>
                         <td class="truncate px-2 py-2 text-center" title="{{ $item->productStock }}">{{ $item->productStock }}</td>
@@ -154,86 +158,91 @@
                     </tr>
                 </tbody>
 
+
                 <!-- VIEW INVENTORY DETAILS MODAL PER PRODUCT-->
-            <x-modal.createModal x-ref="viewInventoryDetails{{ $item->id }}">
-                <x-slot:dialogTitle>Product Details</x-slot:dialogTitle>
-                
-                <div class="grid grid-cols-2 gap-6 p-6">
+                <x-modal.createModal x-ref="viewInventoryDetails{{ $item->id }}">
+                    <x-slot:dialogTitle>Product Details</x-slot:dialogTitle>
+                    
+                    <div class="grid grid-cols-2 gap-6 p-6">
 
-                    <!-- LEFT: IMAGE -->
-                    <div class="flex flex-col items-center justify-center">
-                        <!-- Product name bigger -->
-                        <h2 class="text-3xl tracking-wide font-bold text-start mr-auto uppercase pb-4 text-gray-800">{{ $item->productName }}</h2>
+                        <!-- LEFT: IMAGE -->
+                        <div class="flex flex-col items-center justify-center">
+                            <!-- Product name bigger -->
+                            <h2 class="text-3xl tracking-wide font-bold text-start mr-auto uppercase pb-4 text-gray-800">{{ $item->productName }}</h2>
 
-                        <img src="{{ asset('storage/' . $item->productImage) }}" 
-                            alt="{{ $item->productName }}" 
-                            class="w-full max-h-80 object-contain rounded-xl shadow-lg border">
-                    </div>
+                            <img src="{{ asset('storage/' . $item->productImage) }}" 
+                                alt="{{ $item->productName }}" 
+                                class="w-full max-h-80 object-contain rounded-xl shadow-lg border">
+                        </div>
 
-                    <!-- RIGHT: DETAILS -->
-                    <div class="flex flex-col space-y-4">
+                        <!-- RIGHT: DETAILS -->
+                        <div class="flex flex-col space-y-4">
 
-                        <!-- Info grid -->
-                        <div class="grid grid-cols-4 gap-3">
-                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                <p class="font-semibold text-md">SKU</p>
-                                <p class="text-sm">{{ $item->productSKU }}</p>
-                            </div>
-                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                <p class="font-semibold text-md">Brand</p>
-                                <p class="text-sm">{{ $item->productBrand }}</p>
-                            </div>
-                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                <p class="font-semibold text-md">Stock</p>
-                                <p class="text-sm">{{ $item->productStock }}</p>
-                            </div>
-                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                <p class="font-semibold text-md">Measurement</p>
-                                <p class="text-sm">{{ $item->productItemMeasurement }}</p>
-                            </div>
-                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                <p class="font-semibold text-md">Category</p>
-                                <p class="text-sm">{{ $item->productCategory }}</p>
-                            </div>
-                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                <p class="font-semibold text-md">Selling Price</p>
-                                <p class="text-sm">₱{{ number_format($item->productSellingPrice, 2) }}</p>
-                            </div>
-                            <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                <p class="font-semibold text-md">Cost Price</p>
-                                <p class="text-sm">₱{{ number_format($item->productCostPrice, 2) }}</p>
-                            </div>
-                            <div class="bg-gray-50 col-span-3 p-3 rounded-md">
-                                <p class="font-semibold text-md">Expiration Date</p>
-                                <p class="text-sm">
-                                    {{ \Carbon\Carbon::parse($item->productExpirationDate)->format('M d, Y') }}
-                                    ({{ \Carbon\Carbon::parse($item->productExpirationDate)->diffForHumans() }})
-                                </p>
+                            <!-- Info grid -->
+                            <div class="grid grid-cols-4 gap-3">
+                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                    <p class="font-semibold text-md">SKU</p>
+                                    <p class="text-sm">{{ $item->productSKU }}</p>
+                                </div>
+                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                    <p class="font-semibold text-md">Batch</p>
+                                    <p class="text-sm">{{ $item->productBatch }}</p>
+                                </div>
+                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                    <p class="font-semibold text-md">Brand</p>
+                                    <p class="text-sm">{{ $item->productBrand }}</p>
+                                </div>
+                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                    <p class="font-semibold text-md">Stock</p>
+                                    <p class="text-sm">{{ $item->productStock }}</p>
+                                </div>
+                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                    <p class="font-semibold text-md">Measurement</p>
+                                    <p class="text-sm">{{ $item->productItemMeasurement }}</p>
+                                </div>
+                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                    <p class="font-semibold text-md">Category</p>
+                                    <p class="text-sm">{{ $item->productCategory }}</p>
+                                </div>
+                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                    <p class="font-semibold text-md">Selling Price</p>
+                                    <p class="text-sm">₱{{ number_format($item->productSellingPrice, 2) }}</p>
+                                </div>
+                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                                    <p class="font-semibold text-md">Cost Price</p>
+                                    <p class="text-sm">₱{{ number_format($item->productCostPrice, 2) }}</p>
+                                </div>
+                                <div class="bg-gray-50 col-span-3 p-3 rounded-md">
+                                    <p class="font-semibold text-md">Expiration Date</p>
+                                    <p class="text-sm">
+                                        {{ \Carbon\Carbon::parse($item->productExpirationDate)->format('M d, Y') }}
+                                        ({{ \Carbon\Carbon::parse($item->productExpirationDate)->diffForHumans() }})
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- ACTION BUTTONS -->
-                <div class="flex justify-between items-center gap-x-4 px-6 pb-4 mt-4 border-t pt-4">
-                    <!-- EDIT BUTTON: Opens edit dialog -->
-                    <button 
-                        @click="$refs['editProductDetails{{ $item->id }}'].showModal()" 
-                        class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/60 transition-all duration-100 ease-in">
-                        Edit
-                    </button>
+                    <!-- ACTION BUTTONS -->
+                    <div class="flex justify-between items-center gap-x-4 px-6 pb-4 mt-4 border-t pt-4">
+                        <!-- EDIT BUTTON: Opens edit dialog -->
+                        <button 
+                            @click="$refs['editProductDetails{{ $item->id }}'].showModal()" 
+                            class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/60 transition-all duration-100 ease-in">
+                            Edit
+                        </button>
 
-                    <!-- DELETE BUTTON: Opens delete dialog -->
-                    <x-form.closeBtn @click="$refs['confirmDeleteModal{{ $item->id }}'].showModal()">Delete</x-form.closeBtn>
+                        <!-- DELETE BUTTON: Opens delete dialog -->
+                        <x-form.closeBtn @click="$refs['confirmDeleteModal{{ $item->id }}'].showModal()">Delete</x-form.closeBtn>
 
-                    <!-- CLOSE BUTTON: Closes view details dialog -->
-                    <button 
-                        @click="$refs['viewInventoryDetails{{ $item->id }}'].close()" 
-                        class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
-                        Close
-                    </button>
-                </div>
-            </x-modal.createModal>
+                        <!-- CLOSE BUTTON: Closes view details dialog -->
+                        <button 
+                            @click="$refs['viewInventoryDetails{{ $item->id }}'].close()" 
+                            class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
+                            Close
+                        </button>
+                    </div>
+                </x-modal.createModal>
 
                 @endforeach
             </table>
@@ -256,7 +265,7 @@
 
             <!-- RADIO OPTION TO CHOOSE BETWEEN ADD MANUALLY (DEFAULT) OR REFERENCED -->
             <div x-data="{ addMethod: 'manual' }" class="grid grid-cols-6 px-3 py-4">
-                <div class="container mb-4 col-span-6 font-semibold">
+                <div class="container mb-4 col-span-6 font-semibold flex">
                     <label class="cursor-pointer">
                         <input type="radio" name="addMethod" value="manual" x-model="addMethod">
                         Add Manually
@@ -265,6 +274,10 @@
                         <input type="radio" name="addMethod" value="po" x-model="addMethod">
                         Add from Purchase Order
                     </label>
+                    
+                    <div class="ml-auto">
+                        <p class="text-sm text-gray-600">Batch will be automatically generated</p>
+                    </div>
                 </div>
 
                 <!-- FORM WRAPS EVERYTHING -->
@@ -275,9 +288,12 @@
                     <!-- MANUAL SECTION -->
                     <section class="grid grid-cols-6 col-span-6 justify-end gap-4" 
                             x-show="addMethod === 'manual'"
-                            x-data>
+                            x-data="{ sellingPrice: 0, costPrice: 0 }">
+
                         <!-- ALL MANUAL FIELDS -->
+
                         <x-form.form-input label="Product Name"  name="manual_productName" type="text" value="" class="col-span-3" x-bind:required="addMethod === 'manual'"/>
+                        
                         <!-- Brand Dropdown in Add Form -->
                         <div class='container flex flex-col text-start col-span-3'>
                             <label for="manual_productBrand">Product Brand</label>
@@ -306,13 +322,11 @@
 
                         <x-form.form-input label="Selling Price (₱)" name="manual_productSellingPrice" value="" class="col-span-2" 
                                             type="number" step="1" min="0"
-                                            x-bind:required="addMethod === 'manual'"
-                                            x-model="sellingPrice"/>
+                                            x-bind:required="addMethod === 'manual'"/>
 
                         <x-form.form-input label="Cost Price (₱)" name="manual_productCostPrice" value="" class="col-span-2" 
                                             type="number" step="1" min="0"
-                                            x-bind:required="addMethod === 'manual'"
-                                            x-model="costPrice"/>
+                                            x-bind:required="addMethod === 'manual'"/>
 
                         
                         <div class="container text-start flex col-span-2 w-full flex-col">
@@ -401,6 +415,7 @@
                                     }
                                 }
                             }">
+
 
                         <!-- PO Number Dropdown -->
                         <div class="container text-start flex col-span-3 w-full flex-col font-semibold">
@@ -526,6 +541,27 @@
                         </div>
                     </section>
 
+                    <!-- PREVIEW TABLE FOR ADDED PRODUCTS -->
+                    <div class="border w-auto rounded-md border-solid border-black col-span-7">
+                        <table class="w-full">
+                            <thead class="rounded-lg bg-main text-white px-2 py-1">
+                                <tr class="rounded-lg text-sm">
+                                    <th class="bg-main px-2 py-2">Item/s</th>
+                                    <th class="bg-main px-2 py-2">Quantity</th>
+                                    <th class="bg-main px-2 py-2">Exp Date</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cartItems">
+                                <!-- Cart items will be added here dynamically -->
+                                <tr id="emptyCartMessage">
+                                    <td colspan="4" class="text-center py-4 text-gray-500">
+                                        No items added yet. Add items above to preview the items.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
                     <!-- FORM BUTTONS -->
                     <div class="col-span-6 place-items-end flex justify-end gap-4">
                         <x-form.closeBtn type="button" @click="$refs.cancelAddProduct.showModal()">Cancel</x-form.closeBtn>
@@ -538,6 +574,7 @@
                         </x-form.saveBtn>
                     </div>
                 </form>
+
             </div>
         </x-modal.createModal>
 
@@ -641,15 +678,11 @@
                         <!-- Rest of fields below (full-width layout) -->
                         <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" 
                             value="{{ $item->productSellingPrice }}" class="col-span-2" 
-                            type="number" step="0.01" min="0" required
-                            x-model="sellingPrice"
-                            @input="calculateProfitMargin()"/>
+                            type="number" step="0.01" min="0" required />
 
                         <x-form.form-input label="Cost Price (₱)" name="productCostPrice" 
                             value="{{ $item->productCostPrice }}" class="col-span-2" 
-                            type="number" step="0.01" min="0" required
-                            x-model="costPrice"
-                            @input="calculateProfitMargin()"/>
+                            type="number" step="0.01" min="0" required />
 
                         <div class="flex flex-col text-start col-span-3">
                             <label for="itemMeasurement" class="font-medium">Measurement per item</label>
