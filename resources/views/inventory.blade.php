@@ -513,9 +513,6 @@
                                                 class="col-span-2" readonly
                                                 x-model="costPrice"/>
 
-                            <x-form.form-input label="Profit (₱)" name="productProfitMargin" type="text" value="" 
-                                                class="col-span-2" readonly
-                                                x-model="profitMargin"/>
 
                             <div class="container text-start flex col-span-2 w-full flex-col relative">
                                 <label for="productQuality">Quality Status</label>
