@@ -35,37 +35,13 @@
         
         <!-- SEARCH BAR AND CREATE BUTTON -->
         <div class="w-full flex items-center justify-between mb-4">
-            <!-- SEARCH BAR -->
-            <form action="" method="GET" class="flex items-center gap-4 mr-auto">
-                <input type="hidden" name="timePeriod" value="{{ $timePeriod ?? 'all' }}">
-                <input type="hidden" name="tab" x-model="activeTab">
-                <div class="relative">
-                    <input 
-                        type="text" 
-                        name="search" 
-                        value="{{ request('search') }}"
-                        placeholder="Search reports..." 
-                        class="pl-10 pr-4 py-2 border border-black rounded-md w-64"
-                        autocomplete="off"
-                    >
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-
-                <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                    Search
-                </button>
-
-                @if(request('search'))
-                    <a href="{{ route('reports.index', ['tab' => request('tab', 'product'), 'timePeriod' => $timePeriod ?? 'all']) }}" 
-                       class="text-white px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">
-                        Clear
-                    </a>
-                @endif
-            </form>
+            <!-- PAGE TITLE -->
+            <div class="font-bold text-xl text-gray-800 whitespace-nowrap"
+                x-text="activeTab === 'product' ? 'Product Movements Report'
+                    : activeTab === 'sales' ? 'Sales Report'
+                    : activeTab === 'inventory' ? 'Inventory Report'
+                    : 'Purchase Order Report'">
+            </div>
 
             <!-- RIGHT SIDE: Time Period Dropdown -->
             <div class="relative">
@@ -114,14 +90,6 @@
                 class="w-40 text-center font-bold text-xs py-3 uppercase rounded transition">
                     PO Reports
                 </a>
-            </div>
-
-            <!-- PAGE TITLE -->
-            <div class="font-bold text-xl uppercase text-gray-800 ml-6 whitespace-nowrap"
-                x-text="activeTab === 'product' ? 'Product Movements Report'
-                    : activeTab === 'sales' ? 'Sales Report'
-                    : activeTab === 'inventory' ? 'Inventory Report'
-                    : 'Purchase Order Report'">
             </div>
         </div>
 
