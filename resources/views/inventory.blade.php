@@ -307,14 +307,12 @@
                         <x-form.form-input label="Selling Price (₱)" name="manual_productSellingPrice" value="" class="col-span-2" 
                                             type="number" step="1" min="0"
                                             x-bind:required="addMethod === 'manual'"
-                                            x-model="sellingPrice"
-                                            @input="calculateProfitMargin()"/>
+                                            x-model="sellingPrice"/>
 
                         <x-form.form-input label="Cost Price (₱)" name="manual_productCostPrice" value="" class="col-span-2" 
                                             type="number" step="1" min="0"
                                             x-bind:required="addMethod === 'manual'"
-                                            x-model="costPrice"
-                                            @input="calculateProfitMargin()"/>
+                                            x-model="costPrice"/>
 
                         
                         <div class="container text-start flex col-span-2 w-full flex-col">
@@ -486,8 +484,7 @@
 
                             <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" class="col-span-2" 
                                                 x-bind:required="addMethod === 'po'"
-                                                x-model="sellingPrice"
-                                                @input="calculateProfitMargin()"/>
+                                                x-model="sellingPrice"/>
 
                             <x-form.form-input label="Cost Price (₱)" name="productCostPrice" type="number" value="" 
                                                 class="col-span-2" readonly
@@ -585,18 +582,7 @@
                 <div class="container px-3 py-4">
                     <form id="updateInventoryForm{{ $item->id }}" action="{{ route('inventory.update', $item->id) }}" method="POST" enctype="multipart/form-data"
                         class="px-6 py-4 container grid grid-cols-6 gap-x-8 gap-y-6"
-                        x-data="{
-                            sellingPrice: {{ $item->productSellingPrice }},
-                            costPrice: {{ $item->productCostPrice }},
-                            profitMargin: '{{ $item->productProfitMargin }}',
-                            calculateProfitMargin() {
-                                if (this.costPrice > 0 && this.sellingPrice > 0) {
-                                    this.profitMargin = '₱' + (this.sellingPrice - this.costPrice).toFixed(2);
-                                } else {
-                                    this.profitMargin = '₱' + 0;
-                                }
-                            }
-                        }">
+                        x-data>
                         @csrf
                         @method('PUT')
 
@@ -664,11 +650,6 @@
                             type="number" step="0.01" min="0" required
                             x-model="costPrice"
                             @input="calculateProfitMargin()"/>
-
-                        <x-form.form-input label="Profit Margin (%)" name="productProfitMargin" 
-                            :value="$item->productProfitMargin" class="col-span-2" 
-                            type="text" readonly
-                            x-model="profitMargin"/>
 
                         <div class="flex flex-col text-start col-span-3">
                             <label for="itemMeasurement" class="font-medium">Measurement per item</label>
