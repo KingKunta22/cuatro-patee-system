@@ -129,14 +129,47 @@
 
         <!-- Middle Section: Stock Levels, Low Stock, Expiring -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8" style="min-height: 380px;">
+
             <!-- Stock Level Pie Chart -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col">
+            <div class="bg-white rounded-xl shadow-sm pb-0 p-6 border border-gray-100 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">Stock Level</h2>
                     <span class="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">{{ $inStock + $lowStock + $outOfStock }} products</span>
                 </div>
-                <div class="flex-1 flex items-center justify-center">
-                    <canvas id="stockLevelChart" class="w-full h-full"></canvas>
+                
+                <!-- Pie Chart -->
+                <div class="h-52 flex items-between justify-center">
+                    <canvas id="stockLevelChart" class="w-full h-full max-w-xs"></canvas>
+                </div>
+                
+                <!-- Stock Information Below the Chart -->
+                <div class="grid grid-cols-3 gap-4 my-auto pt-8 border-t border-gray-200">
+                    <!-- In Stock -->
+                    <div class="flex flex-col items-center">
+                        <div class="flex items-center mb-2">
+                            <div class="w-3 h-3 bg-green-500 mr-2"></div>
+                            <span class="text-xs font-medium text-gray-700">In Stock</span>
+                        </div>
+                        <span class="text-xs font-bold text-gray-900">{{ $inStock }} items</span>
+                    </div>
+                    
+                    <!-- Low Stock -->
+                    <div class="flex flex-col items-center">
+                        <div class="flex items-center mb-2">
+                            <div class="w-3 h-3 bg-amber-500 mr-2"></div>
+                            <span class="text-xs font-medium text-gray-700">Low Stock</span>
+                        </div>
+                        <span class="text-xs font-bold text-gray-900">{{ $lowStock }} items</span>
+                    </div>
+                    
+                    <!-- Out of Stock -->
+                    <div class="flex flex-col items-center">
+                        <div class="flex items-center mb-2">
+                            <div class="w-3 h-3 bg-red-500 mr-2"></div>
+                            <span class="text-xs font-medium text-gray-700">Out of Stock</span>
+                        </div>
+                        <span class="text-xs font-bold text-gray-900">{{ $outOfStock }} items</span>
+                    </div>
                 </div>
             </div>
 
@@ -159,7 +192,9 @@
                                 <h3 class="text-sm font-medium text-gray-800">{{ $product->productName }}</h3>
                             </div>
                         </div>
-                        <p class="text-xs text-red-400">{{ $product->productStock }} stocks left</p>
+                        <p class="text-xs text-red-400">
+                            {{ $product->productStock }} {{ $product->productStock > 1 ? ' stocks left' : 'stock left' }}
+                        </p>
                     </div>
                     @empty
                     <div class="text-center py-4 text-gray-500">
@@ -202,76 +237,75 @@
             </div>
         </div>
 
-        <!-- Top Selling Products Carousel -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-8">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-semibold text-gray-800">Top Selling Products</h2>
-                <div class="flex space-x-2">
-                    <button id="prevButton" class="top-selling-prev p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
-                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                        </svg>
-                    </button>
-                    <button id="nextButton" class="top-selling-next p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
-                        <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="relative">
-                <div class="top-selling-carousel overflow-hidden">
-                    <div class="flex -mx-3">
-                        @php $displayedProducts = $topSellingProducts->take(5); @endphp
-                        @forelse($displayedProducts as $index => $product)
-                        <div class="w-full md:w-1/2 lg:w-1/3 px-3 carousel-item">
-                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow h-32">
-                                <div class="flex items-center mb-3">
-                                    <div class="w-12 h-12 rounded-md bg-gray-200 flex items-center justify-center overflow-hidden">
-                                        @if($product->inventory && $product->inventory->productImage && Storage::disk('public')->exists($product->inventory->productImage))
-                                            <img src="{{ asset('storage/' . $product->inventory->productImage) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover">
-                                        @else
-                                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                            </svg>
-                                        @endif
-                                    </div>
-                                    <div class="ml-3">
-                                        @php
-                                            $productName = $product->product_name;
-                                            if (preg_match('/\((INV-\d+-\d+)\)/', $productName, $matches)) {
-                                                $sku = $matches[1];
-                                                $productName = trim(str_replace("($sku)", "", $productName));
-                                            } else {
-                                                $sku = $product->inventory->productSKU ?? 'N/A';
-                                            }
-                                        @endphp
-                                        <h3 class="text-sm font-medium text-gray-800">{{ $productName }}</h3>
-                                        <p class="text-xs text-gray-500">SKU: {{ $sku }}</p>
-                                    </div>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
-                                        Sold: {{ $product->total_sold }}
-                                    </span>
-                                    <span class="text-sm font-semibold text-gray-800">
-                                        ₱{{ number_format($product->unit_price ?? ($product->inventory->unit_price ?? 0), 2) }}
-                                    </span>
-                                </div>
+<!-- Top Selling Products Carousel -->
+<div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-8">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-lg font-semibold text-gray-800">Top Selling Products</h2>
+        <div class="flex space-x-2">
+            <button id="prevButton" class="top-selling-prev p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+            </button>
+            <button id="nextButton" class="top-selling-next p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors">
+                <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <div class="relative">
+        <div class="top-selling-carousel overflow-hidden">
+            <div class="flex transition-transform duration-300 ease-in-out">
+                @forelse($topSellingProducts as $index => $product)
+                <div class="w-1/3 flex-shrink-0 px-3 carousel-item">
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow h-48 flex flex-col">
+                        <div class="flex flex-col items-center mb-3 flex-grow">
+                            <div class="w-20 h-20 rounded-md bg-gray-200 flex items-center justify-center overflow-hidden mb-3">
+                                @if($product->inventory && $product->inventory->productImage && Storage::disk('public')->exists($product->inventory->productImage))
+                                    <img src="{{ asset('storage/' . $product->inventory->productImage) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover">
+                                @else
+                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                @endif
+                            </div>
+                            <div class="text-center">
+                                @php
+                                    $productName = $product->product_name;
+                                    if (preg_match('/\((INV-\d+-\d+)\)/', $productName, $matches)) {
+                                        $sku = $matches[1];
+                                        $productName = trim(str_replace("($sku)", "", $productName));
+                                    } else {
+                                        $sku = $product->inventory->productSKU ?? 'N/A';
+                                    }
+                                @endphp
+                                <h3 class="text-sm font-semibold text-gray-800 mb-1">{{ \Illuminate\Support\Str::limit($productName, 30) }}</h3>
+                                <p class="text-xs text-gray-500">SKU: {{ $sku }}</p>
                             </div>
                         </div>
-                        @empty
-                        <div class="w-full px-3">
-                            <div class="text-center py-6 text-gray-500">
-                                <p>No sales data available</p>
-                            </div>
+                        <div class="flex justify-between items-center mt-auto">
+                            <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                Sold: {{ $product->total_sold }}
+                            </span>
+                            <span class="text-sm font-semibold text-gray-800">
+                                ₱{{ number_format($product->unit_price ?? $product->inventory->unit_price ?? 0, 2) }}
+                            </span>
                         </div>
-                        @endforelse
                     </div>
                 </div>
+                @empty
+                <div class="w-full px-3">
+                    <div class="text-center py-6 text-gray-500">
+                        <p>No sales data available</p>
+                    </div>
+                </div>
+                @endforelse
             </div>
         </div>
+    </div>
+</div>
 
         <!-- Sales Trends Section -->
         <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
@@ -311,12 +345,12 @@
 
         function initCarousel() {
             const carousel = document.querySelector('.top-selling-carousel');
+            const track = carousel.querySelector('.flex');
             const items = document.querySelectorAll('.carousel-item');
             const prevBtn = document.getElementById('prevButton');
             const nextBtn = document.getElementById('nextButton');
             
             if (items.length <= 3) {
-                // Disable buttons if 3 or fewer items
                 prevBtn.disabled = true;
                 nextBtn.disabled = true;
                 prevBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -326,12 +360,11 @@
             
             let currentIndex = 0;
             const itemsToShow = 3;
-            const itemWidth = items[0].offsetWidth + 24; // width + margin
+            const itemWidth = items[0].offsetWidth;
             
             function updateCarousel() {
-                carousel.querySelector('.flex').style.transform = `translateX(-${currentIndex * itemWidth}px)`;
+                track.style.transform = `translateX(-${currentIndex * itemWidth}px)`;
                 
-                // Disable/enable buttons based on position
                 prevBtn.disabled = currentIndex === 0;
                 nextBtn.disabled = currentIndex >= items.length - itemsToShow;
                 
@@ -355,11 +388,12 @@
                 }
             });
             
-            // Initialize carousel
-            carousel.querySelector('.flex').style.transition = 'transform 0.3s ease';
+            track.style.transition = 'transform 0.3s ease';
             updateCarousel();
         }
 
+
+        // FUNCTION FOR THE PIE CHART
         function initStockLevelChart() {
             const ctx = document.getElementById('stockLevelChart').getContext('2d');
             new Chart(ctx, {
@@ -382,24 +416,18 @@
                     maintainAspectRatio: true,
                     plugins: {
                         legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: {
-                                    size: 11
-                                },
-                                padding: 15
-                            }
+                            display: false // Removes the legend completely
                         }
                     }
                 }
             });
         }
 
+
+        // FUNCTION FOR SALES TRENDS
         function initSalesTrendChart(period) {
             const ctx = document.getElementById('salesTrendChart').getContext('2d');
             
-            // This would be replaced with actual data from your controller
-            // For now, using sample data
             let labels, data;
             
             switch(period) {
