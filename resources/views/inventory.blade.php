@@ -327,10 +327,6 @@
                                             x-model="costPrice"
                                             @input="calculateProfitMargin()"/>
 
-                        <x-form.form-input label="Profit (₱)" name="" type="text" value="" 
-                                            class="col-span-2" 
-                                            readonly
-                                            x-model="profitMargin"/>
                         
                         <div class="container text-start flex col-span-2 w-full flex-col">
                             <label for="itemMeasurement">Measurement per item</label>
