@@ -57,10 +57,6 @@
                             <span class="text-red-600 bg-red-100 px-2 py-1 rounded-xl" title="This item is out of stock (0 units available)">
                                 Out of Stock
                             </span>
-                        @elseif ($inventory->productStock <= 5)
-                            <span class="text-red-600 bg-red-100 px-2 py-1 rounded-xl" title="This item has very low stock (only {{ $inventory->productStock }} units left)">
-                                Very Low Stock
-                            </span>
                         @elseif ($inventory->productStock <= 10)
                             <span class="text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl" title="This item has low stock (only {{ $inventory->productStock }} units left)">
                                 Low Stock

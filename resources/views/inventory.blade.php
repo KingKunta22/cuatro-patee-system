@@ -137,10 +137,6 @@
                                 <span class="text-red-600 bg-red-100 px-2 py-1 rounded-xl" title="This item is out of stock (0 units available)">
                                     Out of Stock
                                 </span>
-                            @elseif ($item->productStock <= 5)
-                                <span class="text-red-600 bg-red-100 px-2 py-1 rounded-xl" title="This item has very low stock (only {{ $item->productStock }} units left)">
-                                    Very Low Stock
-                                </span>
                             @elseif ($item->productStock <= 10)
                                 <span class="text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl" title="This item has low stock (only {{ $item->productStock }} units left)">
                                     Low Stock
@@ -260,7 +256,7 @@
         <!-- ============================================ -->
 
         <!-- MODAL FOR ADDING PRODUCT -->
-        <x-modal.createModal x-ref="addProductRef">
+        <x-modal.createModal x-ref="addProductRef" class="w-3/5">
             <x-slot:dialogTitle>Add Product</x-slot:dialogTitle>
 
             <div x-data="{
@@ -292,7 +288,7 @@
                     return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
                 }
             }" class="px-3 py-4">
-                <div class="container mb-4 font-semibold flex">
+                <div class="container mb-3 font-semibold flex">
                     <label class="cursor-pointer">
                         <input type="radio" name="addMethod" value="manual" x-model="addMethod">
                         Add Manually
@@ -312,11 +308,14 @@
                     <section x-show="addMethod === 'manual'" class="space-y-6">
                         <!-- PRODUCT DETAILS -->
                         <div class="bg-gray-50 p-4 rounded-md">
-                            <h3 class="font-semibold text-lg mb-4">Product Details</h3>
-                            <div class="grid grid-cols-2 gap-4">
-                                <x-form.form-input label="Product Name" name="manual_productName" type="text" value="" x-bind:required="addMethod === 'manual'"/>
-                                
-                                <div class='flex flex-col text-start'>
+                            <h3 class="text-lg font-semibold mb-3">Product Details</h3>
+                            <div class="grid grid-cols-6 gap-4">
+
+                                {{-- LABEL FOR PRODUCT NAME --}}
+                                <x-form.form-input label="Product Name" class="col-span-3" name="manual_productName" type="text" value="" x-bind:required="addMethod === 'manual'"/>
+
+                                {{-- LABEL FOR PRODUCT BRAND --}}
+                                <div class='flex flex-col text-start col-span-3'>
                                     <label for="manual_productBrand">Product Brand</label>
                                     <select name="manual_productBrand" id="manual_productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
                                         <option value="" disabled selected>Select Brand</option>
@@ -326,7 +325,8 @@
                                     </select>
                                 </div>
 
-                                <div class="flex flex-col text-start">
+                                {{-- LABEL FOR PRODUCT CATEGORY --}}
+                                <div class="container flex flex-col text-start col-span-2">
                                     <label for="manual_productCategory">Product Category</label>
                                     <select name="manual_productCategory" id="manual_productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
                                         <option value="" disabled selected>Select Category</option>
@@ -336,7 +336,8 @@
                                     </select>
                                 </div>
 
-                                <div class="flex flex-col text-start">
+                                {{-- LABEL FOR ITEM MEASUREMENT --}}
+                                <div class="container flex flex-col text-start col-span-2">
                                     <label for="manual_productItemMeasurement">Measurement per item</label>
                                     <select name="manual_productItemMeasurement" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
                                         <option value="" disabled selected>Select Measurement</option>
@@ -351,86 +352,65 @@
                                     </select>
                                 </div>
 
-                                <x-form.form-input label="Selling Price (₱)" name="manual_productSellingPrice" value="" 
+                                <x-form.form-input label="Selling Price (₱)"  class="col-span-1" name="manual_productSellingPrice" value="" 
                                     type="number" step="0.01" min="0" x-bind:required="addMethod === 'manual'"/>
 
-                                <x-form.form-input label="Cost Price (₱)" name="manual_productCostPrice" value="" 
+                                <x-form.form-input label="Cost Price (₱)"  class="col-span-1" name="manual_productCostPrice" value="" 
                                     type="number" step="0.01" min="0" x-bind:required="addMethod === 'manual'"/>
 
-                                <x-form.form-input label="Upload an image" name="manual_productImage" type="file" value="" 
+                                <x-form.form-input label="Upload an image"  class="col-span-2" name="manual_productImage" type="file" value="" 
                                     class="col-span-2" x-bind:required="addMethod === 'manual'"/>
-                            </div>
-                        </div>
-
-                        <!-- BATCH DETAILS -->
-                        <div class="bg-gray-50 p-4 rounded-md">
-                            <h3 class="font-semibold text-lg mb-2">Batch Details</h3>
-                            <p class="text-xs text-gray-600 mb-4 italic">
-                                If the same product has items with different expiration dates, add them here. <br>
-                                Each row will be tracked as a separate batch.
-                            </p>
-
-                            <div class="grid grid-cols-3 gap-4 mb-4">
-                                <div>
-                                    <label class="block text-sm font-medium">Quantity</label>
-                                    <input type="number" x-model="newBatch.quantity" min="1" 
-                                        class="w-full px-3 py-2 border rounded-sm border-black" placeholder="Qty">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium">Expiration Date</label>
-                                    <input type="date" x-model="newBatch.expiration_date" 
-                                        min="{{ date('Y-m-d') }}"
-                                        class="w-full px-3 py-2 border rounded-sm border-black">
-                                </div>
-                                <div class="flex items-end">
-                                    <button type="button" @click="addBatch()" 
-                                        class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
-                                        + Add Batch
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- BATCH LIST -->
-                            <template x-for="(batch, index) in batches" :key="batch.batch_id">
-                                <div class="grid grid-cols-3 gap-4 mb-2 items-center">
+                                    
+                                <div class="col-span-4 flex text-start">
                                     <div>
-                                        <input type="number" :name="'batches[' + index + '][quantity]'" 
-                                            x-model="batch.quantity" min="1" readonly
-                                            class="w-full px-3 py-2 border rounded-sm border-gray-300 bg-gray-100">
+                                        <label class="block text-sm font-medium">Quantity</label>
+                                        <input type="number" x-model="newBatch.quantity" min="1" 
+                                            class="w-full px-3 py-2 border rounded-sm border-black" placeholder="Qty">
                                     </div>
                                     <div>
-                                        <input type="date" :name="'batches[' + index + '][expiration_date]'" 
-                                            x-model="batch.expiration_date" readonly
-                                            class="w-full px-3 py-2 border rounded-sm border-gray-300 bg-gray-100">
+                                        <label class="block text-sm font-medium">Expiration Date</label>
+                                        <input type="date" x-model="newBatch.expiration_date" 
+                                            min="{{ date('Y-m-d') }}"
+                                            class="w-full px-3 py-2 border rounded-sm border-black">
                                     </div>
-                                    <div>
-                                        <button type="button" @click="removeBatch(index)" 
-                                            class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
-                                            Remove
+                                    <div class="flex place-items-center content-center items-center justify-center">
+                                        <button type="button" @click="addBatch()" 
+                                            class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
+                                            + Add Batch
                                         </button>
                                     </div>
                                 </div>
-                            </template>
-                        </div>
+                            </div>
 
-                        <!-- STOCK PREVIEW -->
-                        <div class="bg-blue-50 p-4 rounded-md" x-show="batches.length > 0">
-                            <h3 class="font-semibold text-lg mb-3">Stock Preview</h3>
-                            <div class="space-y-2">
+                                <!-- BATCH LIST -->
                                 <template x-for="(batch, index) in batches" :key="batch.batch_id">
-                                    <div class="flex justify-between items-center text-sm">
-                                        <span x-text="'Batch ' + String.fromCharCode(65 + index) + ' – ' + batch.quantity + ' pcs (Exp: ' + formatDate(batch.expiration_date) + ')'"></span>
+                                    <div class="grid grid-cols-3 gap-4 mb-2 items-center">
+                                        <div>
+                                            <input type="number" :name="'batches[' + index + '][quantity]'" 
+                                                x-model="batch.quantity" min="1" readonly
+                                                class="w-full px-3 py-2 border rounded-sm border-gray-300 bg-gray-100">
+                                        </div>
+                                        <div>
+                                            <input type="date" :name="'batches[' + index + '][expiration_date]'" 
+                                                x-model="batch.expiration_date" readonly
+                                                class="w-full px-3 py-2 border rounded-sm border-gray-300 bg-gray-100">
+                                        </div>
+                                        <div>
+                                            <button type="button" @click="removeBatch(index)" 
+                                                class="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+                                                Remove
+                                            </button>
+                                        </div>
                                     </div>
                                 </template>
-                                <div class="border-t pt-2 mt-2 font-semibold">
-                                    Total Active Stock: <span x-text="getTotalStock()"></span> pcs
-                                </div>
+                                
                             </div>
+
                         </div>
                     </section>
 
                     <!-- PURCHASE ORDER SECTION -->
-                    <section x-show="addMethod === 'po'" class="grid grid-cols-6 col-span-6 gap-4" 
+                    <section x-show="addMethod === 'po'" class="space-y-4" 
                             x-data="{
                                 items: [],
                                 poId: null,
@@ -490,9 +470,8 @@
                                 }
                             }">
 
-
                         <!-- PO Number Dropdown -->
-                        <div class="container text-start flex col-span-3 w-full flex-col font-semibold">
+                        <div class="flex flex-col text-start font-semibold">
                             <label>Purchase Order Number</label>
                             <select name="purchaseOrderNumber" 
                                     class="px-3 py-2 border rounded-sm border-black" 
@@ -507,7 +486,7 @@
                         </div>
 
                         <!-- PO Items Dropdown -->
-                        <div class="container text-start flex col-span-3 w-full flex-col font-semibold">
+                        <div class="flex flex-col text-start font-semibold">
                             <label>Purchase Order Item</label>
                             <select name="selectedItemId"
                                     class="px-3 py-2 border rounded-sm border-black"
@@ -521,24 +500,24 @@
                             </select>
                         </div>
 
-                        <div class="container grid grid-cols-6 col-span-6 gap-4">
+                        <div class="grid grid-cols-2 gap-4">
                             <x-form.form-input label="Product Name" name="productName" type="text" value="" 
-                                                class="col-span-3"
                                                 x-model="productName"
                                                 x-bind:required="addMethod === 'po'"/>
                                                 
-                            <div class='container flex flex-col text-start col-span-3'>
+                            <div class='flex flex-col text-start'>
                                 <label for="productBrand">Product Brand</label>
-                                <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black overflow-y-auto max-h-[200px]" x-bind:required="addMethod === 'po'">
+                                <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
                                     <option value="" disabled selected>Select Brand</option>
                                     @foreach($brands as $brand)
                                         <option value="{{ $brand->productBrand }}">{{ $brand->productBrand }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="container flex flex-col text-start col-span-3">
+                            
+                            <div class="flex flex-col text-start">
                                 <label for="productCategory">Product Category</label>
-                                <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black overflow-y-auto max-h-[200px]" x-bind:required="addMethod === 'po'">
+                                <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
                                     <option value="" disabled selected>Select Category</option>
                                     @foreach($categories as $category)
                                         <option value="{{ $category->productCategory }}">{{ $category->productCategory }}</option>
@@ -547,13 +526,12 @@
                             </div>
                             
                             <x-form.form-input label="Stock" type="number" value="" 
-                                                class="col-span-1" 
                                                 name="productStock" 
                                                 x-model="productStock"
                                                 x-bind:required="addMethod === 'po'"
                                                 readonly/>
                             
-                            <div class="container text-start flex col-span-2 w-full flex-col">
+                            <div class="flex flex-col text-start">
                                 <label for="itemMeasurement">Measurement per item</label>
                                 <select class="px-3 py-2 border rounded-sm border-black" 
                                 name="productItemMeasurement" 
@@ -571,16 +549,15 @@
                                 </select>
                             </div>
 
-                            <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" class="col-span-2" 
+                            <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" 
                                                 x-bind:required="addMethod === 'po'"
                                                 x-model="sellingPrice"/>
 
                             <x-form.form-input label="Cost Price (₱)" name="productCostPrice" type="number" value="" 
-                                                class="col-span-2" readonly
+                                                readonly
                                                 x-model="costPrice"/>
 
-
-                            <div class="container text-start flex col-span-2 w-full flex-col relative">
+                            <div class="flex flex-col text-start relative">
                                 <label for="productQuality">Quality Status</label>
                                 <select class="px-3 py-2 border rounded-sm border-black" 
                                 name="productQuality" 
@@ -596,7 +573,7 @@
                                 </select>
 
                                 <!-- WILL ONLY SHOW IF QUALITY != goodCondition -->
-                                <div class="container absolute flex flex-row items-center content-center top-16 left-0 text-md w-full py-2"
+                                <div class="flex flex-row items-center content-center mt-2 text-md w-full py-2"
                                     x-show="selectedQuality !== 'goodCondition'">
                                     <label for="badItemQuantity" class="pr-2">Item count: </label>
                                     <input name="badItemQuantity" id="badItemQuantity" type="number" step="1" min="0" 
@@ -609,32 +586,11 @@
                             <x-form.form-input label="Expiration Date" name="productExpirationDate" type="date"
                                 value="" 
                                 min="{{ date('Y-m-d') }}"
-                                class="col-span-2" x-bind:required="addMethod === 'po'"
+                                x-bind:required="addMethod === 'po'"
                             />
-                            <x-form.form-input label="Upload an image" name="productImage" type="file" value="" class="col-span-2" x-bind:required="addMethod === 'po'"/>
+                            <x-form.form-input label="Upload an image" name="productImage" type="file" value="" x-bind:required="addMethod === 'po'"/>
                         </div>
                     </section>
-
-                    <!-- PREVIEW TABLE FOR ADDED PRODUCTS -->
-                    <div class="border w-auto rounded-md border-solid border-black col-span-7">
-                        <table class="w-full">
-                            <thead class="rounded-lg bg-main text-white px-2 py-1">
-                                <tr class="rounded-lg text-sm">
-                                    <th class="bg-main px-2 py-2">Item/s</th>
-                                    <th class="bg-main px-2 py-2">Quantity</th>
-                                    <th class="bg-main px-2 py-2">Exp Date</th>
-                                </tr>
-                            </thead>
-                            <tbody id="cartItems">
-                                <!-- Cart items will be added here dynamically -->
-                                <tr id="emptyCartMessage">
-                                    <td colspan="4" class="text-center py-4 text-gray-500">
-                                        No items added yet. Add items above to preview the items.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
 
                     <!-- FORM BUTTONS -->
                     <div class="flex justify-end gap-4 mt-6">
