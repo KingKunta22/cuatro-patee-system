@@ -98,7 +98,7 @@
             <table class="w-full table-fixed">
                 <thead class="rounded-lg bg-main text-white px-4 py-3">
                     <tr class="rounded-lg">
-                        <th class=" bg-main px-4 py-3">Delivery Number</th>
+                        <th class=" bg-main px-4 py-3">Delivery ID</th>
                         <th class=" bg-main px-4 py-3">Order Date</th>
                         <th class=" bg-main px-4 py-3">Expected Date</th>
                         <th class=" bg-main px-4 py-3">Lead Time</th>
