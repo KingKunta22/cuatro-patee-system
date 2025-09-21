@@ -260,34 +260,55 @@
             <x-slot:dialogTitle>Add Product</x-slot:dialogTitle>
 
             <div x-data="{
-                    addMethod: 'manual',
-                    batches: [],
-                    newBatch: { quantity: '', expiration_date: '' },
-                    
-                    addBatch() {
-                        if (this.newBatch.quantity && this.newBatch.expiration_date) {
-                            this.batches.push({
-                                quantity: this.newBatch.quantity,
-                                expiration_date: this.newBatch.expiration_date,
-                                batch_id: 'BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase()
-                            });
-                            this.newBatch = { quantity: '', expiration_date: '' };
-                        }
-                    },
-                    
-                    removeBatch(index) {
-                        this.batches.splice(index, 1);
-                    },
-                    
-                    getTotalStock() {
-                        return this.batches.reduce((total, batch) => total + parseInt(batch.quantity || 0), 0);
-                    },
-                    
-                    formatDate(dateString) {
-                        const date = new Date(dateString);
-                        return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                addMethod: 'manual',
+                batches: [],
+                newBatch: { quantity: '', expiration_date: '' },
+                manual_productStock: 0,
+                
+                addBatch() {
+                    if (this.newBatch.quantity && this.newBatch.expiration_date) {
+                        this.batches.push({
+                            quantity: this.newBatch.quantity,
+                            expiration_date: this.newBatch.expiration_date,
+                            batch_id: 'BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase()
+                        });
+                        this.newBatch = { quantity: '', expiration_date: '' };
                     }
-                }" class="px-3 pt-1">
+                },
+                
+                removeBatch(index) {
+                    this.batches.splice(index, 1);
+                },
+                
+                getTotalStock() {
+                    return this.batches.reduce((total, batch) => total + parseInt(batch.quantity || 0), 0);
+                },
+                
+                formatDate(dateString) {
+                    const date = new Date(dateString);
+                    return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                },
+                
+                validateForm() {
+                    if (this.addMethod === 'manual') {
+                        // Check if batches match total stocks
+                        const totalStock = parseInt(this.manual_productStock || 0);
+                        const assignedStock = this.getTotalStock();
+                        
+                        if (this.batches.length > 0 && assignedStock !== totalStock) {
+                            alert('Cannot submit: Batch quantities must equal total stocks');
+                            return false;
+                        }
+                        
+                        // Check if we have batches but no total stock
+                        if (this.batches.length > 0 && !this.manual_productStock) {
+                            alert('Please enter total stocks first');
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }" class="px-3 pt-1">
                 <div class="container mb-1 px-4 font-semibold flex">
                     <label class="cursor-pointer">
                         <input type="radio" name="addMethod" value="manual" x-model="addMethod">
@@ -304,129 +325,187 @@
                     @csrf
                     <input type="hidden" name="add_method" x-model="addMethod">
 
-                    <!-- MANUAL SECTION -->
-                    <section x-show="addMethod === 'manual'" class="space-y-6">
-                        <!-- PRODUCT DETAILS -->
-                        <div class="bg-gray-50 px-4 pt-4 pb-0 rounded-md">
-                            <div class="grid grid-cols-6 gap-4">
+<!-- MANUAL SECTION -->
+<section x-show="addMethod === 'manual'" class="space-y-6">
+    <!-- PRODUCT DETAILS -->
+    <div class="bg-gray-50 px-4 pt-4 pb-0 rounded-md">
+        <div class="grid grid-cols-6 gap-x-4 gap-y-3">
 
-                                {{-- LABEL FOR PRODUCT NAME --}}
-                                <x-form.form-input label="Product Name" class="col-span-3" name="manual_productName" type="text" value="" x-bind:required="addMethod === 'manual'"/>
+            {{-- LABEL FOR PRODUCT NAME --}}
+            <x-form.form-input label="Product Name" class="col-span-2" name="manual_productName" type="text" value="" x-bind:required="addMethod === 'manual'"/>
 
-                                {{-- LABEL FOR PRODUCT BRAND --}}
-                                <div class='flex flex-col text-start col-span-3'>
-                                    <label for="manual_productBrand">Product Brand</label>
-                                    <select name="manual_productBrand" id="manual_productBrand" class="px-3 py-2.5 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
-                                        <option value="" disabled selected>Select Brand</option>
-                                        @foreach($brands as $brand)
-                                            <option value="{{ $brand->productBrand }}">{{ $brand->productBrand }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+            {{-- LABEL FOR PRODUCT BRAND --}}
+            <div class='flex flex-col text-start col-span-2'>
+                <label for="manual_productBrand">Product Brand</label>
+                <select name="manual_productBrand" id="manual_productBrand" class="px-3 py-2.5 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
+                    <option value="" disabled selected>Select Brand</option>
+                    @foreach($brands as $brand)
+                        <option value="{{ $brand->productBrand }}">{{ $brand->productBrand }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-                                {{-- LABEL FOR PRODUCT CATEGORY --}}
-                                <div class="container flex flex-col text-start col-span-2">
-                                    <label for="manual_productCategory">Product Category</label>
-                                    <select name="manual_productCategory" id="manual_productCategory" class="px-3 py-2.5 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
-                                        <option value="" disabled selected>Select Category</option>
-                                        @foreach($categories as $category)
-                                            <option value="{{ $category->productCategory }}">{{ $category->productCategory }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+            {{-- LABEL FOR PRODUCT CATEGORY --}}
+            <div class="container flex flex-col text-start col-span-2">
+                <label for="manual_productCategory">Product Category</label>
+                <select name="manual_productCategory" id="manual_productCategory" class="px-3 py-2.5 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
+                    <option value="" disabled selected>Select Category</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->productCategory }}">{{ $category->productCategory }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-                                {{-- LABEL FOR ITEM MEASUREMENT --}}
-                                <div class="container flex flex-col text-start col-span-2">
-                                    <label for="manual_productItemMeasurement">Unit of Measurement</label>
-                                    <select name="manual_productItemMeasurement" class="px-3 py-2.5 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
-                                        <option value="" disabled selected>Select Measurement</option>
-                                        <option value="kilogram">kilogram (kg)</option>
-                                        <option value="gram">gram (g)</option>
-                                        <option value="liter">liter (L)</option>
-                                        <option value="milliliter">milliliter (mL)</option>
-                                        <option value="pcs">pieces (pcs)</option>
-                                        <option value="set">set</option>
-                                        <option value="pair">pair</option>
-                                        <option value="pack">pack</option>
-                                    </select>
-                                </div>
+            {{-- LABEL FOR ITEM MEASUREMENT --}}
+            <div class="container flex flex-col text-start col-span-1">
+                <label for="manual_productItemMeasurement">UOM</label>
+                <select name="manual_productItemMeasurement" class="px-3 py-2.5 border rounded-sm border-black" x-bind:required="addMethod === 'manual'">
+                    <option value="" disabled selected>Select</option>
+                    <option value="kilogram">kg</option>
+                    <option value="gram">g</option>
+                    <option value="liter">L</option>
+                    <option value="milliliter">mL</option>
+                    <option value="pcs">pcs</option>
+                    <option value="set">set</option>
+                    <option value="pair">pair</option>
+                    <option value="pack">pack</option>
+                </select>
+            </div>
 
-                                {{-- <x-form.form-input label="Upload an image"  class="col-span-2" name="manual_productImage" type="file" value=""
-                                 x-bind:required="addMethod === 'manual'"/> --}}
+            <x-form.form-input label="Selling Price"  class="col-span-1" name="manual_productSellingPrice" value="" 
+                type="number" step="0.01" min="0" x-bind:required="addMethod === 'manual'"/>
 
-                                <div class='container flex flex-col text-start col-span-2'>
-                                    <label for="manual_productImage">Upload image</label>
-                                    <input 
-                                        id="manual_productImage" 
-                                        name="manual_productImage" 
-                                        type="file" 
-                                        class="px-3 py-1.5 text-sm border rounded-sm border-black" 
-                                        autocomplete="off"
-                                        x-bind:required="addMethod === 'manual'"
-                                    >
-                                </div>
+            <x-form.form-input label="Cost Price"  class="col-span-1" name="manual_productCostPrice" value="" 
+                type="number" step="0.01" min="0" x-bind:required="addMethod === 'manual'"/>
 
-                                <x-form.form-input label="Selling Price"  class="col-span-1" name="manual_productSellingPrice" value="" 
-                                    type="number" step="0.01" min="0" x-bind:required="addMethod === 'manual'"/>
+            <x-form.form-input label="Total Stocks" type="number" value="" 
+                name="manual_productStock" 
+                x-model="manual_productStock"
+                :readonly="batches.length > 0"
+                x-bind:required="addMethod === 'manual'"
+                :class="{'bg-gray-100': batches.length > 0}"/>
 
-                                <x-form.form-input label="Cost Price"  class="col-span-1" name="manual_productCostPrice" value="" 
-                                    type="number" step="0.01" min="0" x-bind:required="addMethod === 'manual'"/>
+            <div class='container flex flex-col text-start col-span-2'>
+                <label for="manual_productImage">Upload image</label>
+                <input 
+                    id="manual_productImage" 
+                    name="manual_productImage" 
+                    type="file" 
+                    class="px-3 py-1.5 text-sm border rounded-sm border-black" 
+                    autocomplete="off"
+                    x-bind:required="addMethod === 'manual'"
+                >
+            </div>
 
-                                <div class="container flex flex-col text-start col-span-1">
-                                    <label>Quantity</label>
-                                    <input type="number" x-model="newBatch.quantity" min="1" 
-                                        class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0">
-                                </div>
-                                <div class="container flex flex-col text-start col-span-2">
-                                    <label>Expiration Date</label>
-                                    <input type="date" x-model="newBatch.expiration_date" 
-                                        min="{{ date('Y-m-d') }}"
-                                        class="px-3 py-2 text-sm border rounded-sm border-black">
-                                </div>
-                                <div class="container flex flex-col mb-1 col-span-1 place-items-end content-end items-center justify-end">
-                                    <button type="button" @click="addBatch()" 
-                                        class="bg-teal-500/70 px-3 py-2.5 text-sm rounded text-white hover:bg-teal-300 w-full transition-all duration-100 ease-in-out">
-                                        Add Batch
+            <!-- INFORMATION TEXT -->
+            <div class="container text-xs col-span-6">
+                <p class='text-xs text-gray-400 mb-1'>
+                    <strong>Batch Management:</strong> Add multiple batches with different expiry dates if your stock arrives at different times. 
+                    Each batch should have its quantity and expiration date. The total of all batches must equal your total stock count.
+                </p>
+            </div>
+
+            <div class="container flex flex-col text-start col-span-1">
+                <label>Quantity</label>
+                <input type="number" x-model="newBatch.quantity" min="1" 
+                    :max="manual_productStock ? manual_productStock - getTotalStock() : 0"
+                    :disabled="!manual_productStock || manual_productStock <= 0"
+                    class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
+                    :class="{'bg-gray-100': !manual_productStock || manual_productStock <= 0}">
+            </div>
+            <div class="container flex flex-col text-start col-span-2">
+                <label>Expiration Date</label>
+                <input type="date" x-model="newBatch.expiration_date" 
+                    min="{{ date('Y-m-d') }}"
+                    :disabled="!manual_productStock || manual_productStock <= 0"
+                    class="px-3 py-2 text-sm border rounded-sm border-black"
+                    :class="{'bg-gray-100': !manual_productStock || manual_productStock <= 0}">
+            </div>
+            <div class="container flex flex-col mb-1 col-span-2 place-items-end content-end items-center justify-end">
+                <button type="button" @click="addBatch()" 
+                    :disabled="!manual_productStock || !newBatch.quantity || !newBatch.expiration_date || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(manual_productStock)"
+                    :class="{
+                        'bg-teal-500 hover:bg-teal-600': manual_productStock && newBatch.quantity && newBatch.expiration_date && (parseInt(newBatch.quantity) + getTotalStock()) <= parseInt(manual_productStock), 
+                        'bg-gray-300 cursor-not-allowed': !manual_productStock || !newBatch.quantity || !newBatch.expiration_date || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(manual_productStock)
+                    }"
+                    class="px-4 py-2 text-md rounded text-white w-full transition-all duration-100 ease-in-out">
+                    + Add Batch
+                </button>
+            </div>
+        </div>
+
+        <!-- STOCK ASSIGNMENT SUMMARY -->
+        <div class="mt-3 text-sm" x-show="manual_productStock > 0 || batches.length > 0">
+            <span class="font-semibold" :class="{
+                'text-green-600': getTotalStock() == manual_productStock, 
+                'text-yellow-600': getTotalStock() < manual_productStock,
+                'text-red-600': getTotalStock() > manual_productStock
+            }">
+                Stocks assigned: <span x-text="getTotalStock()"></span>/<span x-text="manual_productStock || 0"></span>
+            </span>
+            <span x-show="getTotalStock() < manual_productStock" class="text-red-500 ml-2">
+                (Remaining: <span x-text="(manual_productStock || 0) - getTotalStock()"></span> stocks need assignment)
+            </span>
+            <span x-show="getTotalStock() > manual_productStock" class="text-red-500 ml-2">
+                (Warning: Overassigned by <span x-text="getTotalStock() - (manual_productStock || 0)"></span> stocks!)
+            </span>
+        </div>
+
+        <!-- BATCH VALIDATION MESSAGE -->
+        <div x-show="batches.length > 0 && getTotalStock() !== parseInt(manual_productStock || 0)" class="mt-2 text-sm text-red-600 font-semibold">
+            ❌ Cannot submit: Batch quantities must equal total stocks
+        </div>
+
+        <!-- PREVIEW TABLE FOR ADDED BATCH -->
+        <template x-if="batches.length > 0">
+            <div class="border w-auto rounded-md border-solid border-black mt-3 h-28 overflow-y-auto">
+                <table class="w-full h-auto overflow-y-auto">
+                    <thead class="rounded-lg bg-main text-white px-4 py-2">
+                        <tr class="rounded-lg">
+                            <th class="bg-main px-2 py-2 text-sm">Batch</th>
+                            <th class="bg-main px-2 py-2 text-sm">No. of Items</th>
+                            <th class="bg-main px-2 py-2 text-sm">Expiry Date</th>
+                            <th class="bg-main px-2 py-2 text-sm">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="(batch, index) in batches" :key="index">
+                            <tr class="border-b text-xs">
+                                <td class="px-1 py-1 text-center" x-text="index + 1"></td>
+                                <td class="px-1 py-1 text-center" x-text="batch.quantity"></td>
+                                <td class="px-1 py-1 text-center" x-text="new Date(batch.expiration_date).toLocaleDateString()"></td>
+                                <td class="px-1 py-1 text-center mx-auto flex place-items-center items-center justify-center content-center">                            
+                                    <button type="button" @click="removeBatch(index)" class="text-red-500 hover:text-red-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 hover:fill-button-delete/70 cursor-pointer">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                        </svg>
                                     </button>
-                                </div>
-                            </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
 
+        <template x-if="batches.length === 0">
+            <!-- EMPTY STATE -->
+            <div class="border w-auto rounded-md border-solid border-black mt-3 h-28">
+                <div class="text-center py-8 text-gray-500">
+                    <p>No batch added yet. Adding batch is required to assign expiry dates for the items</p>
+                </div>
+            </div>
+        </template>
 
-                            <!-- PREVIEW TABLE FOR ADDED BATCH -->
-                            {{-- @if --}}
-                            <div class="border w-auto rounded-md border-solid border-black mt-6 h-36 overflow-y-auto">
-                                <table class="w-full overflow-y-auto">
-                                    <thead class="rounded-lg bg-main text-white px-4 py-2">
-                                        <tr class="rounded-lg">
-                                            <th class="bg-main px-2 py-2 text-sm">Batch</th>
-                                            <th class="bg-main px-2 py-2 text-sm">No. of Items</th>
-                                            <th class="bg-main px-2 py-2 text-sm">Expiry Date</th>
-                                            <th class="bg-main px-2 py-2 text-sm">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr class="border-b text-xs">
-                                            <td class="px-1 py-1 text-center">01</td>
-                                            <td class="px-1 py-1 text-center">qwrqw</td>
-                                            <td class="px-1 py-1 text-center">qwrqwr</td>
-                                            <td class="px-1 py-1 text-center mx-auto flex place-items-center items-center justify-center content-center">                            
-                                                <button>+</button>
-                                                <button>-</button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            {{-- @else
-                            <!-- EMPTY STATE -->
-                            <div class="border w-auto rounded-md border-solid border-black mt-6 h-28">
-                                <div class="text-center py-8 text-gray-500">
-                                    <p>No batch added. All stocks will have the same expiry upon adding.</p>
-                                </div>
-                            </div> --}}
-                            {{-- @endif --}}
-                        </div>
-                    </section>
+        <!-- HIDDEN INPUTS FOR BATCH DATA -->
+        <template x-for="(batch, index) in batches" :key="index">
+            <div>
+                <input type="hidden" :name="'manual_batches[' + index + '][quantity]'" :value="batch.quantity">
+                <input type="hidden" :name="'manual_batches[' + index + '][expiration_date]'" :value="batch.expiration_date">
+            </div>
+        </template>
+    </div>
+</section>
 
                     <!-- PURCHASE ORDER SECTION -->
                     <section x-show="addMethod === 'po'" class="space-y-4" 
@@ -617,7 +696,7 @@
                         <x-form.saveBtn 
                             type="button" 
                             @click="
-                                if (document.getElementById('addProductForm').reportValidity()) {
+                                if (validateForm() && document.getElementById('addProductForm').reportValidity()) {
                                     ($refs.confirmAddProduct || document.getElementById('confirmAddProduct')).showModal();
                                 }">
                             Add

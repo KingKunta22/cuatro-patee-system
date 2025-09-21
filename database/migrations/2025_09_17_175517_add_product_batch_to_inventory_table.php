@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('inventory', function (Blueprint $table) {
+        Schema::table('inventories', function (Blueprint $table) {
             $table->string('productBatch')->after('productSKU');
         });
     }
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('inventory', function (Blueprint $table) {
-            //
+        Schema::table('inventories', function (Blueprint $table) {
+            $table->dropColumn('productBatch');
         });
     }
 };

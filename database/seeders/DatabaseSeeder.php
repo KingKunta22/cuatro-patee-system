@@ -11,7 +11,6 @@ class DatabaseSeeder extends Seeder
         // Run your seeders in the CORRECT order
         $this->call([
             SupplierSeeder::class,      // First: Independent tables
-            CustomerSeeder::class,      // First: Independent tables
             PurchaseOrderSeeder::class, // Second: Needs suppliers
             PurchaseOrderItemSeeder::class, // Third: Needs purchase orders
             // UserSeeder::class,       // Add your user seeder here too!
