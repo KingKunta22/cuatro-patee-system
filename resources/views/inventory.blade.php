@@ -430,10 +430,13 @@
                                     </button>
                                 </div>
 
+                                <input type="hidden" name="manual_productExpirationDate" 
+                                :value="batches.length > 0 ? batches[0].expiration_date : ''">
+
                                 <!-- STOCK ASSIGNMENT SUMMARY -->
                                 <div class="text-sm col-span-6" >
-                                    <span class="font-semibold" :class="@{
-                                        'text-green-600': getTotalStock() == manual_productStock, 
+                                    <span class="font-semibold" :class="{
+                                        'text-green-600': getTotalStock() == manual_productStock,
                                         'text-yellow-600': getTotalStock() < manual_productStock,
                                         'text-red-600': getTotalStock() > manual_productStock
                                     }">
@@ -718,7 +721,7 @@
                     :max="originalStock" 
                     :disabled="selectedQuality === 'goodCondition'"
                     class="w-full px-3 py-2 text-md border border-black"
-                    :class="@{'bg-gray-100': selectedQuality === 'goodCondition'}"
+                    :class="{'bg-gray-100': selectedQuality === 'goodCondition'}"
                     x-model="badItemCount"
                     @input="updateStockBasedOnQuality()">
             </div>
@@ -736,7 +739,7 @@
                     :max="productStock ? productStock - getTotalStock() : 0"
                     :disabled="!productStock || productStock <= 0"
                     class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
-                    :class="@{'bg-gray-100': !productStock || productStock <= 0}">
+                    :class="{'bg-gray-100': !productStock || productStock <= 0}">
             </div>
             <div class="container flex flex-col text-start col-span-2">
                 <label>Expiration Date</label>
@@ -744,12 +747,12 @@
                     min="{{ date('Y-m-d') }}"
                     :disabled="!productStock || productStock <= 0"
                     class="px-3 py-2 text-sm border rounded-sm border-black"
-                    :class="@{'bg-gray-100': !productStock || productStock <= 0}">
+                    :class="{'bg-gray-100': !productStock || productStock <= 0}">
             </div>
             <div class="container flex flex-col mb-1 col-span-2 place-items-end content-end items-center justify-end">
                 <button type="button" @click="addBatch()" 
                     :disabled="!productStock || !newBatch.quantity || !newBatch.expiration_date || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)"
-                    :class="@{
+                    :class="{
                         'bg-teal-500 hover:bg-teal-600': productStock && newBatch.quantity && newBatch.expiration_date && (parseInt(newBatch.quantity) + getTotalStock()) <= parseInt(productStock), 
                         'bg-gray-300 cursor-not-allowed': !productStock || !newBatch.quantity || !newBatch.expiration_date || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)
                     }"
@@ -761,7 +764,7 @@
 
         <!-- STOCK ASSIGNMENT SUMMARY -->
         <div class="mt-3 text-sm col-span-6" x-show="manual_productStock > 0 || batches.length > 0">
-            <span class="font-semibold" :class="@{
+            <span class="font-semibold" :class="{
                 'text-green-600': getTotalStock() == manual_productStock, 
                 'text-yellow-600': getTotalStock() < manual_productStock,
                 'text-red-600': getTotalStock() > manual_productStock
