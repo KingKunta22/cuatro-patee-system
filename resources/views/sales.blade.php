@@ -134,35 +134,31 @@
                             open: false,
                             search: '',
                             products: {{ Js::from($products) }},
-                            currentProducts: {{ Js::from($products) }},
                             
                             filtered() {
-                                return this.currentProducts.filter(p => 
+                                return this.products.filter(p => 
                                     p.productName.toLowerCase().includes(this.search.toLowerCase()) ||
                                     p.productSKU.toLowerCase().includes(this.search.toLowerCase())
                                 )
                             },
-                                                        
+                                                                    
                             select(product) {
                                 this.search = product.productName + ' (' + product.productSKU + ')'
                                 this.open = false
 
-                                // Get available batches for this product from CURRENT data (not original)
-                                const productInCurrent = window.currentProducts.find(p => p.id == product.id);
-                                const availableBatches = productInCurrent ? 
-                                    productInCurrent.batches.filter(batch => batch.quantity > 0) : 
-                                    product.batches.filter(batch => batch.quantity > 0);
-                                
+                                // ALWAYS get the LATEST data from window.currentProducts
+                                const currentProduct = window.currentProducts.find(p => p.id == product.id) || product;
+                                const availableBatches = currentProduct.batches.filter(batch => batch.quantity > 0);
                                 const totalStock = availableBatches.reduce((sum, batch) => sum + batch.quantity, 0);
                                 
                                 // Fill form fields
-                                document.getElementById('selectedProductId').value = product.id
-                                document.querySelector('[name=productSKU]').value = product.productSKU
-                                document.querySelector('[name=productBrand]').value = product.brand?.productBrand || 'N/A'
-                                document.querySelector('[name=itemMeasurement]').value = product.productItemMeasurement
+                                document.getElementById('selectedProductId').value = currentProduct.id
+                                document.querySelector('[name=productSKU]').value = currentProduct.productSKU
+                                document.querySelector('[name=productBrand]').value = currentProduct.brand?.productBrand || 'N/A'
+                                document.querySelector('[name=itemMeasurement]').value = currentProduct.productItemMeasurement
                                 document.querySelector('[name=availableStocks]').value = totalStock
-                                document.querySelector('[name=salesPrice]').setAttribute('data-base-price', product.productSellingPrice)
-                                document.querySelector('[name=salesPrice]').value = parseFloat(product.productSellingPrice).toFixed(2)
+                                document.querySelector('[name=salesPrice]').setAttribute('data-base-price', currentProduct.productSellingPrice)
+                                document.querySelector('[name=salesPrice]').value = parseFloat(currentProduct.productSellingPrice).toFixed(2)
                                 document.querySelector('[name=quantity]').setAttribute('max', totalStock)
                                 document.querySelector('[name=quantity]').value = '1'
                                 
@@ -187,19 +183,6 @@
                                 document.getElementById('productBatches').value = JSON.stringify(availableBatches);
                                 
                                 calculateAmount();
-                            },
-                            
-                            // Function to update currentProducts when stock changes
-                            updateProductStock(productId, newBatches) {
-                                const productIndex = this.currentProducts.findIndex(p => p.id == productId);
-                                if (productIndex !== -1) {
-                                    this.currentProducts[productIndex].batches = newBatches;
-                                    // Force Alpine to update the dropdown
-                                    this.search = this.search + ' ';
-                                    setTimeout(() => {
-                                        this.search = this.search.trim();
-                                    }, 10);
-                                }
                             }
                         }"
                         class="relative w-full col-span-3">
@@ -240,8 +223,8 @@
                                             </div>
                                             <div class="text-xs text-gray-500 mt-1">
                                                 Stock:
-                                                <span :class="product.batches.reduce((sum, batch) => sum + batch.quantity, 0) > 0 ? 'text-green-600' : 'text-red-600'" 
-                                                    x-text="product.batches.reduce((sum, batch) => sum + batch.quantity, 0)"></span>
+                                                <!-- ALWAYS show current stock from window.currentProducts -->
+                                                <span x-html="getCurrentStock(product.id)"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -724,8 +707,7 @@
                         }
                     }
                     
-                    // Update Alpine data for dropdown display
-                    updateAlpineStockData(productId, totalStock);
+                    // No need to sync AlpineJS data anymore since we're using window.getCurrentStock()
                 }
             }
                         
@@ -911,7 +893,13 @@
                 
                 console.log('Batch selection completed. Remaining:', remainingQuantity);
                 
-                return remainingQuantity === 0 ? selectedBatches : null;
+                // If we couldn't allocate all required quantity, return null
+                if (remainingQuantity > 0) {
+                    console.log('Not enough stock across all batches');
+                    return null;
+                }
+                
+                return selectedBatches;
             }
 
             
@@ -1136,18 +1124,9 @@
                 // Reset product data
                 window.currentProducts = JSON.parse(JSON.stringify(window.originalProducts));
                 
-                // Reset Alpine data by reloading the modal
-                try {
-                    const alpineElement = document.querySelector('[x-data]');
-                    if (alpineElement && alpineElement.__x && alpineElement.__x.$data) {
-                        const alpineData = alpineElement.__x.$data;
-                        alpineData.products = JSON.parse(JSON.stringify(window.originalProducts));
-                        alpineData.search = '';
-                    }
-                } catch (e) {
-                    console.log('Could not reset Alpine data:', e);
-                }
+                // No need to reset AlpineJS data anymore
             }
+
 
             function validateCartBeforeSubmit() {
                 if (window.cart.length === 0) {
@@ -1155,25 +1134,26 @@
                     return false;
                 }
                 
-                // Group quantities by product ID
+                // Group quantities by product ID from the cart
                 const quantityByProduct = {};
                 window.cart.forEach(item => {
                     quantityByProduct[item.product_id] = (quantityByProduct[item.product_id] || 0) + item.quantity;
                 });
                 
-                // Validate each product's total quantity
+                // Validate each product's total quantity against CURRENT available stock
                 for (const [productId, totalQuantity] of Object.entries(quantityByProduct)) {
-                    const originalProduct = window.originalProducts.find(p => p.id == productId);
+                    // Get the CURRENT product data (after cart deductions)
+                    const currentProduct = window.currentProducts.find(p => p.id == productId);
                     
-                    if (!originalProduct) {
+                    if (!currentProduct) {
                         Toast.error('One of your products is no longer available');
                         return false;
                     }
                     
-                    // Calculate total available stock from batches
-                    const totalAvailableStock = originalProduct.batches.reduce((sum, batch) => sum + batch.quantity, 0);
+                    // Calculate total available stock from CURRENT batches (after cart allocations)
+                    const totalAvailableStock = currentProduct.batches.reduce((sum, batch) => sum + batch.quantity, 0);
                     
-                    // Check TOTAL quantity against stock
+                    // Check if the total quantity in cart exceeds CURRENT available stock
                     if (totalQuantity > totalAvailableStock) {
                         const productName = window.cart.find(item => item.product_id == productId).name;
                         Toast.error(`Not enough stock for ${productName}. Available: ${totalAvailableStock}, Requested: ${totalQuantity}`);
@@ -1183,6 +1163,20 @@
                 
                 return true;
             }
+
+            // Function to get current stock for display in AlpineJS dropdown
+            function getCurrentStock(productId) {
+                const currentProduct = window.currentProducts.find(p => p.id == productId);
+                if (!currentProduct) return '<span class="text-red-600">0</span>';
+                
+                const totalStock = currentProduct.batches.reduce((sum, batch) => sum + batch.quantity, 0);
+                const stockClass = totalStock > 0 ? 'text-green-600' : 'text-red-600';
+                
+                return `<span class="${stockClass}">${totalStock}</span>`;
+            }
+
+            // Make it globally available
+            window.getCurrentStock = getCurrentStock;
             
             // Add event listeners when DOM is loaded
             document.addEventListener('DOMContentLoaded', function() {
@@ -1231,6 +1225,8 @@
                     }, 3000);
                 }
             };
+
+
         </script>
 
     </main>
