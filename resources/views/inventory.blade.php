@@ -763,19 +763,19 @@
         </div>
 
         <!-- STOCK ASSIGNMENT SUMMARY -->
-        <div class="mt-3 text-sm col-span-6" x-show="manual_productStock > 0 || batches.length > 0">
+        <div class="mt-3 text-sm col-span-6" x-show="productStock > 0 || batches.length > 0">
             <span class="font-semibold" :class="{
-                'text-green-600': getTotalStock() == manual_productStock, 
-                'text-yellow-600': getTotalStock() < manual_productStock,
-                'text-red-600': getTotalStock() > manual_productStock
+                'text-green-600': getTotalStock() == productStock, 
+                'text-yellow-600': getTotalStock() < productStock,
+                'text-red-600': getTotalStock() > productStock
             }">
-                Stocks assigned: <span x-text="getTotalStock()"></span>/<span x-text="manual_productStock || 0"></span>
+                Stocks assigned: <span x-text="getTotalStock()"></span>/<span x-text="productStock || 0"></span>
             </span>
-            <span x-show="getTotalStock() < manual_productStock" class="text-red-500 ml-2">
-                (Remaining: <span x-text="(manual_productStock || 0) - getTotalStock()"></span> stocks need assignment)
+            <span x-show="getTotalStock() < productStock" class="text-red-500 ml-2">
+                (Remaining: <span x-text="(productStock || 0) - getTotalStock()"></span> stocks need assignment)
             </span>
-            <span x-show="getTotalStock() > manual_productStock" class="text-red-500 ml-2">
-                (Warning: Overassigned by <span x-text="getTotalStock() - (manual_productStock || 0)"></span> stocks!)
+            <span x-show="getTotalStock() > productStock" class="text-red-500 ml-2">
+                (Warning: Overassigned by <span x-text="getTotalStock() - (productStock || 0)"></span> stocks!)
             </span>
         </div>
 

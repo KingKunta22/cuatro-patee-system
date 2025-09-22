@@ -57,8 +57,9 @@ class InventoryController extends Controller
         }
 
         // Current implementation shows all batches
-        $inventoryItems = $query->orderBy('productSKU')
-            ->orderBy('productExpirationDate', 'ASC') // Show oldest first
+        $inventoryItems = $query->orderBy('created_at', 'DESC') // Newest first
+            ->orderBy('productSKU') // Then by SKU
+            ->orderBy('productExpirationDate', 'ASC') // Then by expiry (oldest first)
             ->paginate(7)
             ->withQueryString();
 
@@ -164,8 +165,7 @@ public function store(Request $request)
         $request->request->remove('manual_productImage');
         $request->request->remove('manual_batches');
     }
-    
-    dd($request->all());
+
 
     $validated = $request->validate($validationRules);
 
