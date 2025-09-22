@@ -116,7 +116,6 @@
                         <th class=" bg-main px-4 py-3">Price</th>
                         <th class=" bg-main px-4 py-3">Stock</th>
                         <th class=" bg-main px-4 py-3">Status</th>
-                        <th class=" bg-main px-4 py-3">Expiry Date</th>
                         <th class=" bg-main px-4 py-3">Action</th>
                     </tr>
                 </thead>
@@ -134,12 +133,7 @@
                             {{ $product->productSKU }}
                         </td>
                         <td class="truncate px-2 py-2 text-center">
-                            @foreach($product->batches as $batch)
-                                <div class="text-xs border-b pb-1 mb-1">
-                                    {{ $batch->batch_number }}<br>
-                                    <span class="text-gray-600">Exp: {{ $batch->expiration_date->format('M d, Y') }}</span>
-                                </div>
-                            @endforeach
+                            {{ $product->batches->count() }}
                         </td>
                         <!-- For brand -->
                         <td class="truncate px-2 py-2 text-center" title="{{ $product->brand->productBrand ?? $product->productBrand ?? 'N/A' }}">
@@ -162,14 +156,6 @@
                             @else
                                 <span class="text-green-600 bg-green-100 px-2 py-1 rounded-xl">Active Stock</span>
                             @endif
-                        </td>
-                        <td class="truncate px-2 py-2 text-center">
-                            @foreach($product->batches as $batch)
-                                <div class="text-xs">
-                                    {{ $batch->expiration_date->format('M d, Y') }}<br>
-                                    <span class="text-gray-600">({{ $batch->expiration_date->diffForHumans() }})</span>
-                                </div>
-                            @endforeach
                         </td>
                         <td class="truncate px-2 py-2 text-center">
                             <button @click="$refs['viewInventoryDetails{{ $product->id }}'].showModal()" 

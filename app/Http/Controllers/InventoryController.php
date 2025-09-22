@@ -24,7 +24,7 @@ class InventoryController extends Controller
                 $query->where('orderStatus', 'Delivered');
             })
             ->whereHas('items', function($query) {
-                $query->whereDoesntHave('productBatches'); // Changed from 'inventory'
+                $query->whereDoesntHave('productBatches');
             })
             ->select('id', 'orderNumber')
             ->get();
@@ -36,17 +36,18 @@ class InventoryController extends Controller
             ->select('id', 'orderNumber')
             ->get();
 
-        // Start query
-        $query = Product::with(['batches', 'brand', 'category']);
+        // Start query - ADD ORDER BY HERE
+        $query = Product::with(['batches', 'brand', 'category'])
+            ->orderBy('created_at', 'desc'); // Newest first
 
-        // Apply category filter (UPDATED for relational structure)
+        // Apply category filter
         if ($request->category && $request->category != 'all') {
             $query->whereHas('category', function($q) use ($request) {
                 $q->where('productCategory', $request->category);
             });
         }
 
-        // Apply brand filter (UPDATED for relational structure)
+        // Apply brand filter
         if ($request->brand && $request->brand != 'all') {
             $query->whereHas('brand', function($q) use ($request) {
                 $q->where('productBrand', $request->brand);

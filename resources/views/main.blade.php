@@ -189,11 +189,11 @@
                                 </svg>
                             </div>
                             <div class='w-5/6'>
-                                <h3 class="text-sm font-medium text-gray-800">{{ $product->productName }}</h3>
+                                <h3 class="text-sm font-medium text-gray-800">{{ $product['productName'] }}</h3>
                             </div>
                         </div>
                         <p class="text-xs text-red-400">
-                            {{ $product->productStock }} {{ $product->productStock > 1 ? ' stocks left' : 'stock left' }}
+                            {{ $product['productStock'] }} {{ $product['productStock'] > 1 ? ' stocks left' : 'stock left' }}
                         </p>
                     </div>
                     @empty
@@ -220,12 +220,12 @@
                                 </svg>
                             </div>
                             <div>
-                                <h3 class="text-sm font-medium text-gray-800">{{ $product->productName }}</h3>
-                                <p class="text-xs text-gray-500">{{ $product->productSKU }}</p>
+                                <h3 class="text-sm font-medium text-gray-800">{{ $product['productName'] }}</h3>
+                                <p class="text-xs text-gray-500">{{ $product['productSKU'] ?? 'N/A' }}</p>
                             </div>
                         </div>
-                        <span class="text-xs font-medium text-blue-600" title="Expires on {{ \Carbon\Carbon::parse($product->productExpirationDate)->format('M d, Y') }}">
-                            {{ \Carbon\Carbon::parse($product->productExpirationDate)->diffForHumans() }}
+                        <span class="text-xs font-medium text-blue-600" title="Expires on {{ \Carbon\Carbon::parse($product['productExpirationDate'])->format('M d, Y') }}">
+                            {{ \Carbon\Carbon::parse($product['productExpirationDate'])->diffForHumans() }}
                         </span>
                     </div>
                     @empty
@@ -263,8 +263,8 @@
                             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow h-auto flex flex-col">
                                 <div class="flex flex-col items-center mb-3 flex-grow">
                                     <div class="w-56 h-60 rounded-md bg-gray-200 flex items-center justify-center overflow-hidden mb-3">
-                                        @if($product->inventory && $product->inventory->productImage && Storage::disk('public')->exists($product->inventory->productImage))
-                                            <img src="{{ asset('storage/' . $product->inventory->productImage) }}" alt="{{ $product->product_name }}" class="w-full h-full object-cover">
+                                        @if(isset($product['inventory']) && $product['inventory']['productImage'] && Storage::disk('public')->exists($product['inventory']['productImage']))
+                                            <img src="{{ asset('storage/' . $product['inventory']['productImage']) }}" alt="{{ $product['product_name'] }}" class="w-full h-full object-cover">
                                         @else
                                             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -273,12 +273,12 @@
                                     </div>
                                     <div class="text-center">
                                         @php
-                                            $productName = $product->product_name;
+                                            $productName = $product['product_name'] ?? 'Unknown Product';
                                             if (preg_match('/\((INV-\d+-\d+)\)/', $productName, $matches)) {
                                                 $sku = $matches[1];
                                                 $productName = trim(str_replace("($sku)", "", $productName));
                                             } else {
-                                                $sku = $product->inventory->productSKU ?? 'N/A';
+                                                $sku = $product['inventory']['productSKU'] ?? 'N/A';
                                             }
                                         @endphp
                                         <h3 class="text-sm font-semibold text-gray-800 mb-1">{{ \Illuminate\Support\Str::limit($productName, 30) }}</h3>
@@ -287,10 +287,10 @@
                                 </div>
                                 <div class="flex justify-between items-center mt-auto">
                                     <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
-                                        Sold: {{ $product->total_sold }}
+                                        Sold: {{ $product['total_sold'] }}
                                     </span>
                                     <span class="text-sm font-semibold text-gray-800">
-                                        ₱{{ number_format($product->unit_price ?: (isset($product->inventory) ? $product->inventory->productSellingPrice : 0), 2) }}
+                                        ₱{{ number_format($product['unit_price'] ?? ($product['inventory']['productSellingPrice'] ?? 0), 2) }}
                                     </span>
                                 </div>
                             </div>

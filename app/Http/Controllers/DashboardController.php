@@ -52,32 +52,37 @@ class DashboardController extends Controller
             })
             ->count();
         
-        // Stock Level breakdown (using product batches)
-        $totalStock = ProductBatch::sum('quantity');
-        $inStock = Product::whereHas('batches', function($query) {
-                $query->where('quantity', '>', 10);
-            })->count();
-        $lowStock = Product::whereHas('batches', function($query) {
-                $query->whereBetween('quantity', [1, 10]);
-            })->count();
-        $outOfStock = Product::whereHas('batches', function($query) {
-                $query->where('quantity', 0);
-            })->count();
+        // Stock Level breakdown (FIXED) - Count PRODUCTS by their TOTAL stock
+        $productsWithStock = Product::with(['batches'])->get();
+
+        $inStock = $productsWithStock->filter(function($product) {
+            $totalStock = $product->batches->sum('quantity');
+            return $totalStock > 10;
+        })->count();
+
+        $lowStock = $productsWithStock->filter(function($product) {
+            $totalStock = $product->batches->sum('quantity');
+            return $totalStock >= 1 && $totalStock <= 10;
+        })->count();
+
+        $outOfStock = $productsWithStock->filter(function($product) {
+            $totalStock = $product->batches->sum('quantity');
+            return $totalStock == 0;
+        })->count();
         
-        // Low Stock Products (stock ≤ 10)
-        $lowStockProducts = Product::whereHas('batches', function($query) {
-                $query->whereBetween('quantity', [1, 10]);
-            })
-            ->with(['batches' => function($query) {
-                $query->select('product_id', DB::raw('SUM(quantity) as total_quantity'))
-                    ->groupBy('product_id');
-            }])
-            ->limit(5)
+        // Low Stock Products (FIXED) - Only products with 1-10 total stock
+        $lowStockProducts = Product::with(['batches'])
             ->get()
+            ->filter(function($product) {
+                $totalStock = $product->batches->sum('quantity');
+                return $totalStock >= 1 && $totalStock <= 10;
+            })
+            ->take(5)
             ->map(function($product) {
+                $totalStock = $product->batches->sum('quantity');
                 return [
                     'productName' => $product->productName,
-                    'productStock' => $product->batches->sum('total_quantity')
+                    'productStock' => $totalStock
                 ];
             });
         
@@ -105,7 +110,8 @@ class DashboardController extends Controller
                 return [
                     'productName' => $batch->product->productName,
                     'productExpirationDate' => $batch->expiration_date,
-                    'batch_number' => $batch->batch_number
+                    'batch_number' => $batch->batch_number,
+                    'productSKU' => $batch->product->productSKU
                 ];
             });
         
