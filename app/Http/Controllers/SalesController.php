@@ -30,10 +30,20 @@ class SalesController extends Controller
         // Get sales data
         $sales = Sale::with('items.productBatch.product')->latest()->paginate(7);
         
-        // Get products for the product dropdown (instead of inventories)
+        // Get products for the product dropdown
         $products = Product::with(['batches' => function($query) {
-                        $query->where('quantity', '>', 0); // Only batches with stock
-                    }])->get();
+                        $query->where('quantity', '>', 0) // Only batches with stock
+                            ->orderBy('expiration_date', 'asc'); // FIFO/FEFO ordering
+                    }])
+                    ->whereHas('batches', function($query) {
+                        $query->where('quantity', '>', 0); // Only products with available stock
+                    })
+                    ->get()
+                    ->map(function($product) {
+                        // Calculate total stock for display
+                        $product->total_stock = $product->batches->sum('quantity');
+                        return $product;
+                    });
 
         return view('sales', compact('sales', 'totalRevenue', 'totalCost', 'totalProfit', 'products'));
     }
@@ -117,17 +127,17 @@ class SalesController extends Controller
 
                 // Check stock availability
                 if ($productBatch->quantity < $item['quantity']) {
-                    throw new \Exception("Not enough stock for {$productBatch->product->productName}. Available: {$productBatch->quantity}");
+                    throw new \Exception("Not enough stock for batch {$productBatch->batch_number}. Available: {$productBatch->quantity}");
                 }
 
                 // Update batch stock
                 $productBatch->decrement('quantity', $item['quantity']);
 
-                // Update inventory summary if you're using it
-                $inventory = Inventory::where('product_id', $item['product_id'])->first();
-                if ($inventory) {
-                    $inventory->decrement('total_quantity', $item['quantity']);
-                }
+                // REMOVED: No need to update inventory table anymore
+                // $inventory = Inventory::where('product_id', $item['product_id'])->first();
+                // if ($inventory) {
+                //     $inventory->decrement('total_quantity', $item['quantity']);
+                // }
 
                 // Create sale item
                 SaleItem::create([
