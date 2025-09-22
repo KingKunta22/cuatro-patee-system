@@ -19,12 +19,12 @@ class InventoryController extends Controller
 {
     public function index(Request $request)
     {
-        // Get delivered POs that haven't been added to inventory yet
+        // Get delivered POs that haven't been added to inventory yet (UPDATED)
         $unaddedPOs = PurchaseOrder::whereHas('deliveries', function($query) {
                 $query->where('orderStatus', 'Delivered');
             })
             ->whereHas('items', function($query) {
-                $query->whereDoesntHave('inventory');
+                $query->whereDoesntHave('productBatches'); // Changed from 'inventory'
             })
             ->select('id', 'orderNumber')
             ->get();
@@ -36,17 +36,17 @@ class InventoryController extends Controller
             ->select('id', 'orderNumber')
             ->get();
 
-        // Start query with relationships
-        $query = Product::with(['batches', 'brand', 'category']); // Add brand and category relationships
+        // Start query
+        $query = Product::with(['batches', 'brand', 'category']);
 
-        // Apply category filter - need to join with categories table
+        // Apply category filter (UPDATED for relational structure)
         if ($request->category && $request->category != 'all') {
             $query->whereHas('category', function($q) use ($request) {
                 $q->where('productCategory', $request->category);
             });
         }
 
-        // Apply brand filter - need to join with brands table
+        // Apply brand filter (UPDATED for relational structure)
         if ($request->brand && $request->brand != 'all') {
             $query->whereHas('brand', function($q) use ($request) {
                 $q->where('productBrand', $request->brand);
@@ -81,227 +81,185 @@ class InventoryController extends Controller
 
     public function getItems($poId)
     {
-        return PurchaseOrderItem::where('purchase_order_id', $poId) // Finds items where purchase_order_id matches the selected PO
-            ->whereDoesntHave('inventory') // Excludes items that are already added/linked
-            ->select('id', 'productName', 'quantity', 'unitPrice', 'itemMeasurement') // Ensures these fields exist first
+        return PurchaseOrderItem::where('purchase_order_id', $poId)
+            ->whereDoesntHave('productBatches') // Changed from 'inventory'
+            ->select('id', 'productName', 'quantity', 'unitPrice', 'itemMeasurement')
             ->get();
     }
-    
-
-public function store(Request $request)
-{
-    // Determine which method will be used first
-    $addMethod = $request->input('add_method');
-    
-    // Define base validation rules
-    $validationRules = [];
-    $fieldPrefix = '';
-    
-    if ($addMethod === 'manual') {
-        $fieldPrefix = 'manual_';
-        $validationRules = [
-            'manual_productName' => 'required|string|max:255',
-            'manual_productBrand' => 'required|string|max:255',
-            'manual_productCategory' => 'required|string|max:255',
-            'manual_productItemMeasurement' => 'required|string|max:255',
-            'manual_productSellingPrice' => 'required|numeric|min:0',
-            'manual_productCostPrice' => 'required|numeric|min:0',
-            'manual_productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'manual_batches' => 'required|array|min:1',
-            'manual_batches.*.quantity' => 'required|numeric|min:1',
-            'manual_batches.*.expiration_date' => 'required|date|after_or_equal:today',
-        ];
         
-        // Add expiration date validation only if no batches are provided
-        if (empty($request->input('manual_batches'))) {
-            $validationRules['manual_productExpirationDate'] = 'required|date|after_or_equal:today';
+
+    public function store(Request $request)
+    {
+        // Determine which method will be used first
+        $addMethod = $request->input('add_method');
+        
+        // Remove unwanted fields based on the method
+        if ($addMethod === 'manual') {
+            // Remove PO fields for manual mode
+            $request->request->remove('productStock');
+            $request->request->remove('display_productStock');
+            $request->request->remove('purchaseOrderNumber');
+            $request->request->remove('selectedItemId');
+            $request->request->remove('productName');
+            $request->request->remove('productBrand');
+            $request->request->remove('productCategory');
+            $request->request->remove('productSellingPrice');
+            $request->request->remove('productCostPrice');
+            $request->request->remove('productItemMeasurement');
+            $request->request->remove('productImage');
+            $request->request->remove('productQuality');
+            $request->request->remove('badItemQuantity');
+            $request->request->remove('batches');
+        } else {
+            // Remove manual fields for PO mode
+            $request->request->remove('manual_productName');
+            $request->request->remove('manual_productBrand');
+            $request->request->remove('manual_productCategory');
+            $request->request->remove('manual_productStock');
+            $request->request->remove('manual_productSellingPrice');
+            $request->request->remove('manual_productCostPrice');
+            $request->request->remove('manual_productItemMeasurement');
+            $request->request->remove('manual_productImage');
+            $request->request->remove('manual_batches');
         }
         
-        // Remove PO field validations for manual mode
-        $request->request->remove('purchaseOrderNumber');
-        $request->request->remove('selectedItemId');
-        $request->request->remove('productName');
-        $request->request->remove('productBrand');
-        $request->request->remove('productCategory');
-        $request->request->remove('productSellingPrice');
-        $request->request->remove('productCostPrice');
-        $request->request->remove('productItemMeasurement');
-        $request->request->remove('productExpirationDate');
-        $request->request->remove('productImage');
-        $request->request->remove('productQuality');
-        $request->request->remove('badItemQuantity');
-        
-    } else {
+        // Define validation rules
+        $validationRules = [];
         $fieldPrefix = '';
-        $validationRules = [
-            'productName' => 'required|string|max:255',
-            'productBrand' => 'required|string|max:255',
-            'productCategory' => 'required|string|max:255',
-            'productItemMeasurement' => 'required|string|max:255',
-            'productSellingPrice' => 'required|numeric|min:0',
-            'productCostPrice' => 'required|numeric|min:0',
-            'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'purchaseOrderNumber' => 'required|exists:purchase_orders,id',
-            'selectedItemId' => 'required|exists:purchase_order_items,id',
-            'batches' => 'required|array|min:1',
-            'batches.*.quantity' => 'required|numeric|min:1',
-            'batches.*.expiration_date' => 'required|date|after_or_equal:today',
-        ];
         
-        // Remove manual field validations for PO mode
-        $request->request->remove('manual_productName');
-        $request->request->remove('manual_productBrand');
-        $request->request->remove('manual_productCategory');
-        $request->request->remove('manual_productStock');
-        $request->request->remove('manual_productSellingPrice');
-        $request->request->remove('manual_productCostPrice');
-        $request->request->remove('manual_productItemMeasurement');
-        $request->request->remove('manual_productExpirationDate');
-        $request->request->remove('manual_productImage');
-        $request->request->remove('manual_batches');
-    }
-
-
-    $validated = $request->validate($validationRules);
-
-    // For manual method with batches, validate that total batches equal total stock
-    if ($addMethod === 'manual' && isset($validated['manual_batches'])) {
-        $totalBatchQuantity = array_sum(array_column($validated['manual_batches'], 'quantity'));
-        if ($totalBatchQuantity != $validated['manual_productStock']) {
-            return back()->withInput()->withErrors([
-                'error' => 'Total batch quantities must equal total stock count'
-            ]);
+        if ($addMethod === 'manual') {
+            $fieldPrefix = 'manual_';
+            $validationRules = [
+                'manual_productName' => 'required|string|max:255',
+                'manual_productBrand' => 'required|string|max:255',
+                'manual_productCategory' => 'required|string|max:255',
+                'manual_productItemMeasurement' => 'required|string|max:255',
+                'manual_productSellingPrice' => 'required|numeric|min:0',
+                'manual_productCostPrice' => 'required|numeric|min:0',
+                'manual_productStock' => 'required|numeric|min:1',
+                'manual_productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'manual_batches' => 'required|array|min:1',
+                'manual_batches.*.quantity' => 'required|numeric|min:1',
+                'manual_batches.*.expiration_date' => 'required|date|after_or_equal:today',
+            ];
+        } else {
+            $fieldPrefix = '';
+            $validationRules = [
+                'productName' => 'required|string|max:255',
+                'productBrand' => 'required|string|max:255',
+                'productCategory' => 'required|string|max:255',
+                'productItemMeasurement' => 'required|string|max:255',
+                'productSellingPrice' => 'required|numeric|min:0',
+                'productCostPrice' => 'required|numeric|min:0',
+                'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'purchaseOrderNumber' => 'required|exists:purchase_orders,id',
+                'selectedItemId' => 'required|exists:purchase_order_items,id',
+                'productQuality' => 'required|in:goodCondition,defective,incorrectItem,nearExpiry,rejected,quantityMismatch',
+                'badItemQuantity' => 'nullable|numeric|min:0',
+                'batches' => 'required|array|min:1',
+                'batches.*.quantity' => 'required|numeric|min:1',
+                'batches.*.expiration_date' => 'required|date|after_or_equal:today',
+            ];
         }
-    }
 
-    // For PO method, calculate actual stock FIRST
-    $poItem = null;
-    if ($addMethod === 'po') {
-        $poItem = PurchaseOrderItem::find($validated['selectedItemId']);
-        
-        // Validate PO item belongs to selected PO
-        if (!$poItem || $poItem->purchase_order_id != $validated['purchaseOrderNumber']) {
-            return back()->withInput()->withErrors([
-                'error' => 'Selected item does not belong to the chosen purchase order'
-            ]);
+        // dd($request->all());
+        $validated = $request->validate($validationRules);
+
+        // For manual method with batches, validate that total batches equal total stock
+        if ($addMethod === 'manual' && isset($validated['manual_batches'])) {
+            $totalBatchQuantity = array_sum(array_column($validated['manual_batches'], 'quantity'));
+            if ($totalBatchQuantity != $validated['manual_productStock']) {
+                return back()->withInput()->withErrors([
+                    'error' => 'Total batch quantities must equal total stock count'
+                ]);
+            }
         }
-        
-        $totalQuantity = $poItem->quantity;
-        $badItemCount = ($validated['productQuality'] !== 'goodCondition') 
-            ? ($validated['badItemQuantity'] ?? 0) 
-            : 0;
-        
-        $actualStock = $totalQuantity - $badItemCount;
-        
-        if ($actualStock < 0) {
-            return back()->withInput()->withErrors([
-                'error' => 'Bad items cannot exceed total quantity'
-            ]);
-        }
-        
-        if ($actualStock === 0) {
-            return back()->withInput()->withErrors([
-                'error' => 'Cannot add product with zero stock'
-            ]);
-        }
-    }
 
-    // Generate SKU based on product details (AFTER validation)
-    $productName = $validated[$fieldPrefix . 'productName'];
-    $productBrand = $validated[$fieldPrefix . 'productBrand'];
-    $productCategory = $validated[$fieldPrefix . 'productCategory'];
-
-    // For manual method with batches, use the first batch's expiration date
-    if ($addMethod === 'manual' && isset($validated['manual_batches']) && count($validated['manual_batches']) > 0) {
-        $validated[$fieldPrefix . 'productExpirationDate'] = $validated['manual_batches'][0]['expiration_date'];
-    }
-
-    $newSKU = $this->generateSKU($productName, $productBrand, $productCategory);
-    
-    // For non-manual methods, check if batch already exists
-    if ($addMethod !== 'manual') {
-        $existingBatch = Inventory::where('productSKU', $newSKU)
-            ->where('productExpirationDate', $validated[$fieldPrefix . 'productExpirationDate'])
-            ->first();
-        
-        if ($existingBatch) {
-            $stockToAdd = ($addMethod === 'po') ? $actualStock : $validated[$fieldPrefix . 'productStock'];
-            $existingBatch->update([
-                'productStock' => $existingBatch->productStock + $stockToAdd
-            ]);
-            
-            return redirect()->route('inventory.index')->with('success', 'Product stock updated successfully!');
-        }
-    }
-
-    // Start transaction
-    DB::beginTransaction();
-
-    try {
-        // Generate SKU
+        // Generate SKU based on product details
         $productName = $validated[$fieldPrefix . 'productName'];
         $productBrand = $validated[$fieldPrefix . 'productBrand'];
         $productCategory = $validated[$fieldPrefix . 'productCategory'];
         $newSKU = $this->generateSKU($productName, $productBrand, $productCategory);
 
-        // First find the brand and category IDs
-        $brand = Brand::where('productBrand', $productBrand)->first();
-        $category = Category::where('productCategory', $productCategory)->first();
+        // Start transaction
+        DB::beginTransaction();
 
-        $productData = [
-            'productName' => $productName,
-            'productSKU' => $newSKU,
-            'brand_id' => $brand->id ?? null, // Use foreign key
-            'category_id' => $category->id ?? null, // Use foreign key
-            'productItemMeasurement' => $validated[$fieldPrefix . 'productItemMeasurement'],
-            'productSellingPrice' => $validated[$fieldPrefix . 'productSellingPrice'],
-            'productCostPrice' => $validated[$fieldPrefix . 'productCostPrice'],
-        ];
+        try {
+            // Find or create brand and category
+            $brand = Brand::firstOrCreate(['productBrand' => $productBrand]);
+            $category = Category::firstOrCreate(['productCategory' => $productCategory]);
 
-        // Handle image upload
-        $imageField = $fieldPrefix . 'productImage';
-        if ($request->hasFile($imageField)) {
-            $productData['productImage'] = $request->file($imageField)->store('products', 'public');
-        }
-
-        $product = Product::firstOrCreate(
-            ['productSKU' => $newSKU],
-            $productData
-        );
-
-        // Create batches
-        $batchesField = $fieldPrefix . 'batches';
-        foreach ($validated[$batchesField] as $batchIndex => $batch) {
-            $batchNumber = date('Ymd') . '-' . str_pad(($batchIndex + 1), 3, '0', STR_PAD_LEFT);
-            
-            $batchData = [
-                'product_id' => $product->id,
-                'batch_number' => $batchNumber,
-                'quantity' => $batch['quantity'],
-                'cost_price' => $validated[$fieldPrefix . 'productCostPrice'],
-                'selling_price' => $validated[$fieldPrefix . 'productSellingPrice'],
-                'expiration_date' => $batch['expiration_date'],
+            // Prepare product data using foreign keys, not text fields
+            $productData = [
+                'productName' => $productName,
+                'productSKU' => $newSKU,
+                'brand_id' => $brand->id,           // ← Foreign key
+                'category_id' => $category->id,     // ← Foreign key
+                'productItemMeasurement' => $validated[$fieldPrefix . 'productItemMeasurement'],
+                'productSellingPrice' => $validated[$fieldPrefix . 'productSellingPrice'],
+                'productCostPrice' => $validated[$fieldPrefix . 'productCostPrice'],
             ];
 
-            // Add PO references for PO method
-            if ($addMethod === 'po') {
-                $batchData['purchase_order_id'] = $validated['purchaseOrderNumber'];
-                $batchData['purchase_order_item_id'] = $validated['selectedItemId'];
+            // Handle image upload
+            $imageField = $fieldPrefix . 'productImage';
+            if ($request->hasFile($imageField)) {
+                $productData['productImage'] = $request->file($imageField)->store('products', 'public');
             }
 
-            ProductBatch::create($batchData);
+            // Create or find product
+            $product = Product::firstOrCreate(
+                ['productSKU' => $newSKU],
+                $productData
+            );
+
+            // Create batches
+            $batchesField = $fieldPrefix . 'batches';
+            foreach ($validated[$batchesField] as $batchIndex => $batch) {
+                $batchNumber = 'BATCH-' . date('Ymd') . '-' . str_pad(($batchIndex + 1), 3, '0', STR_PAD_LEFT);
+                
+                $batchData = [
+                    'product_id' => $product->id,
+                    'batch_number' => $batchNumber,
+                    'quantity' => $batch['quantity'],
+                    'cost_price' => $validated[$fieldPrefix . 'productCostPrice'],
+                    'selling_price' => $validated[$fieldPrefix . 'productSellingPrice'],
+                    'expiration_date' => $batch['expiration_date'],
+                ];
+
+                // Add PO references for PO method
+                if ($addMethod === 'po') {
+                    $batchData['purchase_order_id'] = $validated['purchaseOrderNumber'];
+                    $batchData['purchase_order_item_id'] = $validated['selectedItemId'];
+                }
+
+                ProductBatch::create($batchData);
+            }
+
+            // For PO method, handle bad items
+            if ($addMethod === 'po' && isset($validated['productQuality']) && $validated['productQuality'] !== 'goodCondition') {
+                $badItemCount = $validated['badItemQuantity'] ?? 0;
+                if ($badItemCount > 0) {
+                    BadItem::create([
+                        'purchase_order_item_id' => $validated['selectedItemId'],
+                        'quality_status' => $validated['productQuality'],
+                        'item_count' => $badItemCount,
+                        'notes' => 'Added via inventory system'
+                    ]);
+                }
+            }
+
+            DB::commit();
+            
+            return redirect()->route('inventory.index')->with('success', 'Product added successfully!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return back()->withInput()->withErrors([
+                'error' => 'Failed to save product: ' . $e->getMessage()
+            ]);
         }
-
-        DB::commit();
-        return redirect()->route('inventory.index')->with('success', 'Product added successfully!');
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->withInput()->withErrors([
-            'error' => 'An error occurred: ' . $e->getMessage()
-        ]);
     }
-}
 
 
     private function generateSKU($productName, $productBrand, $productCategory)

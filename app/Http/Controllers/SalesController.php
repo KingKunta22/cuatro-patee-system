@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Sale;
+use App\Models\Product;
 use App\Models\Customer;
 use App\Models\SaleItem;
 use App\Models\Inventory;
+use App\Models\ProductBatch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,26 +19,23 @@ class SalesController extends Controller
     {
         // Total Revenue (based on selling price)
         $totalRevenue = SaleItem::sum(DB::raw('quantity * unit_price'));
-        // Total Cost (based on cost price from inventory)
-        $totalCost = SaleItem::join('inventories', 'sale_items.inventory_id', '=', 'inventories.id')
-            ->sum(DB::raw('sale_items.quantity * inventories.productCostPrice'));
+        
+        // Total Cost (based on cost price from product batches)
+        $totalCost = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
+            ->sum(DB::raw('sale_items.quantity * product_batches.cost_price'));
+        
         // Total Profit (revenue minus cost)
         $totalProfit = $totalRevenue - $totalCost;
         
         // Get sales data
-        $sales = Sale::with('items')->latest()->paginate(7);
+        $sales = Sale::with('items.productBatch.product')->latest()->paginate(7);
         
-        // Get inventories for the product dropdown
-        $inventories = Inventory::all();
+        // Get products for the product dropdown (instead of inventories)
+        $products = Product::with(['batches' => function($query) {
+                        $query->where('quantity', '>', 0); // Only batches with stock
+                    }])->get();
 
-        return view('sales', compact('sales', 'totalRevenue', 'totalCost', 'totalProfit', 'inventories'));
-    }
-
-    // Show form to create new sale
-    public function create()
-    {
-        $inventories = Inventory::all();
-        return view('sales.create', compact('inventories'));
+        return view('sales', compact('sales', 'totalRevenue', 'totalCost', 'totalProfit', 'products'));
     }
 
     // Generate sequential invoice number
@@ -51,25 +50,19 @@ class SalesController extends Controller
             ->first();
 
         if ($latestInvoice) {
-            // Extract the sequence number properly
             $parts = explode('-', $latestInvoice->invoice_number);
             $lastPart = end($parts);
             
-            // Check if the last part is a sequential number (5 digits)
             if (preg_match('/^\d{5}$/', $lastPart)) {
                 $sequence = (int) $lastPart + 1;
             } else {
-                // If it's a random string (like "68AF9017413D5"), start from 1
                 $sequence = 1;
             }
         } else {
-            // First invoice of the day
             $sequence = 1;
         }
 
-        // Format with leading zeros: 00001, 00002, etc.
         $sequenceFormatted = str_pad($sequence, 5, '0', STR_PAD_LEFT);
-
         return $prefix . $date . '-' . $sequenceFormatted;
     }
 
@@ -85,7 +78,8 @@ class SalesController extends Controller
         // Validate the cart items
         $request->validate([
             'items' => 'required|array|min:1',
-            'items.*.inventory_id' => 'required|exists:inventories,id',
+            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_batch_id' => 'required|exists:product_batches,id',
             'items.*.product_name' => 'required|string|max:255',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
@@ -119,21 +113,28 @@ class SalesController extends Controller
 
             // Process each item in the cart
             foreach ($request->items as $item) {
-                $inventory = Inventory::findOrFail($item['inventory_id']);
+                $productBatch = ProductBatch::findOrFail($item['product_batch_id']);
 
                 // Check stock availability
-                if ($inventory->productStock < $item['quantity']) {
-                    throw new \Exception("Not enough stock for {$inventory->productName}. Available: {$inventory->productStock}");
+                if ($productBatch->quantity < $item['quantity']) {
+                    throw new \Exception("Not enough stock for {$productBatch->product->productName}. Available: {$productBatch->quantity}");
                 }
 
-                // Update inventory stock
-                $inventory->decrement('productStock', $item['quantity']);
+                // Update batch stock
+                $productBatch->decrement('quantity', $item['quantity']);
+
+                // Update inventory summary if you're using it
+                $inventory = Inventory::where('product_id', $item['product_id'])->first();
+                if ($inventory) {
+                    $inventory->decrement('total_quantity', $item['quantity']);
+                }
 
                 // Create sale item
                 SaleItem::create([
                     'sale_id' => $sale->id,
-                    'inventory_id' => $item['inventory_id'],
-                    'product_name' => $item['product_name'] ?? $inventory->productName,
+                    'product_id' => $item['product_id'],
+                    'product_batch_id' => $item['product_batch_id'],
+                    'product_name' => $item['product_name'],
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['price'],
                     'total_price' => $item['quantity'] * $item['price']
@@ -147,9 +148,7 @@ class SalesController extends Controller
                 ->with('success', 'Sale completed successfully!');
 
         } catch (\Exception $e) {
-            // Rollback the transaction on error
             DB::rollBack();
-            
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }

@@ -21,7 +21,10 @@ class ProductBatch extends Model
         'purchase_order_item_id',
     ];
 
-    protected $dates = ['expiration_date'];
+    // Replace $dates with $casts
+    protected $casts = [
+        'expiration_date' => 'datetime',
+    ];
 
     /**
      * Get the product that owns this batch

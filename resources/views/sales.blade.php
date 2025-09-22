@@ -134,7 +134,7 @@
                         x-data="{
                             open: false,
                             search: '',
-                            products: {{ Js::from($inventories) }},
+                            products: {{ Js::from($products) }},
                             filtered() {
                                 return this.products.filter(p => 
                                     p.productName.toLowerCase().includes(this.search.toLowerCase()) ||
@@ -145,22 +145,24 @@
                                 this.search = product.productName + ' (' + product.productSKU + ')'
                                 this.open = false
 
-                                // Find the current stock from our updated products data
-                                const currentProduct = currentProducts.find(p => p.id === product.id);
-                                const currentStock = currentProduct ? currentProduct.productStock : product.productStock;
-
-                                // Fill hidden inputs with CURRENT stock data, not original
-                                document.getElementById('selectedInventoryId').value = product.id
+                                // Get available batches for this product
+                                const availableBatches = product.batches.filter(batch => batch.quantity > 0);
+                                const totalStock = availableBatches.reduce((sum, batch) => sum + batch.quantity, 0);
+                                
+                                // Fill form fields - FIXED: Use selectedProductId instead of selectedInventoryId
+                                document.getElementById('selectedProductId').value = product.id
                                 document.querySelector('[name=productSKU]').value = product.productSKU
-                                document.querySelector('[name=productBrand]').value = product.productBrand
+                                document.querySelector('[name=productBrand]').value = product.brand?.productBrand || 'N/A'
                                 document.querySelector('[name=itemMeasurement]').value = product.productItemMeasurement
-                                document.querySelector('[name=availableStocks]').value = currentStock // CHANGED: Now shows current stock
+                                document.querySelector('[name=availableStocks]').value = totalStock
                                 document.querySelector('[name=salesPrice]').setAttribute('data-base-price', product.productSellingPrice)
                                 document.querySelector('[name=salesPrice]').value = parseFloat(product.productSellingPrice).toFixed(2)
-                                document.querySelector('[name=quantity]').setAttribute('max', currentStock) // CHANGED: Now uses current stock
+                                document.querySelector('[name=quantity]').setAttribute('max', totalStock)
                                 document.querySelector('[name=quantity]').value = '1'
                                 
-                                // Auto-calculate amount when product is selected
+                                // Store batches for later selection
+                                document.getElementById('productBatches').value = JSON.stringify(availableBatches);
+                                
                                 calculateAmount();
                             }
                         }"
@@ -209,7 +211,8 @@
                         </div>
 
                         <!-- Hidden inventory ID -->
-                        <input type="hidden" id="selectedInventoryId" name="inventory_id">
+                        <input type="hidden" id="productBatches" name="product_batches">
+                        <input type="hidden" id="selectedProductId" name="product_id">
                     </div>
 
                     <!-- Other inputs (unchanged) -->
@@ -219,6 +222,14 @@
                     <x-form.form-input label="UOM" name="itemMeasurement" type="text" class="col-span-1" readonly/>
                     <x-form.form-input label="Quantity" name="quantity" type="number" value="1" min="1" class="col-span-1" required oninput="calculateAmount()"/>
                     <x-form.form-input label="Unit Price (₱)" name="salesPrice" type="number" step="0.01" value="0.00" class="col-span-2" readonly/>
+
+                    <!-- Add this after product selection -->
+                    <div id="batchSelection" class="hidden col-span-3">
+                        <label class="text-sm font-medium text-gray-700 mb-1">Batch Selection</label>
+                        <div id="batchOptions" class="border rounded p-2 max-h-32 overflow-y-auto">
+                            <!-- Batch options will be populated here -->
+                        </div>
+                    </div>
 
                     
                     <!-- Hidden fields for sale items -->
@@ -381,7 +392,12 @@
                                 <tbody>
                                     @foreach($sale->items as $saleItem)
                                     <tr class="border-b">
-                                        <td class="px-2 py-2 text-center">{{ $saleItem->inventory->productName ?? 'N/A' }}</td>
+                                        <td class="px-2 py-2 text-center">
+                                            {{ $saleItem->product->productName ?? $saleItem->product_name }}
+                                            @if($saleItem->product_batch_id)
+                                                <br><small class="text-gray-500">Batch: {{ $saleItem->productBatch->batch_number ?? 'N/A' }}</small>
+                                            @endif
+                                        </td>
                                         <td class="px-2 py-2 text-center">{{ $saleItem->quantity }} {{ $saleItem->inventory->productItemMeasurement ?? '' }}</td>
                                         <td class="px-2 py-2 text-center">₱{{ number_format($saleItem->unit_price, 2) }}</td>
                                         <td class="px-2 py-2 text-center">₱{{ number_format($saleItem->total_price, 2) }}</td>
@@ -598,7 +614,7 @@
             
             
             // Store original product data for stock management
-            let originalProducts = {{ Js::from($inventories) }};
+            let originalProducts = {{ Js::from($products) }};
             let currentProducts = JSON.parse(JSON.stringify(originalProducts));
             
             // Function to update available stocks in UI
@@ -650,50 +666,66 @@
             
             // Function to add product to cart
             function addToCart() {
-                const inventoryId = document.getElementById('selectedInventoryId').value;
-                const productName = document.getElementById('productName').value;
+                const productId = document.getElementById('selectedProductId').value;
+                const batchesData = JSON.parse(document.getElementById('productBatches').value || '[]');
                 const quantity = parseFloat(document.querySelector('[name="quantity"]').value) || 0;
                 const basePrice = parseFloat(document.querySelector('[name="salesPrice"]').getAttribute('data-base-price') || 0);
 
-                // Get stock from original data (true available stock)
-                const productOriginal = originalProducts.find(p => p.id == inventoryId);
-                const originalStock = productOriginal ? productOriginal.productStock : 0;
+                if (!productId || quantity <= 0 || batchesData.length === 0) {
+                    Toast.error('Please select a product with available stock');
+                    return;
+                }
 
-                if (!inventoryId || quantity <= 0) {
-                    Toast.error('Please select a product and enter a valid quantity');
+                // Implement FIFO/FEFO batch selection logic
+                const selectedBatches = selectBatchesForSale(batchesData, quantity);
+
+                if (!selectedBatches) {
+                    Toast.error('Not enough stock available');
+                    return;
+                }
+
+                // Get product details
+                const productName = document.getElementById('productName').value;
+                const productOriginal = originalProducts.find(p => p.id == productId);
+                
+                if (!productOriginal) {
+                    Toast.error('Product not found');
+                    return;
+                }
+
+                // Calculate total quantity across all batches
+                const totalBatchQuantity = selectedBatches.reduce((sum, batch) => sum + batch.quantityToSell, 0);
+                
+                if (totalBatchQuantity !== quantity) {
+                    Toast.error('Batch allocation error');
                     return;
                 }
 
                 // Find if item already in cart
-                const existingItemIndex = cart.findIndex(item => item.inventory_id === inventoryId);
-                const currentQuantityInCart = existingItemIndex >= 0 ? cart[existingItemIndex].quantity : 0;
-                const totalRequested = currentQuantityInCart + quantity;
-
-                // Compare against original stock
-                if (totalRequested > originalStock) {
-                    Toast.error(`Total quantity cannot exceed available stock (${originalStock})`);
-                    return;
-                }
-
+                const existingItemIndex = cart.findIndex(item => item.product_id === productId);
+                
                 if (existingItemIndex >= 0) {
                     // Update existing item
-                    cart[existingItemIndex].quantity = totalRequested;
-                    cart[existingItemIndex].total = totalRequested * basePrice;
+                    cart[existingItemIndex].quantity += quantity;
+                    cart[existingItemIndex].total = cart[existingItemIndex].quantity * basePrice;
+                    cart[existingItemIndex].batches = selectedBatches;
                 } else {
                     // Add new item to cart
                     const itemTotal = basePrice * quantity;
                     cart.push({
-                        inventory_id: inventoryId,
+                        product_id: productId,
+                        product_batch_id: selectedBatches[0].id, // Main batch ID
                         name: productName,
                         product_name: productName,
                         quantity: quantity,
                         price: basePrice,
-                        total: itemTotal
+                        total: itemTotal,
+                        batches: selectedBatches // Store all batches used
                     });
                 }
 
-                // Update UI for available stocks (subtract from currentProducts for display only)
-                updateAvailableStocksUI(inventoryId, quantity);
+                // Update UI for available stocks
+                updateAvailableStocksUI(productId, quantity);
 
                 // Update cart total
                 cartTotal = cart.reduce((sum, item) => sum + item.total, 0);
@@ -706,7 +738,15 @@
                 itemsAdded = true;
 
                 // Reset product selection fields
+                resetProductSelection();
+
+                calculateChange();
+            }
+
+            // Function to reset product selection fields
+            function resetProductSelection() {
                 document.getElementById('productName').value = '';
+                document.getElementById('selectedProductId').value = '';
                 document.querySelector('[name="productSKU"]').value = '';
                 document.querySelector('[name="productBrand"]').value = '';
                 document.querySelector('[name="itemMeasurement"]').value = '';
@@ -715,8 +755,30 @@
                 document.querySelector('[name="quantity"]').removeAttribute('max');
                 document.querySelector('[name="salesPrice"]').value = '0.00';
                 document.querySelector('[name="salesPrice"]').setAttribute('data-base-price', '0');
+                document.getElementById('productBatches').value = '';
+            }
 
-                calculateChange();
+            // Function to select batches using FIFO/FEFO
+            function selectBatchesForSale(batches, requiredQuantity) {
+                // Sort batches by expiration date (FEFO) or creation date (FIFO)
+                const sortedBatches = batches.sort((a, b) => new Date(a.expiration_date) - new Date(b.expiration_date));
+                
+                let remainingQuantity = requiredQuantity;
+                const selectedBatches = [];
+                
+                for (const batch of sortedBatches) {
+                    if (remainingQuantity <= 0) break;
+                    
+                    const quantityFromBatch = Math.min(batch.quantity, remainingQuantity);
+                    selectedBatches.push({
+                        ...batch,
+                        quantityToSell: quantityFromBatch
+                    });
+                    
+                    remainingQuantity -= quantityFromBatch;
+                }
+                
+                return remainingQuantity === 0 ? selectedBatches : null;
             }
 
             
@@ -768,33 +830,47 @@
                 const container = document.getElementById('saleItemsContainer');
                 container.innerHTML = '';
                 
-                cart.forEach((item, index) => {
-                    const inventoryIdInput = document.createElement('input');
-                    inventoryIdInput.type = 'hidden';
-                    inventoryIdInput.name = `items[${index}][inventory_id]`;
-                    inventoryIdInput.value = item.inventory_id;
-                    
-                    const productNameInput = document.createElement('input');
-                    productNameInput.type = 'hidden';
-                    productNameInput.name = `items[${index}][product_name]`;
-                    productNameInput.value = item.product_name;
-                    
-                    const quantityInput = document.createElement('input');
-                    quantityInput.type = 'hidden';
-                    quantityInput.name = `items[${index}][quantity]`;
-                    quantityInput.value = item.quantity;
-                    
-                    const priceInput = document.createElement('input');
-                    priceInput.type = 'hidden';
-                    priceInput.name = `items[${index}][price]`;
-                    priceInput.value = item.price;
-                    
-                    container.appendChild(inventoryIdInput);
-                    container.appendChild(productNameInput);
-                    container.appendChild(quantityInput);
-                    container.appendChild(priceInput);
+                let itemIndex = 0;
+                
+                cart.forEach((item) => {
+                    // For each batch in the item, create a separate form input set
+                    item.batches.forEach((batch, batchIndex) => {
+                        const productIdInput = document.createElement('input');
+                        productIdInput.type = 'hidden';
+                        productIdInput.name = `items[${itemIndex}][product_id]`;
+                        productIdInput.value = item.product_id;
+                        
+                        const productBatchIdInput = document.createElement('input');
+                        productBatchIdInput.type = 'hidden';
+                        productBatchIdInput.name = `items[${itemIndex}][product_batch_id]`;
+                        productBatchIdInput.value = batch.id;
+                        
+                        const productNameInput = document.createElement('input');
+                        productNameInput.type = 'hidden';
+                        productNameInput.name = `items[${itemIndex}][product_name]`;
+                        productNameInput.value = item.product_name;
+                        
+                        const quantityInput = document.createElement('input');
+                        quantityInput.type = 'hidden';
+                        quantityInput.name = `items[${itemIndex}][quantity]`;
+                        quantityInput.value = batch.quantityToSell;
+                        
+                        const priceInput = document.createElement('input');
+                        priceInput.type = 'hidden';
+                        priceInput.name = `items[${itemIndex}][price]`;
+                        priceInput.value = item.price;
+                        
+                        container.appendChild(productIdInput);
+                        container.appendChild(productBatchIdInput);
+                        container.appendChild(productNameInput);
+                        container.appendChild(quantityInput);
+                        container.appendChild(priceInput);
+                        
+                        itemIndex++;
+                    });
                 });
             }
+
             // Function to remove item from cart
             function removeFromCart(index) {
                 const removedItem = cart[index];
@@ -807,18 +883,18 @@
                 cart.splice(index, 1);
                 
                 // Update UI for available stocks (add back the quantity)
-                const productIndex = currentProducts.findIndex(p => p.id == removedItem.inventory_id);
+                const productIndex = currentProducts.findIndex(p => p.id == removedItem.product_id);
                 if (productIndex !== -1) {
-                    currentProducts[productIndex].productStock += removedItem.quantity;
+                    currentProducts[productIndex].totalStock += removedItem.quantity;
                     
                     // Update the stock field if this product is currently selected
-                    const selectedInventoryId = document.getElementById('selectedInventoryId').value;
-                    if (selectedInventoryId == removedItem.inventory_id) {
-                        document.querySelector('[name="availableStocks"]').value = currentProducts[productIndex].productStock;
+                    const selectedProductId = document.getElementById('selectedProductId').value;
+                    if (selectedProductId == removedItem.product_id) {
+                        document.querySelector('[name="availableStocks"]').value = currentProducts[productIndex].totalStock;
                     }
                     
                     // Update Alpine data
-                    updateAlpineStockData(removedItem.inventory_id, currentProducts[productIndex].productStock);
+                    updateAlpineStockData(removedItem.product_id, currentProducts[productIndex].totalStock);
                 }
                 
                 // Update display
@@ -827,7 +903,6 @@
                 
                 // Recalculate change
                 calculateChange();
-                
             }
             
             // Function to validate form before submission
@@ -860,9 +935,9 @@
                 document.querySelector('[name="salesCash"]').value = '';
                 document.querySelector('[name="salesChange"]').value = '0.00';
                 
-                // Reset product selection fields
+                // Reset product selection fields - FIXED: Use selectedProductId
                 document.getElementById('productName').value = '';
-                document.getElementById('selectedInventoryId').value = '';
+                document.getElementById('selectedProductId').value = '';
                 document.querySelector('[name="productSKU"]').value = '';
                 document.querySelector('[name="productBrand"]').value = '';
                 document.querySelector('[name="itemMeasurement"]').value = '';
@@ -871,6 +946,7 @@
                 document.querySelector('[name="quantity"]').removeAttribute('max');
                 document.querySelector('[name="salesPrice"]').value = '0.00';
                 document.querySelector('[name="salesPrice"]').removeAttribute('data-base-price');
+                document.getElementById('productBatches').value = '';
                 
                 // Reset cart
                 cart = [];
@@ -907,22 +983,25 @@
                 // Group quantities by product ID
                 const quantityByProduct = {};
                 cart.forEach(item => {
-                    quantityByProduct[item.inventory_id] = (quantityByProduct[item.inventory_id] || 0) + item.quantity;
+                    quantityByProduct[item.product_id] = (quantityByProduct[item.product_id] || 0) + item.quantity;
                 });
                 
                 // Validate each product's total quantity
-                for (const [inventoryId, totalQuantity] of Object.entries(quantityByProduct)) {
-                    const originalProduct = originalProducts.find(p => p.id == inventoryId);
+                for (const [productId, totalQuantity] of Object.entries(quantityByProduct)) {
+                    const originalProduct = originalProducts.find(p => p.id == productId);
                     
                     if (!originalProduct) {
                         Toast.error('One of your products is no longer available');
                         return false;
                     }
                     
+                    // Calculate total available stock from batches
+                    const totalAvailableStock = originalProduct.batches.reduce((sum, batch) => sum + batch.quantity, 0);
+                    
                     // CRITICAL: Check TOTAL quantity against stock
-                    if (totalQuantity > originalProduct.productStock) {
-                        const productName = cart.find(item => item.inventory_id == inventoryId).name;
-                        Toast.error(`Not enough stock for ${productName}. Available: ${originalProduct.productStock}, Requested: ${totalQuantity}`);
+                    if (totalQuantity > totalAvailableStock) {
+                        const productName = cart.find(item => item.product_id == productId).name;
+                        Toast.error(`Not enough stock for ${productName}. Available: ${totalAvailableStock}, Requested: ${totalQuantity}`);
                         return false;
                     }
                 }

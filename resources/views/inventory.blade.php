@@ -232,13 +232,6 @@
                                     <p class="font-semibold text-md">Cost Price</p>
                                     <p class="text-sm">₱{{ number_format($product->productCostPrice, 2) }}</p>
                                 </div>
-                                <div class="bg-gray-50 col-span-3 p-3 rounded-md">
-                                    <p class="font-semibold text-md">Expiration Date</p>
-                                    <p class="text-sm">
-                                        {{ \Carbon\Carbon::parse($product->productExpirationDate)->format('M d, Y') }}
-                                        ({{ \Carbon\Carbon::parse($product->productExpirationDate)->diffForHumans() }})
-                                    </p>
-                                </div>
                                 <!-- BATCH DETAILS -->
                                 <div class="bg-gray-50 col-span-4 p-3 rounded-md">
                                     <p class="font-semibold text-md">Batch Details</p>
@@ -246,7 +239,7 @@
                                         <div class="text-sm border-b py-2">
                                             <strong>Batch {{ $batch->batch_number }}:</strong><br>
                                             Qty: {{ $batch->quantity }} | 
-                                            Exp: {{ $batch->expiration_date->format('M d, Y') }} |
+                                            Exp: {{ $batch->expiration_date->format('M d, Y') }} | <!-- This should work after casting -->
                                             Cost: ₱{{ number_format($batch->cost_price, 2) }}
                                         </div>
                                     @endforeach
@@ -465,9 +458,6 @@
                                     </button>
                                 </div>
 
-                                <input type="hidden" name="manual_productExpirationDate" 
-                                :value="batches.length > 0 ? batches[0].expiration_date : ''">
-
                                 <!-- STOCK ASSIGNMENT SUMMARY -->
                                 <div class="text-sm col-span-6" >
                                     <span class="font-semibold" :class="{
@@ -564,20 +554,27 @@
                 this.badItemCount = 0;
                 this.batches = [];
                 this.newBatch = { quantity: '', expiration_date: '' };
+                this.productStock = 0;
+                this.originalStock = 0;
+                this.itemMeasurement = ''; 
                 
                 if (!poId) return;
                 
-                const response = await fetch(`/get-items/${poId}`);
-                this.items = await response.json();
-                
-                if (this.items.length === 0) {
-                    console.log('No items available for this PO');
-                    return;
-                }
-                
-                if (this.items.length === 1) {
-                    this.selectedItemId = this.items[0].id;
-                    this.setCostPrice(this.items[0].id);
+                try {
+                    const response = await fetch(`/get-items/${poId}`);
+                    this.items = await response.json();
+                    
+                    if (this.items.length === 0) {
+                        console.log('No items available for this PO');
+                        return;
+                    }
+                    
+                    if (this.items.length === 1) {
+                        this.selectedItemId = this.items[0].id;
+                        this.setCostPrice(this.items[0].id);
+                    }
+                } catch (error) {
+                    console.error('Error fetching items:', error);
                 }
             },
             
@@ -589,7 +586,7 @@
                     this.productName = item.productName;
                     this.productStock = item.quantity;
                     this.originalStock = item.quantity;
-                    this.itemMeasurement = item.itemMeasurement;
+                    this.itemMeasurement = item.itemMeasurement || ''; 
                 }
             },
             
@@ -605,7 +602,7 @@
             addBatch() {
                 if (this.newBatch.quantity && this.newBatch.expiration_date) {
                     this.batches.push({
-                        quantity: this.newBatch.quantity,
+                        quantity: parseInt(this.newBatch.quantity),
                         expiration_date: this.newBatch.expiration_date,
                         batch_id: 'BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase()
                     });
@@ -619,6 +616,27 @@
             
             getTotalStock() {
                 return this.batches.reduce((total, batch) => total + parseInt(batch.quantity || 0), 0);
+            },
+            
+            // ADD VALIDATION FOR PO METHOD
+            validatePOForm() {
+                if (!this.poId) {
+                    Toast.error('Please select a purchase order');
+                    return false;
+                }
+                if (!this.selectedItemId) {
+                    Toast.error('Please select a purchase order item');
+                    return false;
+                }
+                if (this.batches.length === 0) {
+                    Toast.error('Please add at least one batch');
+                    return false;
+                }
+                if (this.getTotalStock() !== this.productStock) {
+                    Toast.error('Batch quantities must equal total stock');
+                    return false;
+                }
+                return true;
             }
         }">
 
@@ -648,7 +666,8 @@
                         class="px-3 py-2.5 border rounded-sm border-black"
                         x-model="selectedItemId" 
                         :disabled="!items.length"
-                        @change="setCostPrice($event.target.value)">
+                        @change="setCostPrice($event.target.value)"
+                        required>
                     <option value="" disabled selected>Select PO Item</option>
                     <template x-for="item in items" :key="item.id">
                         <option :value="item.id" x-text="item.productName"></option>
@@ -703,12 +722,14 @@
                 </select>
             </div>
 
+            <!-- HIDDEN PRODUCT STOCK FIELD -->
+            <input type="hidden" name="productStock" x-model="productStock" x-bind:required="addMethod === 'po'">
+
             <x-form.form-input label="Total Stocks" type="number" value="" 
-                name="productStock" 
+                name="display_productStock" 
                 x-model="productStock"
                 readonly
-                class="col-span-1"
-                x-bind:required="addMethod === 'po'"/>
+                class="col-span-1"/>
 
             <x-form.form-input label="Selling Price" class="col-span-1" name="productSellingPrice" value="" 
                 type="number" step="0.01" min="0" 
@@ -750,7 +771,7 @@
             </div>
 
             <!-- ALWAYS SHOW BUT DISABLED WHEN GOOD CONDITION -->
-            <div class="flex flex-col items-center content-center text-md w-full">
+            <div class="flex flex-col items-center content-center text-md w-full col-span-1">
                 <label for="badItemQuantity" class="pr-2">Item count: </label>
                 <input name="badItemQuantity" id="badItemQuantity" type="number" step="1" min="0" 
                     :max="originalStock" 
@@ -812,12 +833,6 @@
             <span x-show="getTotalStock() > productStock" class="text-red-500 ml-2">
                 (Warning: Overassigned by <span x-text="getTotalStock() - (productStock || 0)"></span> stocks!)
             </span>
-        </div>
-
-        <!-- BATCH VALIDATION MESSAGE (Hidden but triggers Toast) -->
-        <div x-show="batches.length > 0 && getTotalStock() !== parseInt(productStock || 0)" 
-            x-init="if (batches.length > 0 && getTotalStock() !== parseInt(productStock || 0)) { Toast.error('Batch quantities must equal total stocks') }"
-            class="hidden">
         </div>
 
         <!-- PREVIEW TABLE FOR ADDED BATCH -->
@@ -996,11 +1011,11 @@
                         <div class="flex flex-col text-start col-span-3">
                             <label for="itemMeasurement" class="font-medium">Measurement per item</label>
                             <select name="productItemMeasurement" 
-                                class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
+                                    class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
                                 <option value="" disabled>Select Measurement</option>
                                 <option value="kilogram" {{ $product->productItemMeasurement == 'kilogram' ? 'selected' : '' }}>kilogram (kg)</option>
                                 <option value="gram" {{ $product->productItemMeasurement == 'gram' ? 'selected' : '' }}>gram (g)</option>
-                                <option value="liter" {{ $product>productItemMeasurement == 'liter' ? 'selected' : '' }}>liter (L)</option>
+                                <option value="liter" {{ $product->productItemMeasurement == 'liter' ? 'selected' : '' }}>liter (L)</option>
                                 <option value="milliliter" {{ $product->productItemMeasurement == 'milliliter' ? 'selected' : '' }}>milliliter (mL)</option>
                                 <option value="pcs" {{ $product->productItemMeasurement == 'pcs' ? 'selected' : '' }}>pieces (pcs)</option>
                                 <option value="set" {{ $product->productItemMeasurement == 'set' ? 'selected' : '' }}>set</option>
@@ -1008,12 +1023,6 @@
                                 <option value="pack" {{ $product->productItemMeasurement == 'pack' ? 'selected' : '' }}>pack</option>
                             </select>
                         </div>
-
-                        <x-form.form-input label="Expiration Date" name="productExpirationDate" type="date"
-                            value="{{ $product->productExpirationDate }}" 
-                            min="{{ date('Y-m-d') }}"
-                            class="col-span-3" required
-                        />
 
                         <!-- Footer Buttons -->
                         <div class="container col-span-6 gap-x-4 place-content-end w-full flex items-end content-center px-6 mt-4">

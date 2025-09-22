@@ -120,7 +120,9 @@
 
             <div x-show="activeTab === 'inventory'">
                 @include('reports.inventory-reports', [
-                    'inventories' => $inventories, 
+                    'products' => $inventories, // This passes the products data
+                    'totalStockIn' => $totalStockIn, 
+                    'totalStockOut' => $totalStockOut,
                     'timePeriod' => $timePeriod ?? 'all'
                 ])
             </div>
@@ -164,7 +166,7 @@
         
         @foreach( $purchaseOrders as $po)
         @php
-            // Calculate totals for this PO
+            // Calculate totals for this PO using batches
             $totalItems = $po->items->sum('quantity');
             $goodItemsCount = 0;
             $defectiveCount = 0;
@@ -172,7 +174,11 @@
             $hasNotes = $po->notes->count() > 0;
             
             foreach ($po->items as $item) {
-                $goodItemsCount += $item->inventory ? $item->inventory->productStock : 0;
+                // Use batches instead of inventory
+                $itemGoodCount = \App\Models\ProductBatch::where('purchase_order_item_id', $item->id)
+                    ->sum('quantity');
+                $goodItemsCount += $itemGoodCount;
+                
                 $itemDefectiveCount = $item->badItems->sum('item_count');
                 $defectiveCount += $itemDefectiveCount;
                 
@@ -287,15 +293,16 @@
                         <tbody>
                             @foreach($po->items as $item)
                                 @php
-                                    $itemGoodCount = $item->inventory ? $item->inventory->productStock : 0;
+                                    // Use batches for good count
+                                    $itemGoodCount = \App\Models\ProductBatch::where('purchase_order_item_id', $item->id)
+                                        ->sum('quantity');
                                     $itemDefectiveCount = $item->badItems->sum('item_count');
                                     $itemDefectType = $item->badItems->first() ? $item->badItems->first()->quality_status : '';
                                     
-                                    // Determine individual item status based on delivery status AND notes
+                                    // Determine individual item status
                                     $individualItemStatus = $itemStatus;
                                     $individualItemStatusClass = $itemStatusClass;
                                     
-                                    // For delivered items with defects, check if notes exist
                                     if ($deliveryStatus === 'Delivered' && $itemDefectiveCount > 0) {
                                         $individualItemStatus = $hasNotes ? 'Reviewed' : 'Pending Review';
                                         $individualItemStatusClass = $hasNotes ? 'text-blue-600 bg-blue-100' : 'text-yellow-600 bg-yellow-100';

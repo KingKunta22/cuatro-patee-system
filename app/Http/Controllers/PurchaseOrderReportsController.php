@@ -10,32 +10,36 @@ class PurchaseOrderReportsController extends Controller
 {
     public function index(Request $request)
     {
-        // Start with base query
-        $query = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems', 'deliveries'])
-            ->whereHas('deliveries', function($q) {
-                $q->where('orderStatus', 'Delivered');
-            });
+        // Start with base query - get POs that have delivered batches
+        $query = PurchaseOrder::with([
+            'supplier', 
+            'items', 
+            'items.productBatch', // Changed from items.inventory
+            'items.badItems', 
+            'deliveries'
+        ])
+        ->whereHas('items.productBatch', function($q) {
+            $q->where('quantity', '>', 0); // Only POs with actual stock
+        });
 
         // Apply time period filter
         $timePeriod = $request->timePeriod ?? 'all';
 
         if ($timePeriod !== 'all') {
             switch ($timePeriod) {
-                case 'daily':
+                case 'today':
                     $query->whereDate('created_at', today());
                     break;
-                case 'weekly':
-                    $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
+                case 'lastWeek':
+                    $query->whereBetween('created_at', [now()->subDays(7), now()]);
                     break;
-                case 'monthly':
-                    $query->whereMonth('created_at', now()->month)
-                        ->whereYear('created_at', now()->year);
+                case 'lastMonth':
+                    $query->whereBetween('created_at', [now()->subDays(30), now()]);
                     break;
             }
         }
 
         // Order by delivery status update time (most recent delivered first)
-        // Use po_page parameter instead of page
         $purchaseOrders = $query->orderByDesc(function($query) {
                 $query->select('status_updated_at')
                     ->from('deliveries')
@@ -44,9 +48,9 @@ class PurchaseOrderReportsController extends Controller
                     ->orderBy('status_updated_at', 'desc')
                     ->limit(1);
             })
-            ->paginate(10, ['*'], 'po_page'); // Add this parameter
+            ->paginate(10, ['*'], 'po_page');
 
-        return view('reports.purchase-order-reports', compact('purchaseOrders'));
+        return view('reports.purchase-order-reports', compact('purchaseOrders', 'timePeriod'));
     }
 
     public function updateDefectiveStatus(Request $request, PurchaseOrderItem $item)

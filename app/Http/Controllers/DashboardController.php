@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Sale;
+use App\Models\Product;
 use App\Models\SaleItem;
 use App\Models\Inventory;
+use App\Models\ProductBatch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -15,8 +17,6 @@ class DashboardController extends Controller
     {
         // Get time period filter - default to 'today'
         $timePeriod = $request->get('timePeriod', 'today');
-        
-        // Calculate date range based on time period
         $dateRange = $this->getDateRange($timePeriod);
         
         // Total Sales (revenue)
@@ -27,14 +27,14 @@ class DashboardController extends Controller
             })
             ->sum(DB::raw('quantity * unit_price'));
         
-        // Total Cost
+        // Total Cost (updated for new structure)
         $totalCost = SaleItem::when($dateRange, function($query) use ($dateRange) {
                 $query->whereHas('sale', function($q) use ($dateRange) {
                     $q->whereBetween('sale_date', [$dateRange['start'], $dateRange['end']]);
                 });
             })
-            ->join('inventories', 'sale_items.inventory_id', '=', 'inventories.id')
-            ->sum(DB::raw('sale_items.quantity * inventories.productCostPrice'));
+            ->join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
+            ->sum(DB::raw('sale_items.quantity * product_batches.cost_price'));
         
         // Products Sold (count of items sold)
         $productsSold = SaleItem::when($dateRange, function($query) use ($dateRange) {
@@ -52,36 +52,62 @@ class DashboardController extends Controller
             })
             ->count();
         
-        // Stock Level breakdown
-        $inStock = Inventory::where('productStock', '>', 10)->count();
-        $lowStock = Inventory::whereBetween('productStock', [1, 10])->count();
-        $outOfStock = Inventory::where('productStock', 0)->count();
+        // Stock Level breakdown (using product batches)
+        $totalStock = ProductBatch::sum('quantity');
+        $inStock = Product::whereHas('batches', function($query) {
+                $query->where('quantity', '>', 10);
+            })->count();
+        $lowStock = Product::whereHas('batches', function($query) {
+                $query->whereBetween('quantity', [1, 10]);
+            })->count();
+        $outOfStock = Product::whereHas('batches', function($query) {
+                $query->where('quantity', 0);
+            })->count();
         
         // Low Stock Products (stock ≤ 10)
-        $lowStockProducts = Inventory::whereBetween('productStock', [1, 10])
-            ->orderBy('productStock', 'asc')
+        $lowStockProducts = Product::whereHas('batches', function($query) {
+                $query->whereBetween('quantity', [1, 10]);
+            })
+            ->with(['batches' => function($query) {
+                $query->select('product_id', DB::raw('SUM(quantity) as total_quantity'))
+                    ->groupBy('product_id');
+            }])
             ->limit(5)
-            ->get(['productName', 'productStock']);
+            ->get()
+            ->map(function($product) {
+                return [
+                    'productName' => $product->productName,
+                    'productStock' => $product->batches->sum('total_quantity')
+                ];
+            });
         
         // Top Selling Products (last 30 days)
         $topSellingProducts = SaleItem::whereHas('sale', function($query) {
                 $query->where('sale_date', '>=', now()->subDays(30));
             })
-            ->with(['inventory' => function($query) {
-                $query->select('id', 'productSellingPrice', 'productSKU', 'productImage');
+            ->with(['product' => function($query) {
+                $query->select('id', 'productName', 'productImage');
             }])
-            ->select('product_name', 'inventory_id', 'unit_price', DB::raw('SUM(quantity) as total_sold'))
-            ->groupBy('product_name', 'inventory_id', 'unit_price')
+            ->select('product_id', 'product_name', DB::raw('SUM(quantity) as total_sold'))
+            ->groupBy('product_id', 'product_name')
             ->orderBy('total_sold', 'desc')
             ->limit(5)
             ->get();
         
         // Expiring Products (within next 30 days)
-        $expiringProducts = Inventory::where('productExpirationDate', '>=', now())
-            ->where('productExpirationDate', '<=', now()->addDays(30))
-            ->orderBy('productExpirationDate', 'asc')
+        $expiringProducts = ProductBatch::where('expiration_date', '>=', now())
+            ->where('expiration_date', '<=', now()->addDays(30))
+            ->with('product')
+            ->orderBy('expiration_date', 'asc')
             ->limit(5)
-            ->get(['productName', 'productExpirationDate', 'productSKU']);
+            ->get()
+            ->map(function($batch) {
+                return [
+                    'productName' => $batch->product->productName,
+                    'productExpirationDate' => $batch->expiration_date,
+                    'batch_number' => $batch->batch_number
+                ];
+            });
         
         return view('main', compact(
             'totalSales',

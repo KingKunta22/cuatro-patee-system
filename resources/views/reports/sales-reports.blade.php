@@ -110,7 +110,7 @@
                 </div>
 
                 <!-- Items in this sale -->
-                <div class="col-span-2">
+                <div class="col-span-3">
                     <h2 class="text-xl font-bold mb-4">Items Sold</h2>
                     <div class="border w-auto rounded-md border-solid border-black p-3 my-4">
                         <table class="w-full">
@@ -125,8 +125,13 @@
                             <tbody>
                                 @foreach($sale->items as $saleItem)
                                 <tr class="border-b">
-                                    <td class="px-2 py-2 text-center">{{ $saleItem->inventory->productName ?? $saleItem->product_name ?? 'N/A' }}</td>
-                                    <td class="px-2 py-2 text-center">{{ $saleItem->quantity }} {{ $saleItem->inventory->productItemMeasurement ?? '' }}</td>
+                                    <td class="px-2 py-2 text-center">
+                                        {{ $saleItem->productBatch->product->productName ?? $saleItem->product_name ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-2 py-2 text-center">
+                                        {{ $saleItem->quantity }} 
+                                        {{ $saleItem->productBatch->product->productItemMeasurement ?? '' }}
+                                    </td>
                                     <td class="px-2 py-2 text-center">₱{{ number_format($saleItem->unit_price, 2) }}</td>
                                     <td class="px-2 py-2 text-center">₱{{ number_format($saleItem->total_price, 2) }}</td>
                                 </tr>

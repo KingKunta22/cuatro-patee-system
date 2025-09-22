@@ -16,7 +16,7 @@
         <tbody class="divide-y divide-gray-200">
             @forelse($purchaseOrders as $po)
                 @php
-                    // Calculate totals for this PO
+                    // Calculate totals for this PO using batches instead of inventory
                     $totalItems = $po->items->sum('quantity');
                     $goodItemsCount = 0;
                     $defectiveCount = 0;
@@ -24,7 +24,10 @@
                     $hasNotes = $po->notes->count() > 0;
                     
                     foreach ($po->items as $item) {
-                        $goodItemsCount += $item->inventory ? $item->inventory->productStock : 0;
+                        // Calculate good items from batches linked to this PO item
+                        $itemGoodCount = $item->productBatches->sum('quantity');
+                        $goodItemsCount += $itemGoodCount;
+                        
                         $itemDefectiveCount = $item->badItems->sum('item_count');
                         $defectiveCount += $itemDefectiveCount;
                         

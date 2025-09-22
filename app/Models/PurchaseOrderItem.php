@@ -20,14 +20,14 @@ class PurchaseOrderItem extends Model
         return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
 
-    public function inventory()
-    {
-        return $this->hasOne(Inventory::class, 'purchase_order_item_id');
-    }
-
     public function badItems()
     {
         return $this->hasMany(BadItem::class, 'purchase_order_item_id');
+    }
+
+    public function productBatches()
+    {
+        return $this->hasMany(ProductBatch::class, 'purchase_order_item_id');
     }
     
 }

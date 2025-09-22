@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Sale;
+use App\Models\Product;
+use App\Models\SaleItem;
 use App\Models\Inventory;
+use App\Models\ProductBatch;
+use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
-use App\Models\SaleItem;
-use App\Models\Sale;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
 
 class ReportsController extends Controller
 {
@@ -50,7 +52,7 @@ class ReportsController extends Controller
 
     private function getInventoryData($timePeriod)
     {
-        $query = Inventory::with(['category', 'brand']);
+        $query = Product::with(['brand', 'category', 'batches']);
         
         $this->applyTimeFilter($query, $timePeriod, 'created_at');
         
@@ -62,19 +64,26 @@ class ReportsController extends Controller
 
     private function getPurchaseOrderData($timePeriod)
     {
-        $query = PurchaseOrder::with(['supplier', 'items', 'items.inventory', 'items.badItems', 'notes', 'deliveries'])
-            ->whereHas('deliveries', function($query) {
-                $query->where(function($q) {
-                    $q->where('orderStatus', 'Delivered')
-                    ->orWhere('orderStatus', 'Cancelled')
-                    ->orWhere(function($confirmedQuery) {
-                        $confirmedQuery->where('orderStatus', 'Confirmed')
-                                        ->whereHas('purchaseOrder', function($poQuery) {
-                                            $poQuery->where('deliveryDate', '<', now()->startOfDay());
-                                        });
-                    });
+        $query = PurchaseOrder::with([
+            'supplier', 
+            'items', 
+            'items.productBatches', // Changed from items.inventory
+            'items.badItems', 
+            'notes', 
+            'deliveries'
+        ])
+        ->whereHas('deliveries', function($query) {
+            $query->where(function($q) {
+                $q->where('orderStatus', 'Delivered')
+                ->orWhere('orderStatus', 'Cancelled')
+                ->orWhere(function($confirmedQuery) {
+                    $confirmedQuery->where('orderStatus', 'Confirmed')
+                                    ->whereHas('purchaseOrder', function($poQuery) {
+                                        $poQuery->where('deliveryDate', '<', now()->startOfDay());
+                                    });
                 });
             });
+        });
         
         $this->applyTimeFilter($query, $timePeriod, 'created_at');
         
@@ -89,10 +98,9 @@ class ReportsController extends Controller
     }
 
 
-
     private function getSalesData($timePeriod)
     {
-        $query = Sale::with(['items', 'items.inventory']);
+        $query = Sale::with(['items', 'items.productBatch.product']);
         
         $this->applyTimeFilter($query, $timePeriod, 'sale_date');
         
@@ -101,20 +109,16 @@ class ReportsController extends Controller
     }
 
 
-
-
     private function getStockTotals($timePeriod)
     {
-        $stockInQuery = PurchaseOrderItem::whereHas('purchaseOrder.deliveries', function($query) {
-            $query->where('orderStatus', 'Delivered');
-        });
-        
-        $stockOutQuery = SaleItem::query();
-        
-        $this->applyTimeFilter($stockInQuery, $timePeriod, 'purchase_order_items.created_at');
-        $this->applyTimeFilter($stockOutQuery, $timePeriod, 'sale_items.created_at', 'sale');
-        
+        // Stock in: Sum of all product batch quantities
+        $stockInQuery = ProductBatch::query();
+        $this->applyTimeFilter($stockInQuery, $timePeriod, 'created_at');
         $totalStockIn = $stockInQuery->sum('quantity');
+        
+        // Stock out: Sum of all sale items quantities
+        $stockOutQuery = SaleItem::query();
+        $this->applyTimeFilter($stockOutQuery, $timePeriod, 'created_at');
         $totalStockOut = $stockOutQuery->sum('quantity');
         
         return [$totalStockIn, $totalStockOut];
@@ -124,13 +128,13 @@ class ReportsController extends Controller
     private function getRevenueStats($timePeriod)
     {
         $revenueQuery = Sale::query();
-        $costQuery = SaleItem::join('inventories', 'sale_items.inventory_id', '=', 'inventories.id');
+        $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id');
         
         $this->applyTimeFilter($revenueQuery, $timePeriod, 'sale_date');
         $this->applyTimeFilter($costQuery, $timePeriod, 'sale_date', 'sale');
         
         $totalRevenue = $revenueQuery->sum('total_amount');
-        $totalCost = $costQuery->sum(DB::raw('sale_items.quantity * inventories.productCostPrice'));
+        $totalCost = $costQuery->sum(DB::raw('sale_items.quantity * product_batches.cost_price'));
         $totalProfit = $totalRevenue - $totalCost;
         
         return [$totalRevenue, $totalCost, $totalProfit];
@@ -172,14 +176,14 @@ class ReportsController extends Controller
     private function getProductMovementsData($timePeriod)
     {
         // Get sales data for outflow with time filtering
-        $salesQuery = Sale::with(['items', 'items.inventory']);
+        $salesQuery = Sale::with(['items', 'items.productBatch.product']);
         $this->applyTimeFilter($salesQuery, $timePeriod, 'sale_date');
         $sales = $salesQuery->orderBy('sale_date', 'DESC')->get();
         
-        // Get inventory changes for inflow with time filtering
-        $inventoryQuery = Inventory::with(['category', 'brand']);
-        $this->applyTimeFilter($inventoryQuery, $timePeriod, 'created_at');
-        $inventoryChanges = $inventoryQuery->orderBy('created_at', 'DESC')->get();
+        // Get product additions for inflow with time filtering
+        $productsQuery = Product::with(['brand', 'category', 'batches']);
+        $this->applyTimeFilter($productsQuery, $timePeriod, 'created_at');
+        $products = $productsQuery->orderBy('created_at', 'DESC')->get();
         
         $movements = [];
         
@@ -191,10 +195,10 @@ class ReportsController extends Controller
                 // Clean up product name by removing SKU if it exists
                 if (!empty($productName)) {
                     $productName = preg_replace('/\s*\([^)]*\)\s*$/', '', $productName);
-                } elseif ($item->inventory && !empty($item->inventory->productName)) {
-                    $productName = preg_replace('/\s*\([^)]*\)\s*$/', '', $item->inventory->productName);
+                } elseif ($item->product && !empty($item->product->productName)) {
+                    $productName = preg_replace('/\s*\([^)]*\)\s*$/', '', $item->product->productName);
                 } else {
-                    $productName = 'Product #' . $item->inventory_id;
+                    $productName = 'Product #' . $item->product_id;
                 }
                 
                 $movements[] = [
@@ -208,30 +212,30 @@ class ReportsController extends Controller
             }
         }
         
-        // Process inventory additions (inflow) - ACTUAL inventory changes
-        foreach ($inventoryChanges as $inventory) {
-            // Only show as inflow if product was actually added to inventory
-            if ($inventory->productStock > 0) {
+        // Process product additions (inflow) - ACTUAL product additions
+        foreach ($products as $product) {
+            // Calculate total stock from batches
+            $totalStock = $product->batches->sum('quantity');
+            
+            // Only show as inflow if product has stock
+            if ($totalStock > 0) {
                 $source = 'Manual Addition';
-                $referenceNumber = 'Manually added (' . ($inventory->productSKU ?? 'No SKU') . ')';
+                $referenceNumber = 'Manually added (' . ($product->productSKU ?? 'No SKU') . ')';
                 
-                // Check if from purchase order by matching product names
-                $purchaseOrderItem = PurchaseOrderItem::where('productName', $inventory->productName)->first();
-                    
-                if ($purchaseOrderItem && $purchaseOrderItem->purchaseOrder) {
-                    $po = $purchaseOrderItem->purchaseOrder;
-                    // Only count as PO source if it was actually delivered
-                    if ($po->deliveries()->where('orderStatus', 'Delivered')->exists()) {
-                        $source = 'Purchase Order';
-                        $referenceNumber = $po->orderNumber; // Use PO number as reference
-                    }
+                // Check if from purchase order by checking batches
+                $poBatch = $product->batches->firstWhere('purchase_order_id', '!=', null);
+                
+                if ($poBatch && $poBatch->purchaseOrder) {
+                    $po = $poBatch->purchaseOrder;
+                    $source = 'Purchase Order';
+                    $referenceNumber = $po->orderNumber;
                 }
                 
                 $movements[] = [
-                    'date' => $inventory->created_at,
+                    'date' => $product->created_at,
                     'reference_number' => $referenceNumber,
-                    'product_name' => $inventory->productName,
-                    'quantity' => $inventory->productStock,
+                    'product_name' => $product->productName,
+                    'quantity' => $totalStock,
                     'type' => 'inflow',
                     'remarks' => $source
                 ];
