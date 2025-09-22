@@ -14,9 +14,14 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('productName');
-            $table->foreignId('brand_id')->constrained('brands')->onDelete('cascade');
-            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
-            $table->foreignId('subcategory_id')->constrained('subcategories')->onDelete('cascade');
+            $table->string('productSKU')->unique();
+            $table->foreignId('brand_id')->constrained()->onDelete('cascade');
+            $table->foreignId('category_id')->constrained()->onDelete('cascade');
+            $table->foreignId('subcategory_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('productItemMeasurement');
+            $table->decimal('productSellingPrice', 10, 2);
+            $table->decimal('productCostPrice', 10, 2);
+            $table->string('productImage')->nullable();
             $table->timestamps();
         });
     }

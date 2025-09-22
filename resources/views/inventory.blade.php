@@ -120,55 +120,83 @@
                         <th class=" bg-main px-4 py-3">Action</th>
                     </tr>
                 </thead>
-
-                @foreach($inventoryItems as $item)
-
                 <tbody>
+                    @foreach($products as $product)
                     <tr class="border-b">
-                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productName }}">{{ $item->productName }}</td>
-                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productCategory }}">{{ $item->productCategory }}</td>
-                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productSKU }}">{{ $item->productSKU }}</td>
-                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productBatch }}">{{ $item->productBatch }}</td>
-                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productBrand}}">{{ $item->productBrand}}</td>
-                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productSellingPrice }}">₱{{ $item->productSellingPrice }}</td>
-                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productStock }}">{{ $item->productStock }}</td>
+                        <td class="truncate px-2 py-2 text-center" title="{{ $product->productName }}">
+                            {{ $product->productName }}
+                        </td>
+                        <!-- For category -->
+                        <td class="truncate px-2 py-2 text-center" title="{{ $product->category->productCategory ?? $product->productCategory ?? 'N/A' }}">
+                            {{ $product->category->productCategory ?? $product->productCategory ?? 'N/A' }}
+                        </td>
+                        <td class="truncate px-2 py-2 text-center" title="{{ $product->productSKU }}">
+                            {{ $product->productSKU }}
+                        </td>
+                        <td class="truncate px-2 py-2 text-center">
+                            @foreach($product->batches as $batch)
+                                <div class="text-xs border-b pb-1 mb-1">
+                                    {{ $batch->batch_number }}<br>
+                                    <span class="text-gray-600">Exp: {{ $batch->expiration_date->format('M d, Y') }}</span>
+                                </div>
+                            @endforeach
+                        </td>
+                        <!-- For brand -->
+                        <td class="truncate px-2 py-2 text-center" title="{{ $product->brand->productBrand ?? $product->productBrand ?? 'N/A' }}">
+                            {{ $product->brand->productBrand ?? $product->productBrand ?? 'N/A' }}
+                        </td>
+                        <td class="truncate px-2 py-2 text-center">
+                            ₱{{ number_format($product->productSellingPrice, 2) }}
+                        </td>
+                        <td class="truncate px-2 py-2 text-center">
+                            {{ $product->batches->sum('quantity') }} <!-- TOTAL STOCK -->
+                        </td>
                         <td class="truncate px-2 py-2 text-center text-sm font-semibold">
-                            @if ($item->productStock == 0)
-                                <span class="text-red-600 bg-red-100 px-2 py-1 rounded-xl" title="This item is out of stock (0 units available)">
-                                    Out of Stock
-                                </span>
-                            @elseif ($item->productStock <= 10)
-                                <span class="text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl" title="This item has low stock (only {{ $item->productStock }} units left)">
-                                    Low Stock
-                                </span>
+                            @php
+                                $totalStock = $product->batches->sum('quantity');
+                            @endphp
+                            @if ($totalStock == 0)
+                                <span class="text-red-600 bg-red-100 px-2 py-1 rounded-xl">Out of Stock</span>
+                            @elseif ($totalStock <= 10)
+                                <span class="text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl">Low Stock</span>
                             @else
-                                <span class="text-green-600 bg-green-100 px-2 py-1 rounded-xl" title="This item has sufficient stock ({{ $item->productStock }} units available)">
-                                    Active Stock
-                                </span>
+                                <span class="text-green-600 bg-green-100 px-2 py-1 rounded-xl">Active Stock</span>
                             @endif
                         </td>
-                        <td class="truncate px-2 py-2 text-center" title="{{ $item->productExpirationDate }}">{{ $item->productExpirationDate }}</td>
-                        <td class="truncate px-2 py-2 text-center" title="">
-                            <button @click="$refs['viewInventoryDetails{{ $item->id }}'].showModal()" class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">View Details</button>
+                        <td class="truncate px-2 py-2 text-center">
+                            @foreach($product->batches as $batch)
+                                <div class="text-xs">
+                                    {{ $batch->expiration_date->format('M d, Y') }}<br>
+                                    <span class="text-gray-600">({{ $batch->expiration_date->diffForHumans() }})</span>
+                                </div>
+                            @endforeach
+                        </td>
+                        <td class="truncate px-2 py-2 text-center">
+                            <button @click="$refs['viewInventoryDetails{{ $product->id }}'].showModal()" 
+                                    class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">
+                                View Details
+                            </button>
                         </td>
                     </tr>
+                    
                 </tbody>
 
-
                 <!-- VIEW INVENTORY DETAILS MODAL PER PRODUCT-->
-                <x-modal.createModal x-ref="viewInventoryDetails{{ $item->id }}">
-                    <x-slot:dialogTitle>Product Details</x-slot:dialogTitle>
+                <x-modal.createModal x-ref="viewInventoryDetails{{ $product->id }}">
+                    <x-slot:dialogTitle>Product Details: {{ $product->productName }}</x-slot:dialogTitle>
                     
                     <div class="grid grid-cols-2 gap-6 p-6">
-
                         <!-- LEFT: IMAGE -->
                         <div class="flex flex-col items-center justify-center">
                             <!-- Product name bigger -->
-                            <h2 class="text-3xl tracking-wide font-bold text-start mr-auto uppercase pb-4 text-gray-800">{{ $item->productName }}</h2>
-
-                            <img src="{{ asset('storage/' . $item->productImage) }}" 
-                                alt="{{ $item->productName }}" 
-                                class="w-full max-h-80 object-contain rounded-xl shadow-lg border">
+                            <h2 class="text-3xl tracking-wide font-bold text-start mr-auto uppercase pb-4 text-gray-800">
+                                {{ $product->productName }}
+                            </h2>
+                            @if($product->productImage)
+                                <img src="{{ asset('storage/' . $product->productImage) }}" 
+                                    alt="{{ $product->productName }}" 
+                                    class="w-full max-h-80 object-contain rounded-xl shadow-lg border">
+                            @endif
                         </div>
 
                         <!-- RIGHT: DETAILS -->
@@ -178,42 +206,50 @@
                             <div class="grid grid-cols-4 gap-3">
                                 <div class="bg-gray-50 col-span-2 p-3 rounded-md">
                                     <p class="font-semibold text-md">SKU</p>
-                                    <p class="text-sm">{{ $item->productSKU }}</p>
+                                    <p class="text-sm">{{ $product->productSKU }}</p>
                                 </div>
                                 <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                    <p class="font-semibold text-md">Batch</p>
-                                    <p class="text-sm">{{ $item->productBatch }}</p>
+                                    <p class="font-semibold text-md">Total Stock</p>
+                                    <p class="text-sm">{{ $product->batches->sum('quantity') }}</p>
                                 </div>
                                 <div class="bg-gray-50 col-span-2 p-3 rounded-md">
                                     <p class="font-semibold text-md">Brand</p>
-                                    <p class="text-sm">{{ $item->productBrand }}</p>
-                                </div>
-                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                    <p class="font-semibold text-md">Stock</p>
-                                    <p class="text-sm">{{ $item->productStock }}</p>
+                                    <p class="text-sm">{{ $product->brand->productBrand ?? 'N/A' }}</p>
                                 </div>
                                 <div class="bg-gray-50 col-span-2 p-3 rounded-md">
                                     <p class="font-semibold text-md">Measurement</p>
-                                    <p class="text-sm">{{ $item->productItemMeasurement }}</p>
+                                    <p class="text-sm">{{ $product->productItemMeasurement }}</p>
                                 </div>
                                 <div class="bg-gray-50 col-span-2 p-3 rounded-md">
                                     <p class="font-semibold text-md">Category</p>
-                                    <p class="text-sm">{{ $item->productCategory }}</p>
+                                    <p class="text-sm">{{ $product->category->productCategory ?? 'N/A' }}</p>
                                 </div>
                                 <div class="bg-gray-50 col-span-2 p-3 rounded-md">
                                     <p class="font-semibold text-md">Selling Price</p>
-                                    <p class="text-sm">₱{{ number_format($item->productSellingPrice, 2) }}</p>
+                                    <p class="text-sm">₱{{ number_format($product->productSellingPrice, 2) }}</p>
                                 </div>
                                 <div class="bg-gray-50 col-span-2 p-3 rounded-md">
                                     <p class="font-semibold text-md">Cost Price</p>
-                                    <p class="text-sm">₱{{ number_format($item->productCostPrice, 2) }}</p>
+                                    <p class="text-sm">₱{{ number_format($product->productCostPrice, 2) }}</p>
                                 </div>
                                 <div class="bg-gray-50 col-span-3 p-3 rounded-md">
                                     <p class="font-semibold text-md">Expiration Date</p>
                                     <p class="text-sm">
-                                        {{ \Carbon\Carbon::parse($item->productExpirationDate)->format('M d, Y') }}
-                                        ({{ \Carbon\Carbon::parse($item->productExpirationDate)->diffForHumans() }})
+                                        {{ \Carbon\Carbon::parse($product->productExpirationDate)->format('M d, Y') }}
+                                        ({{ \Carbon\Carbon::parse($product->productExpirationDate)->diffForHumans() }})
                                     </p>
+                                </div>
+                                <!-- BATCH DETAILS -->
+                                <div class="bg-gray-50 col-span-4 p-3 rounded-md">
+                                    <p class="font-semibold text-md">Batch Details</p>
+                                    @foreach($product->batches as $batch)
+                                        <div class="text-sm border-b py-2">
+                                            <strong>Batch {{ $batch->batch_number }}:</strong><br>
+                                            Qty: {{ $batch->quantity }} | 
+                                            Exp: {{ $batch->expiration_date->format('M d, Y') }} |
+                                            Cost: ₱{{ number_format($batch->cost_price, 2) }}
+                                        </div>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
@@ -223,17 +259,17 @@
                     <div class="flex justify-between items-center gap-x-4 px-6 pb-4 mt-4 border-t pt-4">
                         <!-- EDIT BUTTON: Opens edit dialog -->
                         <button 
-                            @click="$refs['editProductDetails{{ $item->id }}'].showModal()" 
+                            @click="$refs['editProductDetails{{ $product->id }}'].showModal()" 
                             class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/60 transition-all duration-100 ease-in">
                             Edit
                         </button>
 
                         <!-- DELETE BUTTON: Opens delete dialog -->
-                        <x-form.closeBtn @click="$refs['confirmDeleteModal{{ $item->id }}'].showModal()">Delete</x-form.closeBtn>
+                        <x-form.closeBtn @click="$refs['confirmDeleteModal{{ $product->id }}'].showModal()">Delete</x-form.closeBtn>
 
                         <!-- CLOSE BUTTON: Closes view details dialog -->
                         <button 
-                            @click="$refs['viewInventoryDetails{{ $item->id }}'].close()" 
+                            @click="$refs['viewInventoryDetails{{ $product->id }}'].close()" 
                             class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
                             Close
                         </button>
@@ -243,11 +279,10 @@
                 @endforeach
             </table>
 
-            <!-- PAGINATION VIEW -->
+            <!-- PAGINATION -->
             <div class="mt-4 px-4 py-2 bg-gray-50">
-                {{ $inventoryItems->appends(request()->except('page'))->links() }}
+                {{ $products->appends(request()->except('page'))->links() }}
             </div>
-
         </section>
 
 
@@ -886,12 +921,12 @@
         <!-- ======================================================= -->
 
         <!-- UPDATE MODAL -->
-        @foreach($inventoryItems as $item)
-            <x-modal.createModal x-ref="editProductDetails{{ $item->id }}">
-                <x-slot:dialogTitle>Update {{ $item->productName }}</x-slot:dialogTitle>
+        @foreach($products as $product)
+            <x-modal.createModal x-ref="editProductDetails{{ $product->id }}">
+                <x-slot:dialogTitle>Update {{ $product->productName }}</x-slot:dialogTitle>
 
                 <div class="container px-3 py-4">
-                    <form id="updateInventoryForm{{ $item->id }}" action="{{ route('inventory.update', $item->id) }}" method="POST" enctype="multipart/form-data"
+                    <form id="updateInventoryForm{{ $product->id }}" action="{{ route('inventory.update', $product->id) }}" method="POST" enctype="multipart/form-data"
                         class="px-6 py-4 container grid grid-cols-6 gap-x-8 gap-y-6"
                         x-data>
                         @csrf
@@ -899,9 +934,9 @@
 
                         <!-- Left Side (Image + Upload) -->
                         <div class="col-span-2 flex flex-col items-center gap-3">
-                            @if($item->productImage)
-                                <img src="{{ asset('storage/' . $item->productImage) }}" 
-                                    alt="{{ $item->productName }}" 
+                            @if($product->productImage)
+                                <img src="{{ asset('storage/' . $product->productImage) }}" 
+                                    alt="{{ $product->productName }}" 
                                     class="size-44 object-contain border rounded shadow-sm">
                             @endif
                             <div class="w-full">
@@ -914,7 +949,7 @@
                             
                             <!-- Product Name (full width) -->
                             <x-form.form-input label="Product Name" name="productName" type="text" 
-                                value="{{ $item->productName }}" class="col-span-4" required />
+                                value="{{ $product->productName }}" class="col-span-4" required />
 
                             <!-- Product Brand (full width) - FIXED: Dynamic from database -->
                             <div class="col-span-4 flex flex-col text-start">
@@ -923,7 +958,7 @@
                                     class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
                                     <option value="" disabled>Select Brand</option>
                                     @foreach($brands as $brand)
-                                        <option value="{{ $brand->productBrand }}" {{ $item->productBrand == $brand->productBrand ? 'selected' : '' }}>
+                                        <option value="{{ $brand->productBrand }}" {{ $product->productBrand == $brand->productBrand ? 'selected' : '' }}>
                                             {{ $brand->productBrand }}
                                         </option>
                                     @endforeach
@@ -937,7 +972,7 @@
                                     class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
                                     <option value="" disabled>Select Category</option>
                                     @foreach($categories as $category)
-                                        <option value="{{ $category->productCategory }}" {{ $item->productCategory == $category->productCategory ? 'selected' : '' }}>
+                                        <option value="{{ $category->productCategory }}" {{ $product->productCategory == $category->productCategory ? 'selected' : '' }}>
                                             {{ $category->productCategory }}
                                         </option>
                                     @endforeach
@@ -945,17 +980,17 @@
                             </div>
 
                             <!-- Stock (half) -->
-                            <x-form.form-input label="Stock" name="productStock" value="{{ $item->productStock }}" 
+                            <x-form.form-input label="Stock" name="productStock" value="{{ $product->productStock }}" 
                                 class="col-span-2" type="number" step="1" min="0" required />
                         </div>
 
                         <!-- Rest of fields below (full-width layout) -->
                         <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" 
-                            value="{{ $item->productSellingPrice }}" class="col-span-2" 
+                            value="{{ $product->productSellingPrice }}" class="col-span-2" 
                             type="number" step="0.01" min="0" required />
 
                         <x-form.form-input label="Cost Price (₱)" name="productCostPrice" 
-                            value="{{ $item->productCostPrice }}" class="col-span-2" 
+                            value="{{ $product->productCostPrice }}" class="col-span-2" 
                             type="number" step="0.01" min="0" required />
 
                         <div class="flex flex-col text-start col-span-3">
@@ -963,19 +998,19 @@
                             <select name="productItemMeasurement" 
                                 class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
                                 <option value="" disabled>Select Measurement</option>
-                                <option value="kilogram" {{ $item->productItemMeasurement == 'kilogram' ? 'selected' : '' }}>kilogram (kg)</option>
-                                <option value="gram" {{ $item->productItemMeasurement == 'gram' ? 'selected' : '' }}>gram (g)</option>
-                                <option value="liter" {{ $item->productItemMeasurement == 'liter' ? 'selected' : '' }}>liter (L)</option>
-                                <option value="milliliter" {{ $item->productItemMeasurement == 'milliliter' ? 'selected' : '' }}>milliliter (mL)</option>
-                                <option value="pcs" {{ $item->productItemMeasurement == 'pcs' ? 'selected' : '' }}>pieces (pcs)</option>
-                                <option value="set" {{ $item->productItemMeasurement == 'set' ? 'selected' : '' }}>set</option>
-                                <option value="pair" {{ $item->productItemMeasurement == 'pair' ? 'selected' : '' }}>pair</option>
-                                <option value="pack" {{ $item->productItemMeasurement == 'pack' ? 'selected' : '' }}>pack</option>
+                                <option value="kilogram" {{ $product->productItemMeasurement == 'kilogram' ? 'selected' : '' }}>kilogram (kg)</option>
+                                <option value="gram" {{ $product->productItemMeasurement == 'gram' ? 'selected' : '' }}>gram (g)</option>
+                                <option value="liter" {{ $product>productItemMeasurement == 'liter' ? 'selected' : '' }}>liter (L)</option>
+                                <option value="milliliter" {{ $product->productItemMeasurement == 'milliliter' ? 'selected' : '' }}>milliliter (mL)</option>
+                                <option value="pcs" {{ $product->productItemMeasurement == 'pcs' ? 'selected' : '' }}>pieces (pcs)</option>
+                                <option value="set" {{ $product->productItemMeasurement == 'set' ? 'selected' : '' }}>set</option>
+                                <option value="pair" {{ $product->productItemMeasurement == 'pair' ? 'selected' : '' }}>pair</option>
+                                <option value="pack" {{ $product->productItemMeasurement == 'pack' ? 'selected' : '' }}>pack</option>
                             </select>
                         </div>
 
                         <x-form.form-input label="Expiration Date" name="productExpirationDate" type="date"
-                            value="{{ $item->productExpirationDate }}" 
+                            value="{{ $product->productExpirationDate }}" 
                             min="{{ date('Y-m-d') }}"
                             class="col-span-3" required
                         />
@@ -983,11 +1018,11 @@
                         <!-- Footer Buttons -->
                         <div class="container col-span-6 gap-x-4 place-content-end w-full flex items-end content-center px-6 mt-4">
                             <button type="button" 
-                                    @click="$refs['editProductDetails{{ $item->id }}'].close()" 
+                                    @click="$refs['editProductDetails{{ $product->id }}'].close()" 
                                     class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out">
                                 Cancel
                             </button>
-                            <x-form.saveBtn @click="$refs['confirmEditProduct{{ $item->id }}'].showModal()" type="button">Update</x-form.saveBtn>
+                            <x-form.saveBtn @click="$refs['confirmEditProduct{{ $product->id }}'].showModal()" type="button">Update</x-form.saveBtn>
                         </div>
                     </form>
                 </div>
@@ -995,13 +1030,13 @@
 
 
             <!-- UPDATE CONFIRMATION MODAL -->
-            <x-modal.createModal x-ref="confirmEditProduct{{ $item->id }}">
+            <x-modal.createModal x-ref="confirmEditProduct{{ $product->id }}">
                 <x-slot:dialogTitle>Confirm Changes?</x-slot:dialogTitle>
                 <div class="container px-2 py-2">
                     <h1 class="py-6 px-5 text-xl">Are you sure you want to save these changes?</h1>
                     <div class="col-span-6 place-items-end flex justify-end gap-4">
-                        <x-form.closeBtn @click="$refs.confirmEditProduct{{ $item->id }}.close()">Cancel</x-form.closeBtn>
-                        <x-form.saveBtn type="submit" form="updateInventoryForm{{ $item->id }}">Save</x-form.saveBtn>
+                        <x-form.closeBtn @click="$refs.confirmEditProduct{{ $product->id }}.close()">Cancel</x-form.closeBtn>
+                        <x-form.saveBtn type="submit" form="updateInventoryForm{{ $product->id }}">Save</x-form.saveBtn>
                     </div>
                 </div>
             </x-modal.createModal>
@@ -1012,26 +1047,26 @@
 
 
         <!-- DELETE CONFIRMATION MODAL -->
-        @foreach ($inventoryItems as $item)
-            <x-modal.createModal x-ref="confirmDeleteModal{{ $item->id }}" class="z-50">
+        @foreach ($products as $product)
+            <x-modal.createModal x-ref="confirmDeleteModal{{ $product->id }}" class="z-50">
                 <x-slot:dialogTitle>Are you sure?</x-slot:dialogTitle>
                 
                 <div class="container px-2 py-2">
                     <h1 class="py-6 px-5 text-xl">
-                        <p class="text-lg">Are you sure you want to delete <span class="font-bold">{{ $item->productName }}</span>?</p>
+                        <p class="text-lg">Are you sure you want to delete <span class="font-bold">{{ $product->productName }}</span>?</p>
                         <p class="text-xs text-gray-600 mt-2">This action cannot be undone. All items associated with this product will also be deleted.</p>
                     </h1>
                     
                     <div class="flex justify-end gap-4">
                         <!-- CANCEL -->
                         <x-form.closeBtn 
-                            @click="$refs['confirmDeleteModal{{ $item->id }}'].close()" 
+                            @click="$refs['confirmDeleteModal{{ $product->id }}'].close()" 
                             type="button">
                             Cancel
                         </x-form.closeBtn>
 
                         <!-- DELETE FORM -->
-                        <form action="{{ route('inventory.destroy', $item->id) }}" method="POST">
+                        <form action="{{ route('inventory.destroy', $product->id) }}" method="POST">
                             @csrf
                             @method('DELETE')
                             <x-form.saveBtn type="submit">Delete</x-form.saveBtn>

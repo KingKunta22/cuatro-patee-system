@@ -9,17 +9,13 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
         Schema::create('inventories', function (Blueprint $table) {
             $table->id();
-            $table->string('productName');
-            $table->string('productBrand');
-            $table->string('productCategory');
-            $table->decimal('sellingPrice', 8, 2);
-            $table->decimal('costPrice', 8, 2);
-            $table->decimal('profitMargin', 5, 2);
-            $table->string('image')->nullable(); // Stores the image path
+            $table->unsignedBigInteger('product_id'); // Change from foreignId to unsignedBigInteger
+            $table->integer('total_quantity')->default(0);
+            $table->timestamp('last_updated')->nullable();
             $table->timestamps();
         });
     }

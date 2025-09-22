@@ -9,20 +9,17 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
         Schema::table('inventories', function (Blueprint $table) {
-            $table->string('productBatch')->after('productSKU');
+            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('inventories', function (Blueprint $table) {
-            $table->dropColumn('productBatch');
+            $table->dropForeign(['product_id']);
         });
     }
 };

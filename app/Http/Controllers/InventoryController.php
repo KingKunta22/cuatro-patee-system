@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Brand;
 use App\Models\BadItem;
+use App\Models\Product;
 use App\Models\Category;
 use App\Models\SaleItem;
 use App\Models\Inventory;
+use App\Models\ProductBatch;
 use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
@@ -34,17 +36,21 @@ class InventoryController extends Controller
             ->select('id', 'orderNumber')
             ->get();
 
-        // Start query
-        $query = Inventory::query();
+        // Start query with relationships
+        $query = Product::with(['batches', 'brand', 'category']); // Add brand and category relationships
 
-        // Apply category filter
+        // Apply category filter - need to join with categories table
         if ($request->category && $request->category != 'all') {
-            $query->where('productCategory', $request->category);
+            $query->whereHas('category', function($q) use ($request) {
+                $q->where('productCategory', $request->category);
+            });
         }
 
-        // Apply brand filter
+        // Apply brand filter - need to join with brands table
         if ($request->brand && $request->brand != 'all') {
-            $query->where('productBrand', $request->brand);
+            $query->whereHas('brand', function($q) use ($request) {
+                $q->where('productBrand', $request->brand);
+            });
         }
 
         // Apply search filter
@@ -56,29 +62,19 @@ class InventoryController extends Controller
             });
         }
 
-        // Current implementation shows all batches
-        $inventoryItems = $query->orderBy('created_at', 'DESC') // Newest first
-            ->orderBy('productSKU') // Then by SKU
-            ->orderBy('productExpirationDate', 'ASC') // Then by expiry (oldest first)
-            ->paginate(7)
-            ->withQueryString();
+        // Get products instead of inventory items
+        $products = $query->paginate(7)->withQueryString();
 
         // Get categories and brands from their models for dropdowns
         $categories = Category::orderBy('productCategory')->get();
         $brands = Brand::orderBy('productBrand')->get();
 
-        // Get unique values from inventory for filters
-        $uniqueCategories = Inventory::distinct()->pluck('productCategory')->filter();
-        $uniqueBrands = Inventory::distinct()->pluck('productBrand')->filter();
-
         return view('inventory', compact(
             'unaddedPOs', 
-            'inventoryItems', 
+            'products', 
             'deliveredPOs', 
             'categories', 
             'brands', 
-            'uniqueCategories', 
-            'uniqueBrands',
         ));
     }
 
@@ -107,12 +103,11 @@ public function store(Request $request)
             'manual_productName' => 'required|string|max:255',
             'manual_productBrand' => 'required|string|max:255',
             'manual_productCategory' => 'required|string|max:255',
-            'manual_productStock' => 'required|numeric|min:0',
+            'manual_productItemMeasurement' => 'required|string|max:255',
             'manual_productSellingPrice' => 'required|numeric|min:0',
             'manual_productCostPrice' => 'required|numeric|min:0',
-            'manual_productItemMeasurement' => 'required|string|max:255',
             'manual_productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'manual_batches' => 'sometimes|array',
+            'manual_batches' => 'required|array|min:1',
             'manual_batches.*.quantity' => 'required|numeric|min:1',
             'manual_batches.*.expiration_date' => 'required|date|after_or_equal:today',
         ];
@@ -142,15 +137,15 @@ public function store(Request $request)
             'productName' => 'required|string|max:255',
             'productBrand' => 'required|string|max:255',
             'productCategory' => 'required|string|max:255',
+            'productItemMeasurement' => 'required|string|max:255',
             'productSellingPrice' => 'required|numeric|min:0',
             'productCostPrice' => 'required|numeric|min:0',
-            'productItemMeasurement' => 'required|string|max:255',
-            'productExpirationDate' => 'required|date|after_or_equal:today',
             'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'purchaseOrderNumber' => 'required|exists:purchase_orders,id',
             'selectedItemId' => 'required|exists:purchase_order_items,id',
-            'productQuality' => 'required|string',
-            'badItemQuantity' => 'nullable|integer|min:0',
+            'batches' => 'required|array|min:1',
+            'batches.*.quantity' => 'required|numeric|min:1',
+            'batches.*.expiration_date' => 'required|date|after_or_equal:today',
         ];
         
         // Remove manual field validations for PO mode
@@ -239,89 +234,62 @@ public function store(Request $request)
         }
     }
 
-    // Start a database transaction
+    // Start transaction
     DB::beginTransaction();
 
     try {
-        // Map fields to database fields for base inventory data
-        $baseInventoryData = [
+        // Generate SKU
+        $productName = $validated[$fieldPrefix . 'productName'];
+        $productBrand = $validated[$fieldPrefix . 'productBrand'];
+        $productCategory = $validated[$fieldPrefix . 'productCategory'];
+        $newSKU = $this->generateSKU($productName, $productBrand, $productCategory);
+
+        // First find the brand and category IDs
+        $brand = Brand::where('productBrand', $productBrand)->first();
+        $category = Category::where('productCategory', $productCategory)->first();
+
+        $productData = [
             'productName' => $productName,
             'productSKU' => $newSKU,
-            'productBrand' => $productBrand,
-            'productCategory' => $productCategory,
+            'brand_id' => $brand->id ?? null, // Use foreign key
+            'category_id' => $category->id ?? null, // Use foreign key
+            'productItemMeasurement' => $validated[$fieldPrefix . 'productItemMeasurement'],
             'productSellingPrice' => $validated[$fieldPrefix . 'productSellingPrice'],
             'productCostPrice' => $validated[$fieldPrefix . 'productCostPrice'],
-            'productItemMeasurement' => $validated[$fieldPrefix . 'productItemMeasurement'],
-            'purchase_order_id' => ($addMethod === 'po') ? $validated['purchaseOrderNumber'] : null,
-            'purchase_order_item_id' => ($addMethod === 'po') ? $validated['selectedItemId'] : null,
         ];
-
-        // Calculate profit margin
-        $profitMargin = $baseInventoryData['productSellingPrice'] - $baseInventoryData['productCostPrice'];
-        $baseInventoryData['productProfitMargin'] = round($profitMargin, 2);
 
         // Handle image upload
         $imageField = $fieldPrefix . 'productImage';
-        $uploadedImagePath = null;
         if ($request->hasFile($imageField)) {
-            $uploadedImagePath = $request->file($imageField)->store('inventory', 'public');
-            $baseInventoryData['productImage'] = $uploadedImagePath;
+            $productData['productImage'] = $request->file($imageField)->store('products', 'public');
         }
 
-        // Save to database
-        if ($addMethod === 'manual') {
-            if (isset($validated['manual_batches'])) {
-                // Process with batches
-                $createdInventories = [];
-                
-                foreach ($validated['manual_batches'] as $batchIndex => $batch) {
-                    $batchNumber = date('Ymd') . '-' . str_pad(($batchIndex + 1), 3, '0', STR_PAD_LEFT);
-                    
-                    $batchInventoryData = array_merge($baseInventoryData, [
-                        'productBatch' => $batchNumber,
-                        'productStock' => $batch['quantity'],
-                        'productExpirationDate' => $batch['expiration_date'],
-                    ]);
+        $product = Product::firstOrCreate(
+            ['productSKU' => $newSKU],
+            $productData
+        );
 
-                    if ($uploadedImagePath) {
-                        $batchInventoryData['productImage'] = $uploadedImagePath;
-                    }
-
-                    $inventory = Inventory::create($batchInventoryData);
-                    $createdInventories[] = $inventory;
-                }
-            } else {
-                // Process without batches
-                $inventoryData = array_merge($baseInventoryData, [
-                    'productBatch' => date('Ymd') . '-' . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT),
-                    'productStock' => $validated['manual_productStock'],
-                    'productExpirationDate' => $validated['manual_productExpirationDate'],
-                ]);
-                
-                $inventory = Inventory::create($inventoryData);
-            }
-        } else {
-            // PO method
-            $inventoryData = array_merge($baseInventoryData, [
-                'productBatch' => date('Ymd') . '-' . str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT),
-                'productStock' => $actualStock,
-                'productExpirationDate' => $validated[$fieldPrefix . 'productExpirationDate'],
-            ]);
-
-            $inventory = Inventory::create($inventoryData);
+        // Create batches
+        $batchesField = $fieldPrefix . 'batches';
+        foreach ($validated[$batchesField] as $batchIndex => $batch) {
+            $batchNumber = date('Ymd') . '-' . str_pad(($batchIndex + 1), 3, '0', STR_PAD_LEFT);
             
-            // Handle bad items
-            if ($validated['productQuality'] !== 'goodCondition' && $badItemCount > 0) {
-                BadItem::create([
-                    'inventory_id' => $inventory->id,
-                    'purchase_order_id' => $validated['purchaseOrderNumber'],
-                    'purchase_order_item_id' => $validated['selectedItemId'],
-                    'quality_status' => $validated['productQuality'],
-                    'item_count' => $badItemCount,
-                    'notes' => 'Reported during inventory addition from PO',
-                    'status' => 'Pending',
-                ]);
+            $batchData = [
+                'product_id' => $product->id,
+                'batch_number' => $batchNumber,
+                'quantity' => $batch['quantity'],
+                'cost_price' => $validated[$fieldPrefix . 'productCostPrice'],
+                'selling_price' => $validated[$fieldPrefix . 'productSellingPrice'],
+                'expiration_date' => $batch['expiration_date'],
+            ];
+
+            // Add PO references for PO method
+            if ($addMethod === 'po') {
+                $batchData['purchase_order_id'] = $validated['purchaseOrderNumber'];
+                $batchData['purchase_order_item_id'] = $validated['selectedItemId'];
             }
+
+            ProductBatch::create($batchData);
         }
 
         DB::commit();
