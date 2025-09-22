@@ -112,6 +112,9 @@ class InventoryController extends Controller
                 'manual_productItemMeasurement' => 'required|string|max:255',
                 'manual_productExpirationDate' => 'required|date|after_or_equal:today',
                 'manual_productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'manual_batches' => 'sometimes|array',
+                'manual_batches.*.quantity' => 'required|numeric|min:1',
+                'manual_batches.*.expiration_date' => 'required|date|after_or_equal:today',
             ];
         } else {
             $fieldPrefix = '';
@@ -132,6 +135,17 @@ class InventoryController extends Controller
         }
 
         $validated = $request->validate($validationRules);
+
+        // For manual method with batches, validate that total batches equal total stock
+        if ($addMethod === 'manual' && isset($validated['manual_batches'])) {
+            $totalBatchQuantity = array_sum(array_column($validated['manual_batches'], 'quantity'));
+            if ($totalBatchQuantity != $validated['manual_productStock']) {
+                return back()->withInput()->withErrors([
+                    'error' => 'Total batch quantities must equal total stock count'
+                ]);
+            }
+        }
+
 
         // For PO method, calculate actual stock FIRST
         if ($addMethod === 'po') {
@@ -160,6 +174,13 @@ class InventoryController extends Controller
         $productName = $validated[$fieldPrefix . 'productName'];
         $productBrand = $validated[$fieldPrefix . 'productBrand'];
         $productCategory = $validated[$fieldPrefix . 'productCategory'];
+
+        // For manual method with batches, use the first batch's expiration date
+        if ($addMethod === 'manual' && isset($validated['manual_batches']) && count($validated['manual_batches']) > 0) {
+            // Use the first batch's expiration date as the main expiration date
+            $validated[$fieldPrefix . 'productExpirationDate'] = $validated['manual_batches'][0]['expiration_date'];
+        }
+
         
         $newSKU = $this->generateSKU($productName, $productBrand, $productCategory);
         
@@ -231,8 +252,56 @@ class InventoryController extends Controller
             $profitMargin = $inventoryData['productSellingPrice'] - $inventoryData['productCostPrice'];
             $inventoryData['productProfitMargin'] = round($profitMargin, 2);
 
-            // Save to database
-            $inventory = Inventory::create($inventoryData);
+            // Save to database - handle multiple batches for manual method
+            if ($addMethod === 'manual' && isset($validated['manual_batches'])) {
+                $createdInventories = [];
+                
+                foreach ($validated['manual_batches'] as $batchIndex => $batch) {
+                    $batchNumber = date('Ymd') . '-' . str_pad(($batchIndex + 1), 3, '0', STR_PAD_LEFT);
+                    
+                    $inventoryData = [
+                        'productName' => $productName,
+                        'productSKU' => $newSKU,
+                        'productBatch' => $batchNumber,
+                        'productBrand' => $productBrand,
+                        'productCategory' => $productCategory,
+                        'productStock' => $batch['quantity'],
+                        'productSellingPrice' => $validated[$fieldPrefix . 'productSellingPrice'],
+                        'productCostPrice' => $validated[$fieldPrefix . 'productCostPrice'],
+                        'productItemMeasurement' => $validated[$fieldPrefix . 'productItemMeasurement'],
+                        'productExpirationDate' => $batch['expiration_date'],
+                        'productProfitMargin' => round($profitMargin, 2),
+                    ];
+
+                    // Handle image upload (only for first batch)
+                    if ($batchIndex === 0 && $request->hasFile($imageField)) {
+                        $imagePath = $request->file($imageField)->store('inventory', 'public');
+                        $inventoryData['productImage'] = $imagePath;
+                    } elseif ($batchIndex > 0 && isset($createdInventories[0])) {
+                        // Copy image from first batch for subsequent batches
+                        $inventoryData['productImage'] = $createdInventories[0]->productImage;
+                    }
+
+                    $inventory = Inventory::create($inventoryData);
+                    $createdInventories[] = $inventory;
+                }
+            } else {
+                // Original single inventory creation for PO method
+                $inventory = Inventory::create($inventoryData);
+                
+                // Handle bad items if adding from PO and quality is not good
+                if ($addMethod === 'po' && $validated['productQuality'] !== 'goodCondition' && $badItemCount > 0) {
+                    BadItem::create([
+                        'inventory_id' => $inventory->id,
+                        'purchase_order_id' => $validated['purchaseOrderNumber'],
+                        'purchase_order_item_id' => $validated['selectedItemId'],
+                        'quality_status' => $validated['productQuality'],
+                        'item_count' => $badItemCount,
+                        'notes' => 'Reported during inventory addition from PO',
+                        'status' => 'Pending',
+                    ]);
+                }
+            }
 
             // Handle bad items if adding from PO and quality is not good
             if ($addMethod === 'po' && $validated['productQuality'] !== 'goodCondition' && $badItemCount > 0) {
@@ -265,25 +334,12 @@ class InventoryController extends Controller
 
     private function generateSKU($productName, $productBrand, $productCategory)
     {
-        // Create a base SKU from product details (same for all batches of this product)
+        // Create a consistent base SKU
         $base = substr(strtoupper(preg_replace('/[^a-z0-9]/i', '', $productName)), 0, 3);
         $brand = substr(strtoupper(preg_replace('/[^a-z0-9]/i', '', $productBrand)), 0, 2);
         $category = substr(strtoupper(preg_replace('/[^a-z0-9]/i', '', $productCategory)), 0, 2);
         
-        $baseSKU = "{$base}-{$brand}-{$category}";
-        
-        // Check if this product already exists in inventory
-        $existingProduct = Inventory::where('productName', $productName)
-            ->where('productBrand', $productBrand)
-            ->where('productCategory', $productCategory)
-            ->first();
-        
-        if ($existingProduct) {
-            // Use the same SKU as existing product
-            return $existingProduct->productSKU;
-        }
-        
-        return $baseSKU;
+        return "{$base}-{$brand}-{$category}";
     }
 
     public function update(Request $request, Inventory $inventory) 

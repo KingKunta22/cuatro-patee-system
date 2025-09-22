@@ -296,7 +296,7 @@
                         const assignedStock = this.getTotalStock();
                         
                         if (this.batches.length > 0 && assignedStock !== totalStock) {
-                            Toast.error('Batch quantities must equal total stocks')
+                            Toast.error('Batch quantities must equal total stocks');
                             return false;
                         }
                         
@@ -397,9 +397,8 @@
 
                                 <!-- INFORMATION TEXT -->
                                 <div class="container text-xs col-span-6">
-                                    <p class='text-xs text-gray-400 mb-1'>
-                                        <strong>Batch Management:</strong> Add multiple batches with different expiry dates if your stock arrives at different times. 
-                                        Each batch should have its quantity and expiration date. The total of all batches must equal your total stock count.
+                                    <p class='text-xs text-gray-400'>
+                                        <strong>Batch Management:</strong> Add batches with quantities and expiry dates. Total batches must equal total stock.
                                     </p>
                                 </div>
 
@@ -430,6 +429,24 @@
                                         + Add Batch
                                     </button>
                                 </div>
+
+                                <!-- STOCK ASSIGNMENT SUMMARY -->
+                                <div class="text-sm col-span-6" >
+                                    <span class="font-semibold" :class="@{
+                                        'text-green-600': getTotalStock() == manual_productStock, 
+                                        'text-yellow-600': getTotalStock() < manual_productStock,
+                                        'text-red-600': getTotalStock() > manual_productStock
+                                    }">
+                                        Stocks assigned: <span x-text="getTotalStock()"></span>/<span x-text="manual_productStock || 0"></span>
+                                    </span>
+                                    <span x-show="getTotalStock() < manual_productStock" class="text-red-500 ml-2">
+                                        (Remaining: <span x-text="(manual_productStock || 0) - getTotalStock()"></span> stocks need assignment)
+                                    </span>
+                                    <span x-show="getTotalStock() > manual_productStock" class="text-red-500 ml-2">
+                                        (Warning: Overassigned by <span x-text="getTotalStock() - (manual_productStock || 0)"></span> stocks!)
+                                    </span>
+                                </div>
+
                             </div>
 
                             <!-- PREVIEW TABLE FOR ADDED BATCH -->
@@ -483,210 +500,341 @@
                         </div>
                     </section>
 
-                    <!-- PURCHASE ORDER SECTION -->
-                    <section x-show="addMethod === 'po'" class="space-y-6" 
-                            x-data="{
-                                items: [],
-                                poId: null,
-                                sellingPrice: 0,
-                                costPrice: 0,
-                                productName: '',
-                                productStock: 0,
-                                originalStock: 0,
-                                itemMeasurement: '',
-                                selectedItemId: null,
-                                selectedQuality: 'goodCondition',
-                                badItemCount: 0,
-                                
-                                async getItems(poId) {
-                                    this.poId = poId;
-                                    this.items = [];
-                                    this.selectedItemId = null;
-                                    this.costPrice = 0;
-                                    this.selectedQuality = 'goodCondition';
-                                    this.badItemCount = 0;
-                                    
-                                    if (!poId) return;
-                                    
-                                    const response = await fetch(`/get-items/${poId}`);
-                                    this.items = await response.json();
-                                    
-                                    if (this.items.length === 0) {
-                                        console.log('No items available for this PO');
-                                        return;
-                                    }
-                                    
-                                    if (this.items.length === 1) {
-                                        this.selectedItemId = this.items[0].id;
-                                        this.setCostPrice(this.items[0].id);
-                                    }
-                                },
-                                
-                                setCostPrice(itemId) {
-                                    this.selectedItemId = itemId;
-                                    const item = this.items.find(i => i.id == itemId);
-                                    if (item) {
-                                        this.costPrice = item.unitPrice || 0;
-                                        this.productName = item.productName;
-                                        this.productStock = item.quantity;
-                                        this.originalStock = item.quantity;
-                                        this.itemMeasurement = item.itemMeasurement;
-                                    }
-                                },
-                                
-                                updateStockBasedOnQuality() {
-                                    if (this.selectedQuality === 'goodCondition') {
-                                        this.productStock = this.originalStock;
-                                        this.badItemCount = 0;
-                                    } else if (this.badItemCount > 0) {
-                                        this.productStock = Math.max(0, this.originalStock - this.badItemCount);
-                                    }
-                                }
-                            }">
+<!-- PURCHASE ORDER SECTION -->
+<section x-show="addMethod === 'po'" class="space-y-6" 
+        x-data="{
+            items: [],
+            poId: null,
+            sellingPrice: 0,
+            costPrice: 0,
+            productName: '',
+            productStock: 0,
+            originalStock: 0,
+            itemMeasurement: '',
+            selectedItemId: null,
+            selectedQuality: 'goodCondition',
+            badItemCount: 0,
+            batches: [],
+            newBatch: { quantity: '', expiration_date: '' },
+            
+            async getItems(poId) {
+                this.poId = poId;
+                this.items = [];
+                this.selectedItemId = null;
+                this.costPrice = 0;
+                this.selectedQuality = 'goodCondition';
+                this.badItemCount = 0;
+                this.batches = [];
+                this.newBatch = { quantity: '', expiration_date: '' };
+                
+                if (!poId) return;
+                
+                const response = await fetch(`/get-items/${poId}`);
+                this.items = await response.json();
+                
+                if (this.items.length === 0) {
+                    console.log('No items available for this PO');
+                    return;
+                }
+                
+                if (this.items.length === 1) {
+                    this.selectedItemId = this.items[0].id;
+                    this.setCostPrice(this.items[0].id);
+                }
+            },
+            
+            setCostPrice(itemId) {
+                this.selectedItemId = itemId;
+                const item = this.items.find(i => i.id == itemId);
+                if (item) {
+                    this.costPrice = item.unitPrice || 0;
+                    this.productName = item.productName;
+                    this.productStock = item.quantity;
+                    this.originalStock = item.quantity;
+                    this.itemMeasurement = item.itemMeasurement;
+                }
+            },
+            
+            updateStockBasedOnQuality() {
+                if (this.selectedQuality === 'goodCondition') {
+                    this.productStock = this.originalStock;
+                    this.badItemCount = 0;
+                } else if (this.badItemCount > 0) {
+                    this.productStock = Math.max(0, this.originalStock - this.badItemCount);
+                }
+            },
+            
+            addBatch() {
+                if (this.newBatch.quantity && this.newBatch.expiration_date) {
+                    this.batches.push({
+                        quantity: this.newBatch.quantity,
+                        expiration_date: this.newBatch.expiration_date,
+                        batch_id: 'BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase()
+                    });
+                    this.newBatch = { quantity: '', expiration_date: '' };
+                }
+            },
+            
+            removeBatch(index) {
+                this.batches.splice(index, 1);
+            },
+            
+            getTotalStock() {
+                return this.batches.reduce((total, batch) => total + parseInt(batch.quantity || 0), 0);
+            }
+        }">
 
-                        <!-- PO Number Dropdown -->
-                        <div class="flex flex-col text-start font-semibold">
-                            <label>Purchase Order Number</label>
-                            <select name="purchaseOrderNumber" 
-                                    class="px-3 py-2 border rounded-sm border-black" 
-                                    x-model="poId" 
-                                    :required="addMethod === 'po'" 
-                                    @change="getItems($event.target.value)">
-                                <option value="" disabled selected>Select PO Number</option>
-                                @foreach($unaddedPOs as $po)
-                                    <option value="{{ $po->id }}">{{ $po->orderNumber }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+    <!-- PRODUCT DETAILS -->
+    <div class="bg-gray-50 px-4 pt-4 pb-0 rounded-md">
+        <div class="grid grid-cols-6 gap-x-4 gap-y-3">
 
-                        <!-- PO Items Dropdown -->
-                        <div class="flex flex-col text-start font-semibold">
-                            <label>Purchase Order Item</label>
-                            <select name="selectedItemId"
-                                    class="px-3 py-2 border rounded-sm border-black"
-                                    x-model="selectedItemId" 
-                                    :disabled="!items.length"
-                                    @change="setCostPrice($event.target.value)">
-                                <option value="" disabled selected>Select PO Item</option>
-                                <template x-for="item in items" :key="item.id">
-                                    <option :value="item.id" x-text="item.productName"></option>
-                                </template>
-                            </select>
-                        </div>
+            <!-- PO Number Dropdown -->
+            <div class="flex flex-col text-start col-span-2">
+                <label class="font-semibold">Purchase Order Number</label>
+                <select name="purchaseOrderNumber" 
+                        class="px-3 py-2.5 border rounded-sm border-black" 
+                        x-model="poId" 
+                        :required="addMethod === 'po'" 
+                        @change="getItems($event.target.value)">
+                    <option value="" disabled selected>Select PO Number</option>
+                    @foreach($unaddedPOs as $po)
+                        <option value="{{ $po->id }}">{{ $po->orderNumber }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <x-form.form-input label="Product Name" name="productName" type="text" value="" 
-                                                x-model="productName"
-                                                x-bind:required="addMethod === 'po'"/>
-                                                
-                            <div class='flex flex-col text-start'>
-                                <label for="productBrand">Product Brand</label>
-                                <select name="productBrand" id="productBrand" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
-                                    <option value="" disabled selected>Select Brand</option>
-                                    @foreach($brands as $brand)
-                                        <option value="{{ $brand->productBrand }}">{{ $brand->productBrand }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            
-                            <div class="flex flex-col text-start">
-                                <label for="productCategory">Product Category</label>
-                                <select name="productCategory" id="productCategory" class="px-3 py-2 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
-                                    <option value="" disabled selected>Select Category</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->productCategory }}">{{ $category->productCategory }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            
-                            <x-form.form-input label="Stock" type="number" value="" 
-                                                name="productStock" 
-                                                x-model="productStock"
-                                                x-bind:required="addMethod === 'po'"
-                                                readonly/>
-                            
-                            <div class="flex flex-col text-start">
-                                <label for="itemMeasurement">Measurement per item</label>
-                                <select class="px-3 py-2 border rounded-sm border-black" 
-                                name="productItemMeasurement" 
-                                x-model="itemMeasurement"
-                                x-bind:required="addMethod === 'po'">
-                                    <option value="" disabled selected>Select Measurement</option>
-                                    <option value="kilogram">kilogram (kg)</option>
-                                    <option value="gram">gram (g)</option>
-                                    <option value="liter">liter (L)</option>
-                                    <option value="milliliter">milliliter (mL)</option>
-                                    <option value="pcs">pieces (pcs)</option>
-                                    <option value="set">set</option>
-                                    <option value="pair">pair</option>
-                                    <option value="pack">pack</option>
-                                </select>
-                            </div>
+            <!-- PO Items Dropdown -->
+            <div class="flex flex-col text-start col-span-2">
+                <label class="font-semibold">Purchase Order Item</label>
+                <select name="selectedItemId"
+                        class="px-3 py-2.5 border rounded-sm border-black"
+                        x-model="selectedItemId" 
+                        :disabled="!items.length"
+                        @change="setCostPrice($event.target.value)">
+                    <option value="" disabled selected>Select PO Item</option>
+                    <template x-for="item in items" :key="item.id">
+                        <option :value="item.id" x-text="item.productName"></option>
+                    </template>
+                </select>
+            </div>
 
-                            <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" type="number" value="" 
-                                                x-bind:required="addMethod === 'po'"
-                                                x-model="sellingPrice"/>
+            {{-- LABEL FOR PRODUCT NAME --}}
+            <x-form.form-input label="Product Name" name="productName" type="text" value="" 
+                                x-model="productName"
+                                class="col-span-2"
+                                x-bind:required="addMethod === 'po'"/>
 
-                            <x-form.form-input label="Cost Price (₱)" name="productCostPrice" type="number" value="" 
-                                                readonly
-                                                x-model="costPrice"/>
+            {{-- LABEL FOR PRODUCT BRAND --}}
+            <div class='flex flex-col text-start col-span-2'>
+                <label for="productBrand">Product Brand</label>
+                <select name="productBrand" id="productBrand" class="px-3 py-2.5 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
+                    <option value="" disabled selected>Select Brand</option>
+                    @foreach($brands as $brand)
+                        <option value="{{ $brand->productBrand }}">{{ $brand->productBrand }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-                            <div class="flex flex-col text-start relative">
-                                <label for="productQuality">Quality Status</label>
-                                <select class="px-3 py-2 border rounded-sm border-black" 
-                                name="productQuality" 
-                                x-model="selectedQuality"
-                                @change="updateStockBasedOnQuality()"
-                                x-bind:required="addMethod === 'po'">
-                                    <option value="goodCondition" selected>Good Condition</option>
-                                    <option value="defective">Defective</option>
-                                    <option value="incorrectItem">Incorrect Item</option>
-                                    <option value="nearExpiry">Near Expiry</option>
-                                    <option value="rejected">Rejected</option>
-                                    <option value="quantityMismatch">Quantity Mismatch</option>
-                                </select>
+            {{-- LABEL FOR PRODUCT CATEGORY --}}
+            <div class="container flex flex-col text-start col-span-2">
+                <label for="productCategory">Product Category</label>
+                <select name="productCategory" id="productCategory" class="px-3 py-2.5 border rounded-sm border-black" x-bind:required="addMethod === 'po'">
+                    <option value="" disabled selected>Select Category</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category->productCategory }}">{{ $category->productCategory }}</option>
+                    @endforeach
+                </select>
+            </div>
 
-                                <!-- WILL ONLY SHOW IF QUALITY != goodCondition -->
-                                <div class="flex flex-row items-center content-center mt-2 text-md w-full py-2"
-                                    x-show="selectedQuality !== 'goodCondition'">
-                                    <label for="badItemQuantity" class="pr-2">Item count: </label>
-                                    <input name="badItemQuantity" id="badItemQuantity" type="number" step="1" min="0" 
-                                        :max="originalStock" class="text-sm w-16 px-2 py-1 border border-black"
-                                        x-model="badItemCount"
-                                        @input="updateStockBasedOnQuality()">
-                                </div>
-                            </div>
+            {{-- LABEL FOR ITEM MEASUREMENT --}}
+            <div class="container flex flex-col text-start col-span-1">
+                <label for="itemMeasurement">UOM</label>
+                <select name="productItemMeasurement" 
+                        class="px-3 py-2.5 border rounded-sm border-black" 
+                        x-model="itemMeasurement"
+                        x-bind:required="addMethod === 'po'">
+                    <option value="" disabled selected>Select</option>
+                    <option value="kilogram">kg</option>
+                    <option value="gram">g</option>
+                    <option value="liter">L</option>
+                    <option value="milliliter">mL</option>
+                    <option value="pcs">pcs</option>
+                    <option value="set">set</option>
+                    <option value="pair">pair</option>
+                    <option value="pack">pack</option>
+                </select>
+            </div>
 
-                            <x-form.form-input label="Expiration Date" name="productExpirationDate" type="date"
-                                value="" 
-                                min="{{ date('Y-m-d') }}"
-                                x-bind:required="addMethod === 'po'"
-                            />
-                            <x-form.form-input label="Upload an image" name="productImage" type="file" value="" x-bind:required="addMethod === 'po'"/>
-                        </div>
-                    </section>
+            <x-form.form-input label="Total Stocks" type="number" value="" 
+                name="productStock" 
+                x-model="productStock"
+                readonly
+                class="col-span-1"
+                x-bind:required="addMethod === 'po'"/>
+
+            <x-form.form-input label="Selling Price" class="col-span-1" name="productSellingPrice" value="" 
+                type="number" step="0.01" min="0" 
+                x-bind:required="addMethod === 'po'"
+                x-model="sellingPrice"/>
+
+            <x-form.form-input label="Cost Price" class="col-span-1" name="productCostPrice" value="" 
+                type="number" step="0.01" min="0" 
+                readonly
+                x-model="costPrice"/>
+
+            <div class='container flex flex-col text-start col-span-2'>
+                <label for="productImage">Upload image</label>
+                <input 
+                    id="productImage" 
+                    name="productImage" 
+                    type="file" 
+                    class="px-3 py-1.5 text-sm border rounded-sm border-black" 
+                    autocomplete="off"
+                    x-bind:required="addMethod === 'po'"
+                >
+            </div>
+
+            <!-- Quality Status -->
+            <div class="flex flex-col text-start relative col-span-1">
+                <label for="productQuality">Quality</label>
+                <select class="px-3 py-2.5 border rounded-sm border-black" 
+                name="productQuality" 
+                x-model="selectedQuality"
+                @change="updateStockBasedOnQuality()"
+                x-bind:required="addMethod === 'po'">
+                    <option value="goodCondition" selected>Good Condition</option>
+                    <option value="defective">Defective</option>
+                    <option value="incorrectItem">Incorrect Item</option>
+                    <option value="nearExpiry">Near Expiry</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="quantityMismatch">Quantity Mismatch</option>
+                </select>
+            </div>
+
+            <!-- ALWAYS SHOW BUT DISABLED WHEN GOOD CONDITION -->
+            <div class="flex flex-col items-center content-center text-md w-full">
+                <label for="badItemQuantity" class="pr-2">Item count: </label>
+                <input name="badItemQuantity" id="badItemQuantity" type="number" step="1" min="0" 
+                    :max="originalStock" 
+                    :disabled="selectedQuality === 'goodCondition'"
+                    class="w-full px-3 py-2 text-md border border-black"
+                    :class="@{'bg-gray-100': selectedQuality === 'goodCondition'}"
+                    x-model="badItemCount"
+                    @input="updateStockBasedOnQuality()">
+            </div>
+
+            <!-- INFORMATION TEXT -->
+            <div class="container text-xs col-span-6">
+                <p class='text-xs text-gray-400'>
+                    <strong>Batch Management:</strong> Add batches with quantities and expiry dates. Total batches must equal total stock.
+                </p>
+            </div>
+
+            <div class="container flex flex-col text-start col-span-1">
+                <label>Quantity</label>
+                <input type="number" x-model="newBatch.quantity" min="1" 
+                    :max="productStock ? productStock - getTotalStock() : 0"
+                    :disabled="!productStock || productStock <= 0"
+                    class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
+                    :class="@{'bg-gray-100': !productStock || productStock <= 0}">
+            </div>
+            <div class="container flex flex-col text-start col-span-2">
+                <label>Expiration Date</label>
+                <input type="date" x-model="newBatch.expiration_date" 
+                    min="{{ date('Y-m-d') }}"
+                    :disabled="!productStock || productStock <= 0"
+                    class="px-3 py-2 text-sm border rounded-sm border-black"
+                    :class="@{'bg-gray-100': !productStock || productStock <= 0}">
+            </div>
+            <div class="container flex flex-col mb-1 col-span-2 place-items-end content-end items-center justify-end">
+                <button type="button" @click="addBatch()" 
+                    :disabled="!productStock || !newBatch.quantity || !newBatch.expiration_date || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)"
+                    :class="@{
+                        'bg-teal-500 hover:bg-teal-600': productStock && newBatch.quantity && newBatch.expiration_date && (parseInt(newBatch.quantity) + getTotalStock()) <= parseInt(productStock), 
+                        'bg-gray-300 cursor-not-allowed': !productStock || !newBatch.quantity || !newBatch.expiration_date || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)
+                    }"
+                    class="px-4 py-2 text-md rounded text-white w-full transition-all duration-100 ease-in-out">
+                    + Add Batch
+                </button>
+            </div>
+        </div>
+
+        <!-- STOCK ASSIGNMENT SUMMARY -->
+        <div class="mt-3 text-sm col-span-6" x-show="manual_productStock > 0 || batches.length > 0">
+            <span class="font-semibold" :class="@{
+                'text-green-600': getTotalStock() == manual_productStock, 
+                'text-yellow-600': getTotalStock() < manual_productStock,
+                'text-red-600': getTotalStock() > manual_productStock
+            }">
+                Stocks assigned: <span x-text="getTotalStock()"></span>/<span x-text="manual_productStock || 0"></span>
+            </span>
+            <span x-show="getTotalStock() < manual_productStock" class="text-red-500 ml-2">
+                (Remaining: <span x-text="(manual_productStock || 0) - getTotalStock()"></span> stocks need assignment)
+            </span>
+            <span x-show="getTotalStock() > manual_productStock" class="text-red-500 ml-2">
+                (Warning: Overassigned by <span x-text="getTotalStock() - (manual_productStock || 0)"></span> stocks!)
+            </span>
+        </div>
+
+        <!-- BATCH VALIDATION MESSAGE (Hidden but triggers Toast) -->
+        <div x-show="batches.length > 0 && getTotalStock() !== parseInt(productStock || 0)" 
+            x-init="if (batches.length > 0 && getTotalStock() !== parseInt(productStock || 0)) { Toast.error('Batch quantities must equal total stocks') }"
+            class="hidden">
+        </div>
+
+        <!-- PREVIEW TABLE FOR ADDED BATCH -->
+        <template x-if="batches.length > 0">
+            <div class="border w-auto rounded-md border-solid border-black mt-3 h-28 overflow-y-auto">
+                <table class="w-full h-auto overflow-y-auto">
+                    <thead class="rounded-lg bg-main text-white px-4 py-2">
+                        <tr class="rounded-lg">
+                            <th class="bg-main px-2 py-2 text-sm">Batch</th>
+                            <th class="bg-main px-2 py-2 text-sm">No. of Items</th>
+                            <th class="bg-main px-2 py-2 text-sm">Expiry Date</th>
+                            <th class="bg-main px-2 py-2 text-sm">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="(batch, index) in batches" :key="index">
+                            <tr class="border-b text-xs">
+                                <td class="px-1 py-1 text-center" x-text="index + 1"></td>
+                                <td class="px-1 py-1 text-center" x-text="batch.quantity"></td>
+                                <td class="px-1 py-1 text-center" x-text="new Date(batch.expiration_date).toLocaleDateString()"></td>
+                                <td class="px-1 py-1 text-center mx-auto flex place-items-center items-center justify-center content-center">                            
+                                    <button type="button" @click="removeBatch(index)" class="text-red-500 hover:text-red-700">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 hover:fill-button-delete/70 cursor-pointer">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                        </svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+
+        <template x-if="batches.length === 0">
+            <!-- EMPTY STATE -->
+            <div class="border w-auto rounded-md border-solid border-black mt-3 h-28">
+                <div class="text-center py-8 text-gray-500">
+                    <p>No batch added yet. Adding batch is required to assign expiry dates for the items</p>
+                </div>
+            </div>
+        </template>
+
+        <!-- HIDDEN INPUTS FOR BATCH DATA -->
+        <template x-for="(batch, index) in batches" :key="index">
+            <div>
+                <input type="hidden" :name="'batches[' + index + '][quantity]'" :value="batch.quantity">
+                <input type="hidden" :name="'batches[' + index + '][expiration_date]'" :value="batch.expiration_date">
+            </div>
+        </template>
+    </div>
+</section>
 
                     <!-- FORM BUTTONS -->
                     <div class="flex justify-end gap-4 mt-4 mx-4">
-
-                        <!-- STOCK ASSIGNMENT SUMMARY -->
-                        <div class="mt-3 text-sm mr-auto" x-show="manual_productStock > 0 || batches.length > 0">
-                            <span class="font-semibold" :class="{
-                                'text-green-600': getTotalStock() == manual_productStock, 
-                                'text-yellow-600': getTotalStock() < manual_productStock,
-                                'text-red-600': getTotalStock() > manual_productStock
-                            }">
-                                Stocks assigned: <span x-text="getTotalStock()"></span>/<span x-text="manual_productStock || 0"></span>
-                            </span>
-                            <span x-show="getTotalStock() < manual_productStock" class="text-red-500 ml-2">
-                                (Remaining: <span x-text="(manual_productStock || 0) - getTotalStock()"></span> stocks need assignment)
-                            </span>
-                            <span x-show="getTotalStock() > manual_productStock" class="text-red-500 ml-2">
-                                (Warning: Overassigned by <span x-text="getTotalStock() - (manual_productStock || 0)"></span> stocks!)
-                            </span>
-                        </div>
-
-
                         <x-form.closeBtn type="button" @click="$refs.cancelAddProduct.showModal()">Cancel</x-form.closeBtn>
                         <x-form.saveBtn 
                             type="button" 
