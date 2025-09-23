@@ -1,6 +1,5 @@
 <?php
 
-// Allows UserController to be referenced from this Route
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SalesController;
@@ -17,145 +16,48 @@ use App\Http\Controllers\InventoryReportsController;
 use App\Http\Controllers\PurchaseOrderReportsController;
 use App\Http\Controllers\ProductMovementReportsController;
 
+// Authentication routes
 Route::get('/', function() {
     return view('login');
 })->name('login');
 
 Route::post('/login', [UserController::class, 'login']);
-
-// MANAGE ACCOUNT PAGE ROUTE
-Route::get('/manage-account', function () {
-    return view('manage-account');
-})->name('manage.account')->middleware('auth');
-
-// The middleware method doesn't allow unlogged users to open this URL
-Route::get('/main', [DashboardController::class, 'index'])->name('main')->middleware('auth');
-
-
-// The function is inside the UserController.php for cleaner code
 Route::post('/logout', [UserController::class, 'logout']);
 
-
-// This resource route doesn't route the user to the /suppliers. 
-// This only allows us to use suppliers.store so that we can put it--
-// inside the action attribute inside the form
-
-// ROUTE FOR SALES
-Route::resource('sales', SalesController::class)->middleware('auth');
-
-// Route for invoice PDF
-Route::get('/sales/{sale}/download-receipt', [SalesController::class, 'downloadSaleReceipt'])->name('sales.download-receipt');
-
-// Route::get('sales/{sale}/invoice', [SalesController::class, 'showInvoice'])->name('sales.invoice');}}
-Route::get('/sales/{id}/edit', [SalesController::class, 'edit'])->name('sales.edit');
-Route::put('/sales/{id}', [SalesController::class, 'update'])->name('sales.update');
-Route::delete('/sales/{id}', [SalesController::class, 'destroy'])->name('sales.destroy');
-
-
-// ROUTES FOR INVENTORY
-Route::resource('inventory', InventoryController::class)->middleware('auth');
-Route::get('/get-items/{poId}', [InventoryController::class, 'getItems'])->middleware('auth');
-
-
-// ROUTE FOR PURCHASE ORDERS
-Route::resource('purchase-orders', PurchaseOrderController::class)->except(['update'])->middleware('auth');
-
-
-// ============== Custom routes for purchase order session management ==========
-
-// For adding items to the session
-Route::post('purchase-orders/add-item', [PurchaseOrderController::class, 'addItem'])->name('purchase-orders.add-item')->middleware('auth');
-// For removing items from the session
-Route::delete('purchase-orders/remove-item/{index}', [PurchaseOrderController::class, 'removeItem'])->name('purchase-orders.remove-item')->middleware('auth');
-// For clearing the session
-Route::post('purchase-orders/clear-session', [PurchaseOrderController::class, 'clearSession'])->name('purchase-orders.clearSession')->middleware('auth');
-// To update session and the existing values
-Route::put('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase-orders.update')->middleware('auth');
-// To delete existing items
-Route::delete('/purchase-orders/{purchaseOrder}/items/{item}', [App\Http\Controllers\PurchaseOrderController::class, 'destroyItem'])->name('purchase-orders.items.destroy');
-
-// FOR PDF
-Route::get('/download-pdf/{orderId}', [PurchaseOrderController::class, 'downloadPDF'])->name('purchase-orders.download-pdf');
-
-
-// ROUTE FOR DELIVERY MANAGEMENT
-Route::resource('delivery-management', DeliveryController::class)->middleware('auth');
-// TO UPDATE DELIVERY STATUS
-Route::post('/delivery-management/update-status', [DeliveryController::class, 'updateStatus'])
-    ->name('delivery-management.updateStatus');
-
-// ROUTES FOR PRODUCTS CLASSIFICATION
-Route::resource('product-classification', ProductClassification::class)->middleware('auth');
-
-// Custom destroy routes for delete buttons
-Route::delete('brands/{id}', [ProductClassification::class, 'destroyBrand'])->name('brands.destroy')->middleware('auth');
-Route::delete('categories/{id}', [ProductClassification::class, 'destroyCategory'])->name('categories.destroy')->middleware('auth');
-Route::delete('subcategories/{id}', [ProductClassification::class, 'destroySubcategory'])->name('subcategories.destroy')->middleware('auth');
-
-
-
-// MAIN ROUTE FOR REPORTS - use a more specific path
-Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index')->middleware('auth');
-
-
-Route::resource('po-notes', PONotesController::class);
-
-
-// ROUTE FOR SUPPLIERS
-Route::resource('suppliers', SupplierController::class)->middleware('auth');
-
-
-
-
-// API route for sales trends data
-Route::get('/dashboard/sales-trends', [DashboardController::class, 'getSalesTrends'])->name('dashboard.sales-trends')->middleware('auth');
-
-
-
-
-
-
-
-
-
-/*
-
-    ====MANUAL====
-    array:12 [▼ // app\Http\Controllers\InventoryController.php:45
-    "_token" => "t7mdbi4EwlnmeJCNLYUE9cena5gFqt5Tt8EBoba8"
-    "productName" => null
-        "productSKU" => "INV-202508-0011"
-        "productBrand" => "Whiskas"
-        "productCategory" => "Dog Toy"
-    "productStock" => "0"
-    "productSellingPrice" => "0"
-    "productCostPrice" => "0"
-        "productItemMeasurement" => "pcs"
-    "productExpirationDate" => null
-        "purchaseOrderNumber" => "108"
-    "productProfitMargin" => "0%"
-    ]
-    ================================================================== productName, 
-    ====PURCHASEORDER====
-    array:14 [▼ // app\Http\Controllers\InventoryController.php:45
-    "_token" => "t7mdbi4EwlnmeJCNLYUE9cena5gFqt5Tt8EBoba8"
-    "productName" => "ManualPurchaseOrder2"
-    "productSKU" => "INV-202508-0011"
-    "productStock" => "5"
-    "productSellingPrice" => "300"
-    "productCostPrice" => "200.00"
-    "productExpirationDate" => "2025-09-06"
-    "purchaseOrderNumber" => "118"
-    "selectedItemId" => "91"
-    "productBrand" => "Whiskas"
-    "productCategory" => "Dog Toy"
-    "productProfitMargin" => "50.00%"
-    "productItemMeasurement" => "liter"
-    "productImage" => 
-    Illuminate\Http
-    \
-    UploadedFile
-    {#1291 ▶}
-    ]
-
-*/
+// All routes that require authentication
+Route::middleware('auth')->group(function () {
+    
+    // === ROUTES ACCESSIBLE BY BOTH STAFF & ADMIN ===
+    Route::get('/main', [DashboardController::class, 'index'])->name('main');
+    Route::resource('sales', SalesController::class);
+    Route::get('/sales/{sale}/download-receipt', [SalesController::class, 'downloadSaleReceipt'])->name('sales.download-receipt');
+    Route::get('/sales/{id}/edit', [SalesController::class, 'edit'])->name('sales.edit');
+    Route::put('/sales/{id}', [SalesController::class, 'update'])->name('sales.update');
+    Route::delete('/sales/{id}', [SalesController::class, 'destroy'])->name('sales.destroy');
+    Route::resource('inventory', InventoryController::class);
+    Route::get('/get-items/{poId}', [InventoryController::class, 'getItems']);
+    Route::resource('purchase-orders', PurchaseOrderController::class)->except(['update']);
+    Route::post('purchase-orders/add-item', [PurchaseOrderController::class, 'addItem'])->name('purchase-orders.add-item');
+    Route::delete('purchase-orders/remove-item/{index}', [PurchaseOrderController::class, 'removeItem'])->name('purchase-orders.remove-item');
+    Route::post('purchase-orders/clear-session', [PurchaseOrderController::class, 'clearSession'])->name('purchase-orders.clearSession');
+    Route::put('purchase-orders/{purchaseOrder}', [PurchaseOrderController::class, 'update'])->name('purchase-orders.update');
+    Route::delete('/purchase-orders/{purchaseOrder}/items/{item}', [App\Http\Controllers\PurchaseOrderController::class, 'destroyItem'])->name('purchase-orders.items.destroy');
+    Route::get('/download-pdf/{orderId}', [PurchaseOrderController::class, 'downloadPDF'])->name('purchase-orders.download-pdf');
+    Route::resource('delivery-management', DeliveryController::class);
+    Route::post('/delivery-management/update-status', [DeliveryController::class, 'updateStatus'])->name('delivery-management.updateStatus');
+    Route::resource('product-classification', ProductClassification::class);
+    Route::delete('brands/{id}', [ProductClassification::class, 'destroyBrand'])->name('brands.destroy');
+    Route::delete('categories/{id}', [ProductClassification::class, 'destroyCategory'])->name('categories.destroy');
+    Route::delete('subcategories/{id}', [ProductClassification::class, 'destroySubcategory'])->name('subcategories.destroy');
+    Route::resource('po-notes', PONotesController::class);
+    Route::get('/dashboard/sales-trends', [DashboardController::class, 'getSalesTrends'])->name('dashboard.sales-trends');
+    
+    // === ADMIN-ONLY ROUTES (protected by controller checks) ===
+    // REMOVE THE MIDDLEWARE GROUP - just list the routes directly
+    Route::get('/manage-account', [UserController::class, 'index'])->name('manage.account');
+    Route::post('/manage-account', [UserController::class, 'store'])->name('users.store');
+    Route::put('/manage-account/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/manage-account/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
+    Route::resource('suppliers', SupplierController::class);
+});

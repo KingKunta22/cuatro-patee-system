@@ -4,10 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SupplierController extends Controller
 {
     public function store(Request $request) {
+
+        // Admin check
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Admin access required.');
+        }
+
         $supplierFields = $request->validate([
             'supplierName'=>'required',
             'supplierAddress'=>'required',
@@ -28,6 +35,11 @@ class SupplierController extends Controller
     // This method will run after every method call
     public function index(Request $request)
     {
+        // Admin check
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Admin access required.');
+        }
+
         // Start query
         $query = Supplier::query();
 
@@ -49,6 +61,13 @@ class SupplierController extends Controller
     }
 
     public function update(Request $request, Supplier $supplier){
+
+        // Admin check
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Admin access required.');
+        }
+        
+
         $updatedFields = $request->validate([
             'supplierName' => 'required',
             'supplierAddress' => 'required',
@@ -63,6 +82,12 @@ class SupplierController extends Controller
     }
 
     public function destroy(Supplier $supplier){
+
+        // Admin check
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Admin access required.');
+        }
+        
 
         $supplier->delete();
 

@@ -49,4 +49,11 @@ class User extends Authenticatable
     {
         return $this->status === self::STATUS_ACTIVE;
     }
+    
+    public function getAvatarUrl()
+    {
+        // Generate Gravatar URL based on email
+        $hash = md5(strtolower(trim($this->email)));
+        return "https://www.gravatar.com/avatar/{$hash}?d=identicon&s=200";
+    }
 }

@@ -11,11 +11,18 @@ use Illuminate\Http\Request;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class ReportsController extends Controller
 {
     public function index(Request $request)
     {
+        // Admin check
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Admin access required.');
+        }
+        
+
         $timePeriod = $request->timePeriod ?? 'all';
         
         // Data for inventory tab with time period filtering
@@ -52,6 +59,7 @@ class ReportsController extends Controller
 
     private function getInventoryData($timePeriod)
     {
+
         $query = Product::with(['brand', 'category', 'batches']);
         
         $this->applyTimeFilter($query, $timePeriod, 'created_at');
@@ -64,6 +72,7 @@ class ReportsController extends Controller
 
     private function getPurchaseOrderData($timePeriod)
     {
+
         $query = PurchaseOrder::with([
             'supplier', 
             'items', 
@@ -127,6 +136,7 @@ class ReportsController extends Controller
 
     private function getRevenueStats($timePeriod)
     {
+
         $revenueQuery = Sale::query();
         $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id');
         
@@ -143,6 +153,8 @@ class ReportsController extends Controller
 
     private function applyTimeFilter($query, $timePeriod, $dateField, $relation = null)
     {
+        
+
         if ($timePeriod !== 'all') {
             if ($relation) {
                 // For relationships, use whereHas with the time condition
@@ -159,6 +171,8 @@ class ReportsController extends Controller
 
     private function applyTimeCondition($query, $timePeriod, $dateField)
     {
+        
+
         switch ($timePeriod) {
             case 'today':
                 $query->whereDate($dateField, today());
@@ -175,6 +189,8 @@ class ReportsController extends Controller
 
     private function getProductMovementsData($timePeriod)
     {
+        
+
         // Get sales data for outflow with time filtering
         $salesQuery = Sale::with(['items', 'items.productBatch.product']);
         $this->applyTimeFilter($salesQuery, $timePeriod, 'sale_date');
