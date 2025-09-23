@@ -52,14 +52,15 @@ class SalesController extends Controller
         return view('sales', compact('sales', 'totalRevenue', 'totalCost', 'totalProfit', 'products'));
     }
 
-    // Generate sequential invoice number
+    // Generate sequential invoice number in MDYY format
     private function generateInvoiceNumber()
     {
         $prefix = 'INV-';
-        $date = now()->format('Ymd');
+        $date = now()->format('md'); // MD format (month and day)
+        $year = now()->format('y'); // Last 2 digits of year
         
         // Get the highest sequential number for today
-        $latestInvoice = Sale::where('invoice_number', 'like', $prefix . $date . '-%')
+        $latestInvoice = Sale::where('invoice_number', 'like', $prefix . $date . $year . '-%')
             ->orderBy('invoice_number', 'desc')
             ->first();
 
@@ -67,7 +68,7 @@ class SalesController extends Controller
             $parts = explode('-', $latestInvoice->invoice_number);
             $lastPart = end($parts);
             
-            if (preg_match('/^\d{5}$/', $lastPart)) {
+            if (preg_match('/^\d{3}$/', $lastPart)) {
                 $sequence = (int) $lastPart + 1;
             } else {
                 $sequence = 1;
@@ -76,8 +77,8 @@ class SalesController extends Controller
             $sequence = 1;
         }
 
-        $sequenceFormatted = str_pad($sequence, 5, '0', STR_PAD_LEFT);
-        return $prefix . $date . '-' . $sequenceFormatted;
+        $sequenceFormatted = str_pad($sequence, 3, '0', STR_PAD_LEFT);
+        return $prefix . $date . $year . '-' . $sequenceFormatted; // INV-092325-001 format
     }
 
     // Store a new sale

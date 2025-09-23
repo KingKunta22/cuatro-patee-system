@@ -367,9 +367,9 @@
             <x-slot:dialogTitle>Sale Details: {{ $sale->invoice_number }}</x-slot:dialogTitle>
             
             <div class="container">
-                <div class="grid grid-cols-2 gap-3 px-4">
+                <div class="grid grid-cols-1 gap-4 p-4">
                     <!-- Sale Information -->
-                    <div class="col-span-4">
+                    <div class="col-span-1">
                         <h2 class="text-xl font-bold mb-4">Sale Information</h2>
                         <div class="grid grid-cols-4 gap-3">
                             <div class="bg-gray-50 p-3 rounded-md">
@@ -392,8 +392,9 @@
                     </div>
 
                     <!-- Batch Information -->
-                    <div class="col-span-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="col-span-1">
+                        <h3 class="text-lg font-semibold mb-3">Batch Information</h3>
+                        <div class="grid grid-cols-1 @if($sale->items->groupBy('product_batch_id')->count() == 1) grid-cols-1 @elseif($sale->items->groupBy('product_batch_id')->count() == 2) grid-cols-2 @else grid-cols-3 @endif gap-4">
                             @php
                                 $batchGroups = $sale->items->groupBy('product_batch_id');
                             @endphp
@@ -402,7 +403,7 @@
                                     $batch = $items->first()->productBatch;
                                     $totalQuantity = $items->sum('quantity');
                                 @endphp
-                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <div class="bg-gray-50 p-4 rounded-md">
                                     <p class="font-semibold text-sm text-gray-800">{{ $batch->batch_number ?? 'N/A' }}</p>
                                     <p class="text-xs text-gray-600 mt-1">Exp: {{ $batch ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'N/A' }}</p>
                                     <p class="text-xs text-gray-700 mt-1">Quantity Sold: {{ $totalQuantity }}</p>
@@ -413,61 +414,77 @@
                     </div>
 
                     <!-- Items in this sale -->
-                    <div class="col-span-2">
-                        <h2 class="text-xl font-bold mb-4">Items Sold</h2>
-                        <div class="border w-auto rounded-md border-solid border-black p-3 my-4">
-                            <table class="w-full">
-                                <thead class="rounded-lg bg-main text-white px-4 py-2">
-                                    <tr class="rounded-lg">
-                                        <th class="bg-main px-2 py-2 text-sm">Product</th>
-                                        <th class="bg-main px-2 py-2 text-sm">Quantity</th>
-                                        <th class="bg-main px-2 py-2 text-sm">Unit Price</th>
-                                        <th class="bg-main px-2 py-2 text-sm">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($sale->items as $saleItem)
-                                    <tr class="border-b">
-                                        <td class="px-2 py-2 text-xs text-center">
-                                            {{ $saleItem->product->productName ?? $saleItem->product_name }}
-                                        </td>
-                                        <td class="px-2 py-2 text-xs text-center">
-                                            {{ $saleItem->quantity }} 
-                                            {{ $saleItem->product->productItemMeasurement ?? '' }}
-                                        </td>
-                                        <td class="px-2 py-2 text-xs text-center">₱{{ number_format($saleItem->unit_price, 2) }}</td>
-                                        <td class="px-2 py-2 text-xs text-center">₱{{ number_format($saleItem->total_price, 2) }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        <!-- Total Row -->
-                        <div class="flex flex-col items-end space-y-2 mx-6 pb-4 px-8">
-                            <div class="flex justify-between w-64">
-                                <span class="text-xs font-semibold">Cash Received:</span>
-                                <span class="text-xs">₱{{ number_format($sale->cash_received, 2) }}</span>
+                    <div class="col-span-1">
+                        <div class="flex gap-2">
+                            <!-- Table (3/4 width) -->
+                            <div class="w-4/6">
+                                <h2 class="text-xl font-bold mb-4">Items Sold</h2>
+                                <div class="border rounded-md border-solid border-black">
+                                    <table class="w-full">
+                                        <thead class="rounded-lg bg-main text-white">
+                                            <tr class="rounded-lg">
+                                                <th class="bg-main px-2 py-2 text-sm">Product</th>
+                                                <th class="bg-main px-2 py-2 text-sm">Quantity</th>
+                                                <th class="bg-main px-2 py-2 text-sm">Unit Price</th>
+                                                <th class="bg-main px-2 py-2 text-sm">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($sale->items as $saleItem)
+                                            <tr class="border-b">
+                                                <td class="px-2 py-2 text-xs text-center">
+                                                    {{ $saleItem->product->productName ?? $saleItem->product_name }}
+                                                </td>
+                                                <td class="px-2 py-2 text-xs text-center">
+                                                    {{ $saleItem->quantity }} 
+                                                    {{ $saleItem->product->productItemMeasurement ?? '' }}
+                                                </td>
+                                                <td class="px-2 py-2 text-xs text-center">₱{{ number_format($saleItem->unit_price, 2) }}</td>
+                                                <td class="px-2 py-2 text-xs text-center">₱{{ number_format($saleItem->total_price, 2) }}</td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                            <div class="flex justify-between w-64">
-                                <span class="text-xs font-semibold">Change:</span>
-                                <span class="text-xs">₱{{ number_format($sale->change, 2) }}</span>
-                            </div>
-                            <div class="flex justify-between w-64 border-t pt-2">
-                                <span class="text-xs font-bold">Total Amount:</span>
-                                <span class="text-xs font-bold">₱{{ number_format($sale->total_amount, 2) }}</span>
+                            
+                            <!-- Totals (1/4 width) -->
+                            <div class="w-auto">
+                                <div class="px-4">
+                                    <h3 class="font-bold text-lg mb-4">Payment Summary</h3>
+                                    <div class="space-y-3 pt-2">
+                                        <div class="flex justify-between">
+                                            <span class="text-xs font-semibold">Cash Received:</span>
+                                            <span class="text-xs">₱{{ number_format($sale->cash_received, 2) }}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-xs font-semibold">Change:</span>
+                                            <span class="text-xs">₱{{ number_format($sale->change, 2) }}</span>
+                                        </div>
+                                        <div class="border-t pt-2 mt-2">
+                                            <div class="flex justify-between">
+                                                <span class="text-xs font-bold">Total Amount:</span>
+                                                <span class="text-xs font-bold">₱{{ number_format($sale->total_amount, 2) }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- ACTION BUTTONS -->
-                <div class="flex justify-between items-center w-full px-6 pt-2 pb-0 border-t">
+                <div class="flex justify-between items-center w-full px-6 pt-4 pb-2 border-t mt-4">
                     <!-- Buttons on left -->
                     <div class="flex items-center space-x-4">
                         <button onclick="downloadSalePDF({{ $sale->id }})" class="flex items-center space-x-1 cursor-pointer bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition-colors">
                             <span>Download PDF</span>
                         </button>
-                        <button class="flex items-center space-x-1 cursor-pointer bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600 transition-colors">
+                        <button onclick="printSaleDetails({{ $sale->id }})" class="flex items-center space-x-1 cursor-pointer bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition-colors">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                            </svg>
                             <span>Print</span>
                         </button>
                     </div>
@@ -495,7 +512,6 @@
             </div>
         </x-modal.createModal>
         @endforeach
-
 
 
         <!-- EDIT DIALOG -->
@@ -1109,6 +1125,312 @@
             }, 3000);
         }
     };
+
+    // Hndle print on form submission
+    document.getElementById('addSales').addEventListener('submit', function(e) {
+        if (!validateFormBeforeSubmit()) {
+            e.preventDefault();
+            return;
+        }
+        
+        if (!validateCartBeforeSubmit()) {
+            e.preventDefault();
+            return;
+        }
+        
+        // Handle print after successful submission
+        const shouldPrint = document.querySelector('input[name="salesPrint"]').checked;
+        if (shouldPrint) {
+            // You might want to store this flag and handle printing after redirect
+            localStorage.setItem('printAfterSave', 'true');
+        }
+    });
+
+    // Function to print after successful sale creation (call this on your success page)
+    function printNewSale(invoiceNumber) {
+        if (localStorage.getItem('printAfterSave') === 'true') {
+            // Find the sale and print it
+            setTimeout(() => {
+                // This would need to be implemented based on how you handle new sales
+                console.log('Printing new sale:', invoiceNumber);
+                localStorage.removeItem('printAfterSave');
+            }, 1000);
+        }
+    }
+
+
+    // Enhanced print function with better data extraction
+    function printSaleDetails(saleId) {
+        try {
+            // Get the modal
+            const modal = document.querySelector(`[x-ref="viewSaleDetails${saleId}"]`);
+            if (!modal) {
+                Toast.error('Sale details not found');
+                return;
+            }
+
+            // Extract data from the modal
+            const invoiceNumber = modal.querySelector('[x-slot\\:dialogTitle]')?.textContent.replace('Sale Details: ', '') || 'N/A';
+            const saleInfoItems = modal.querySelectorAll('.bg-gray-50.p-3.rounded-md');
+            const saleDate = saleInfoItems[1]?.querySelector('.text-sm')?.textContent || 'N/A';
+            const itemsCount = saleInfoItems[2]?.querySelector('.text-sm')?.textContent || 'N/A';
+            const processedBy = saleInfoItems[3]?.querySelector('.text-sm')?.textContent || 'System';
+
+            // Extract batch information
+            const batchItems = modal.querySelectorAll('.bg-gray-50.p-4.rounded-md');
+            const batchHTML = Array.from(batchItems).map(batch => `
+                <div class="batch-item">
+                    <strong>${batch.querySelector('.font-semibold')?.textContent || 'N/A'}</strong><br>
+                    ${batch.querySelectorAll('.text-xs')[0]?.textContent || ''}<br>
+                    ${batch.querySelectorAll('.text-xs')[1]?.textContent || ''}<br>
+                    ${batch.querySelectorAll('.text-xs')[2]?.textContent || ''}
+                </div>
+            `).join('');
+
+            // Extract table data
+            const tableRows = modal.querySelectorAll('table tbody tr');
+            const tableHTML = Array.from(tableRows).map(row => `
+                <tr>
+                    <td>${row.cells[0]?.textContent || ''}</td>
+                    <td>${row.cells[1]?.textContent || ''}</td>
+                    <td>${row.cells[2]?.textContent || ''}</td>
+                    <td>${row.cells[3]?.textContent || ''}</td>
+                </tr>
+            `).join('');
+
+            // Extract payment summary
+            const paymentSummary = modal.querySelector('.bg-gray-50.p-4.rounded-md');
+            const cashReceived = paymentSummary?.querySelector('.flex.justify-between:nth-child(1) span:last-child')?.textContent || '₱0.00';
+            const change = paymentSummary?.querySelector('.flex.justify-between:nth-child(2) span:last-child')?.textContent || '₱0.00';
+            const totalAmount = paymentSummary?.querySelector('.flex.justify-between:nth-child(3) span:last-child')?.textContent || '₱0.00';
+
+            const printContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Sale Receipt - ${invoiceNumber}</title>
+                    <style>
+                        body { 
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                            margin: 20px; 
+                            color: #333;
+                            line-height: 1.4;
+                        }
+                        .header { 
+                            text-align: center; 
+                            margin-bottom: 30px; 
+                            padding-bottom: 15px;
+                            border-bottom: 3px double #333;
+                        }
+                        .header h1 { 
+                            margin: 0; 
+                            font-size: 28px; 
+                            color: #2d3748;
+                        }
+                        .header h2 { 
+                            margin: 5px 0 0 0; 
+                            font-size: 18px; 
+                            color: #4a5568;
+                        }
+                        .section { 
+                            margin-bottom: 25px; 
+                        }
+                        .section h3 { 
+                            background: #2d3748; 
+                            color: white; 
+                            padding: 8px 12px; 
+                            margin: 0 0 15px 0;
+                            border-radius: 4px;
+                            font-size: 16px;
+                        }
+                        .info-grid {
+                            display: grid;
+                            grid-template-columns: repeat(4, 1fr);
+                            gap: 15px;
+                            margin-bottom: 20px;
+                        }
+                        .info-item {
+                            background: #f8f9fa;
+                            padding: 12px;
+                            border-radius: 6px;
+                            border-left: 4px solid #2d3748;
+                        }
+                        .info-item strong {
+                            display: block;
+                            margin-bottom: 5px;
+                            color: #2d3748;
+                        }
+                        .batch-grid {
+                            display: grid;
+                            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                            gap: 15px;
+                        }
+                        .batch-item {
+                            background: #f8f9fa;
+                            padding: 12px;
+                            border-radius: 6px;
+                            border: 1px solid #e2e8f0;
+                        }
+                        .table {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin: 15px 0;
+                            font-size: 14px;
+                        }
+                        .table th {
+                            background: #2d3748;
+                            color: white;
+                            padding: 10px;
+                            text-align: left;
+                            font-weight: 600;
+                        }
+                        .table td {
+                            padding: 8px 10px;
+                            border-bottom: 1px solid #e2e8f0;
+                        }
+                        .table tr:hover {
+                            background: #f7fafc;
+                        }
+                        .payment-summary {
+                            background: #f8f9fa;
+                            padding: 20px;
+                            border-radius: 8px;
+                            border: 2px solid #e2e8f0;
+                        }
+                        .summary-item {
+                            display: flex;
+                            justify-content: space-between;
+                            margin-bottom: 10px;
+                            padding: 5px 0;
+                        }
+                        .total-amount {
+                            border-top: 2px solid #2d3748;
+                            padding-top: 15px;
+                            margin-top: 15px;
+                            font-size: 16px;
+                            font-weight: bold;
+                        }
+                        .footer {
+                            text-align: center;
+                            margin-top: 40px;
+                            padding-top: 20px;
+                            border-top: 1px solid #cbd5e0;
+                            color: #718096;
+                            font-size: 12px;
+                        }
+                        @media print {
+                            body { margin: 15mm; }
+                            .header { border-bottom: 3px double #000; }
+                            .no-print { display: none; }
+                        }
+                        @page {
+                            size: A4;
+                            margin: 15mm;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>SALES RECEIPT</h1>
+                        <h2>Invoice: ${invoiceNumber}</h2>
+                    </div>
+                    
+                    <div class="section">
+                        <h3>Sale Information</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <strong>Invoice Number</strong>
+                                ${invoiceNumber}
+                            </div>
+                            <div class="info-item">
+                                <strong>Sale Date</strong>
+                                ${saleDate}
+                            </div>
+                            <div class="info-item">
+                                <strong>Items Count</strong>
+                                ${itemsCount}
+                            </div>
+                            <div class="info-item">
+                                <strong>Processed By</strong>
+                                ${processedBy}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Batch Information</h3>
+                        <div class="batch-grid">
+                            ${batchHTML}
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h3>Items Sold</h3>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableHTML}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="section">
+                        <h3>Payment Summary</h3>
+                        <div class="payment-summary">
+                            <div class="summary-item">
+                                <span>Cash Received:</span>
+                                <span><strong>${cashReceived}</strong></span>
+                            </div>
+                            <div class="summary-item">
+                                <span>Change:</span>
+                                <span><strong>${change}</strong></span>
+                            </div>
+                            <div class="summary-item total-amount">
+                                <span>Total Amount:</span>
+                                <span><strong>${totalAmount}</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="footer">
+                        <p>Generated on: ${new Date().toLocaleDateString('en-PH', { 
+                            year: 'numeric', 
+                            month: 'long', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        })}</p>
+                        <p>Thank you for your business!</p>
+                    </div>
+
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                            setTimeout(() => {
+                                window.close();
+                            }, 1000);
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `;
+
+            const printWindow = window.open('', '_blank', 'width=1000,height=700');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+
+        } catch (error) {
+            console.error('Print error:', error);
+            Toast.error('Error generating print preview');
+        }
+    }
 </script>
 
     </main>
