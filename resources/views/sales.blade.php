@@ -193,10 +193,6 @@
                                     <div>
                                         <div class="font-medium text-gray-900" x-text="product.productName"></div>
                                         <div class="text-sm text-gray-500 mt-1">
-                                            <!-- FIX 2: Show SKU properly -->
-                                            <span class="text-gray-600">SKU: </span>
-                                            <span x-text="product.productSKU || 'N/A'"></span>
-                                            <span class="mx-2">|</span>
                                             <!-- FIX 1: Show brand name properly -->
                                             <span class="text-gray-600" x-text="product.brand ? product.brand.productBrand : 'N/A'"></span>
                                         </div>

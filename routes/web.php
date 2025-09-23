@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -63,12 +64,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('suppliers', SupplierController::class);
 });
 
-
-// Add this route to your existing web.php file
 Route::get('/check-notifications', function () {
     $notifications = [];
     
-    // Check low stock (stock <= 10)
+    // 1. Check low stock (stock <= 10)
     $lowStockProducts = \App\Models\Product::with('batches')->get();
     
     foreach ($lowStockProducts as $product) {
@@ -79,12 +78,13 @@ Route::get('/check-notifications', function () {
                 'title' => 'Low Stock Alert',
                 'message' => $product->productName . ' is running low! Stock: ' . $totalStock,
                 'url' => '/inventory',
-                'time' => 'Today'
+                'time' => 'Today',
+                'created_at' => now()->timestamp // For sorting
             ];
         }
     }
     
-    // Check expiring products (within 30 days)
+    // 2. Check expiring products (within 30 days) - FIXED: No decimals
     $expiringBatches = \App\Models\ProductBatch::where('expiration_date', '<=', now()->addDays(30))
         ->where('expiration_date', '>', now())
         ->where('quantity', '>', 0)
@@ -92,15 +92,52 @@ Route::get('/check-notifications', function () {
         ->get();
     
     foreach ($expiringBatches as $batch) {
-        $days = now()->diffInDays($batch->expiration_date);
+        $days = floor(now()->diffInDays($batch->expiration_date)); // FIXED: No decimals
         $notifications[] = [
             'id' => 'expiring_' . $batch->id,
             'title' => 'Product Expiring Soon',
             'message' => $batch->product->productName . " expires in {$days} days",
             'url' => '/inventory',
-            'time' => 'Today'
+            'time' => 'Today',
+            'created_at' => now()->timestamp
         ];
     }
+    
+    // 3. Check for delivered orders that aren't in inventory - IMPROVED
+    $deliveredOrders = \App\Models\PurchaseOrder::whereHas('deliveries', function($query) {
+        $query->where('orderStatus', 'Delivered');
+    })->with(['items', 'deliveries'])->get();
+    
+    foreach ($deliveredOrders as $order) {
+        $hasUnaddedItems = false;
+        
+        foreach ($order->items as $item) {
+            $batchExists = \App\Models\ProductBatch::where('purchase_order_id', $order->id)
+                ->where('purchase_order_item_id', $item->id)
+                ->exists();
+                
+            if (!$batchExists) {
+                $hasUnaddedItems = true;
+                break;
+            }
+        }
+        
+        if ($hasUnaddedItems) {
+            $notifications[] = [
+                'id' => 'delivered_' . $order->id,
+                'title' => 'Delivery Ready for Inventory',
+                'message' => "Order #{$order->id} has been delivered - add items to inventory",
+                'url' => '/inventory?add_delivery=' . $order->id,
+                'time' => 'Today',
+                'created_at' => $order->deliveries->first()->status_updated_at?->timestamp ?? now()->timestamp
+            ];
+        }
+    }
+    
+    // 4. ORDER BY NEWEST TO LATEST (most recent first)
+    usort($notifications, function($a, $b) {
+        return ($b['created_at'] ?? 0) <=> ($a['created_at'] ?? 0);
+    });
     
     return response()->json(['notifications' => $notifications]);
 });
