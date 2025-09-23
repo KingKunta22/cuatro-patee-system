@@ -38,7 +38,10 @@ Route::post('/logout', [UserController::class, 'logout']);
 
 // ROUTE FOR SALES
 Route::resource('sales', SalesController::class)->middleware('auth');
+
 // Route for invoice PDF
+Route::get('/sales/{sale}/download-receipt', [SalesController::class, 'downloadSaleReceipt'])->name('sales.download-receipt');
+
 // Route::get('sales/{sale}/invoice', [SalesController::class, 'showInvoice'])->name('sales.invoice');}}
 Route::get('/sales/{id}/edit', [SalesController::class, 'edit'])->name('sales.edit');
 Route::put('/sales/{id}', [SalesController::class, 'update'])->name('sales.update');

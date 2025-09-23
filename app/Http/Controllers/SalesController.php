@@ -11,6 +11,8 @@ use App\Models\ProductBatch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class SalesController extends Controller
 {
@@ -81,9 +83,7 @@ class SalesController extends Controller
     // Store a new sale
     public function store(Request $request)
     {
-        // Remove customerName validation since it's not needed
         $validated = $request->validate([
-            // 'customerName' => 'required|string|max:255', // REMOVE THIS LINE
             'salesCash' => 'required|numeric|min:0',
         ]);
 
@@ -117,7 +117,7 @@ class SalesController extends Controller
             $sale = Sale::create([
                 'invoice_number' => $invoiceNumber,
                 'sale_date' => now(),
-                'customer_name' => 'Walk-in Customer', // Or $request->customerName if you still want to accept it
+                // 'customer_name' => 'Walk-in Customer', Or $request->customerName
                 'total_amount' => $totalAmount,
                 'cash_received' => $cashReceived,
                 'change' => $change
@@ -135,12 +135,6 @@ class SalesController extends Controller
                 // Update batch stock
                 $productBatch->decrement('quantity', $item['quantity']);
 
-                // REMOVED: No need to update inventory table anymore
-                // $inventory = Inventory::where('product_id', $item['product_id'])->first();
-                // if ($inventory) {
-                //     $inventory->decrement('total_quantity', $item['quantity']);
-                // }
-
                 // Create sale item
                 SaleItem::create([
                     'sale_id' => $sale->id,
@@ -156,6 +150,11 @@ class SalesController extends Controller
             // Commit the transaction
             DB::commit();
 
+            // Handle PDF download if requested
+            if ($request->has('salesDownload') && $request->salesDownload) {
+                return $this->downloadReceipt($sale->id);
+            }
+
             return redirect()->route('sales.index')
                 ->with('success', 'Sale completed successfully!');
 
@@ -164,6 +163,24 @@ class SalesController extends Controller
             return back()->withErrors(['error' => $e->getMessage()]);
         }
     }
+
+        // PDF Download method
+    public function downloadReceipt($saleId)
+    {
+        $sale = Sale::with(['items.productBatch'])->findOrFail($saleId);
+        
+        $pdf = Pdf::loadView('pdf.receipt', compact('sale'));
+        $filename = 'receipt-' . $sale->invoice_number . '.pdf';
+        
+        return $pdf->download($filename);
+    }
+
+    // PDF Download for existing sales (from view details)
+    public function downloadSaleReceipt($saleId)
+    {
+        return $this->downloadReceipt($saleId);
+    }
+
 
     // Edit method - Show edit form
     public function edit($id)

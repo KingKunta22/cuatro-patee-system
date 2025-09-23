@@ -366,15 +366,15 @@
         <x-modal.createModal x-ref="viewSaleDetails{{ $sale->id }}">
             <x-slot:dialogTitle>Sale Details: {{ $sale->invoice_number }}</x-slot:dialogTitle>
             
-            <div class="container px-3 pt-4 pb-0">
+            <div class="container">
                 <div class="grid grid-cols-2 gap-3 px-4">
                     <!-- Sale Information -->
-                    <div class="col-span-3">
+                    <div class="col-span-4">
                         <h2 class="text-xl font-bold mb-4">Sale Information</h2>
-                        <div class="grid grid-cols-3 gap-3">
+                        <div class="grid grid-cols-4 gap-3">
                             <div class="bg-gray-50 p-3 rounded-md">
                                 <p class="font-semibold text-md">Invoice Number</p>
-                                <p class="text-sm">{{ $sale->invoice_number }}</p>
+                                <p class="text-sm truncate" title="{{ $sale->invoice_number }}">{{ $sale->invoice_number }}</p>
                             </div>
                             <div class="bg-gray-50 p-3 rounded-md">
                                 <p class="font-semibold text-md">Sale Date</p>
@@ -385,17 +385,34 @@
                                 <p class="text-sm">{{ $sale->items->count() }} items</p>
                             </div>
                             <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-md">Total Amount</p>
-                                <p class="text-sm">₱{{ number_format($sale->total_amount, 2) }}</p>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-main">Processed By</p>
-                                <p class="text-sm">{{ $sale->employee->name ?? 'System' }}</p>
+                                <p class="font-semibold text-md">Processed by</p>
+                                <p class="text-sm">System</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Items in this sale - Updated table styling -->
+                    <!-- Batch Information -->
+                    <div class="col-span-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            @php
+                                $batchGroups = $sale->items->groupBy('product_batch_id');
+                            @endphp
+                            @foreach($batchGroups as $batchId => $items)
+                                @php
+                                    $batch = $items->first()->productBatch;
+                                    $totalQuantity = $items->sum('quantity');
+                                @endphp
+                                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                    <p class="font-semibold text-sm text-gray-800">{{ $batch->batch_number ?? 'N/A' }}</p>
+                                    <p class="text-xs text-gray-600 mt-1">Exp: {{ $batch ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'N/A' }}</p>
+                                    <p class="text-xs text-gray-700 mt-1">Quantity Sold: {{ $totalQuantity }}</p>
+                                    <p class="text-xs text-gray-700">Product: {{ $items->first()->product_name }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Items in this sale -->
                     <div class="col-span-2">
                         <h2 class="text-xl font-bold mb-4">Items Sold</h2>
                         <div class="border w-auto rounded-md border-solid border-black p-3 my-4">
@@ -411,58 +428,63 @@
                                 <tbody>
                                     @foreach($sale->items as $saleItem)
                                     <tr class="border-b">
-                                        <td class="px-2 py-2 text-center">
+                                        <td class="px-2 py-2 text-xs text-center">
                                             {{ $saleItem->product->productName ?? $saleItem->product_name }}
-                                            @if($saleItem->product_batch_id)
-                                                <br><small class="text-gray-500">Batch: {{ $saleItem->productBatch->batch_number ?? 'N/A' }}</small>
-                                            @endif
                                         </td>
-                                        <td class="px-2 py-2 text-center">
+                                        <td class="px-2 py-2 text-xs text-center">
                                             {{ $saleItem->quantity }} 
-                                            {{ $saleItem->product->productItemMeasurement ?? '' }} <!-- FIXED: Use product relationship -->
+                                            {{ $saleItem->product->productItemMeasurement ?? '' }}
                                         </td>
-                                        <td class="px-2 py-2 text-center">₱{{ number_format($saleItem->unit_price, 2) }}</td>
-                                        <td class="px-2 py-2 text-center">₱{{ number_format($saleItem->total_price, 2) }}</td>
+                                        <td class="px-2 py-2 text-xs text-center">₱{{ number_format($saleItem->unit_price, 2) }}</td>
+                                        <td class="px-2 py-2 text-xs text-center">₱{{ number_format($saleItem->total_price, 2) }}</td>
                                     </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
                         <!-- Total Row -->
-                        <div class="col-span-4 flex items-center place-content-end mb-4 mx-6 pb-4 px-8 border-b-2 border-black">
-                            <label class="font-bold mr-2 uppercase">Grand Total:</label>
-                            <p>₱{{ number_format($sale->total_amount, 2) }}</p>
+                        <div class="flex flex-col items-end space-y-2 mx-6 pb-4 px-8">
+                            <div class="flex justify-between w-64">
+                                <span class="text-xs font-semibold">Cash Received:</span>
+                                <span class="text-xs">₱{{ number_format($sale->cash_received, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between w-64">
+                                <span class="text-xs font-semibold">Change:</span>
+                                <span class="text-xs">₱{{ number_format($sale->change, 2) }}</span>
+                            </div>
+                            <div class="flex justify-between w-64 border-t pt-2">
+                                <span class="text-xs font-bold">Total Amount:</span>
+                                <span class="text-xs font-bold">₱{{ number_format($sale->total_amount, 2) }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- ACTION BUTTONS - Updated layout with checkboxes on left, action buttons on right -->
-                <div class="flex justify-between items-center w-full px-6 py-4 border-t">
-                    <!-- Checkboxes on left -->
+                <!-- ACTION BUTTONS -->
+                <div class="flex justify-between items-center w-full px-6 pt-2 pb-0 border-t">
+                    <!-- Buttons on left -->
                     <div class="flex items-center space-x-4">
-                        <label class="flex items-center space-x-1">
-                            <input type="checkbox" name="downloadPDF">
-                            <span>Download</span>
-                        </label>
-                        <label class="flex items-center space-x-1">
-                            <input type="checkbox" name="print">
+                        <button onclick="downloadSalePDF({{ $sale->id }})" class="flex items-center space-x-1 cursor-pointer bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition-colors">
+                            <span>Download PDF</span>
+                        </button>
+                        <button class="flex items-center space-x-1 cursor-pointer bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600 transition-colors">
                             <span>Print</span>
-                        </label>
+                        </button>
                     </div>
 
-                    <!-- Action buttons on right (Edit, Delete, Close) -->
+                    <!-- Action buttons on right -->
                     <div class="flex gap-4">
-                        <!-- EDIT BUTTON: Opens edit dialog -->
+                        <!-- EDIT BUTTON -->
                         <button 
                             @click="$refs['editDialog{{ $sale->id }}'].showModal()" 
                             class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/70 transition-all duration-100 ease-in">
                             Edit
                         </button>
 
-                        <!-- DELETE BUTTON: Opens delete dialog -->
+                        <!-- DELETE BUTTON -->
                         <x-form.closeBtn @click="$refs['deleteDialog{{ $sale->id }}'].showModal()">Delete</x-form.closeBtn>
 
-                        <!-- CLOSE BUTTON: Closes view details dialog -->
+                        <!-- CLOSE BUTTON -->
                         <button 
                             @click="$refs['viewSaleDetails{{ $sale->id }}'].close()" 
                             class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
@@ -779,6 +801,9 @@
         updateCartDisplay();
         updateSaleItemsForm();
 
+        // ADD THIS LINE to refresh dropdown stock display
+        refreshProductDropdown();
+        
         itemsAdded = true;
         resetProductSelection();
         calculateChange();
@@ -938,7 +963,6 @@
         // Restore the quantities to the batches
         const productIndex = window.currentProducts.findIndex(p => p.id == removedItem.product_id);
         if (productIndex !== -1) {
-            // Restore quantities for each batch in the removed item
             removedItem.batches.forEach(removedBatch => {
                 const currentBatch = window.currentProducts[productIndex].batches.find(b => b.id == removedBatch.id);
                 if (currentBatch) {
@@ -946,14 +970,15 @@
                 }
             });
             
-            // Update the UI for the selected product
             updateProductSelectionUI(removedItem.product_id);
         }
+        
+        // ADD THIS LINE to refresh dropdown
+        refreshProductDropdown();
         
         updateCartDisplay();
         updateSaleItemsForm();
         calculateChange();
-        
     }
     
     // Function to validate form before submission
@@ -1015,7 +1040,13 @@
         return true;
     }
 
-    // Function to get current stock for display in AlpineJS dropdown
+    // Function to download sale PDF
+    function downloadSalePDF(saleId) {
+        window.open(`/sales/${saleId}/download-receipt`, '_blank');
+    }
+
+
+    // Function to get current stock for display in AlpineJS dropdown - UPDATED
     function getCurrentStock(productId) {
         const currentProduct = window.currentProducts.find(p => p.id == productId);
         if (!currentProduct) return '<span class="text-red-600">0</span>';
@@ -1024,6 +1055,15 @@
         const stockClass = totalStock > 0 ? 'text-green-600' : 'text-red-600';
         
         return `<span class="${stockClass}">${totalStock}</span>`;
+    }
+
+    // Function to refresh AlpineJS dropdown data
+    function refreshProductDropdown() {
+        // Force Alpine to re-evaluate the filtered products
+        const alpineComponent = document.querySelector('[x-data]').__x;
+        if (alpineComponent) {
+            alpineComponent.$data.products = JSON.parse(JSON.stringify(window.currentProducts));
+        }
     }
 
     // Make it globally available
