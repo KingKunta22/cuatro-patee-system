@@ -230,7 +230,11 @@
                                         <th class="bg-main px-2 py-2 text-sm">Unit Price</th>
                                         <th class="bg-main px-2 py-2 text-sm">Measurement</th>
                                         <th class="bg-main px-2 py-2 text-sm">Total</th>
-                                        <th class="bg-main px-2 py-2 text-sm">Action</th>
+                                        @if(Auth::user()->role === 'admin')
+                                            <th class=" bg-main px-4 py-3">Action</th>
+                                        @else
+                                            <th class=" bg-main px-4 py-3">View</th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -444,8 +448,10 @@
                                                 Edit
                                             </button>
 
-                                            <!-- DELETE BUTTON: Opens delete dialog -->
-                                            <x-form.closeBtn @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].showModal()">Delete</x-form.closeBtn>
+                                            <!-- DELETE BUTTON: Only show for admins -->
+                                            @if(Auth::user()->role === 'admin')
+                                                <x-form.closeBtn @click="$refs['deleteDialog{{ $purchaseOrder->id }}'].showModal()">Delete</x-form.closeBtn>
+                                            @endif
 
                                             <!-- CLOSE BUTTON: Closes view details dialog -->
                                             <button 
@@ -559,7 +565,8 @@
                                                 </div>
                                             </dialog>
 
-                                            <!-- DELETE DIALOG -->
+                                            <!-- DELETE DIALOG - Only include if admin -->
+                                            @if(Auth::user()->role === 'admin')
                                             <dialog x-ref="deleteDialog{{ $purchaseOrder->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
                                                 <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Delete Purchase Order?</h1>
                                                 <div class="container px-3 py-4">
@@ -581,9 +588,8 @@
                                                     </form>
                                                 </div>
                                             </dialog>
-
+                                            @endif
                                         </div>
-
                                     </div>
                                 </dialog>
                             </td>

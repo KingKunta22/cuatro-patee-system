@@ -8,6 +8,7 @@ use App\Models\PurchaseOrder;
 use App\Mail\PurchaseOrderMail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\PurchaseOrderItem;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 
 
@@ -236,9 +237,14 @@ class PurchaseOrderController extends Controller
 
 
     // DELETE PURCHASE ORDER
-    public function destroy(PurchaseOrder $purchaseOrder){
+    public function destroy(PurchaseOrder $purchaseOrder)
+    {
+        // Admin check - only admins can delete
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Admin access required.');
+        }
+        
         $purchaseOrder->delete();
-
         return redirect()->back();
     }
 

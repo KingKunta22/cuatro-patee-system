@@ -9,8 +9,7 @@ use Illuminate\Support\Facades\Auth;
 class SupplierController extends Controller
 {
     public function store(Request $request) {
-
-        // Admin check
+        // Admin check - KEEP THIS (modification)
         if (Auth::user()->role !== 'admin') {
             abort(403, 'Unauthorized. Admin access required.');
         }
@@ -35,11 +34,7 @@ class SupplierController extends Controller
     // This method will run after every method call
     public function index(Request $request)
     {
-        // Admin check
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'Unauthorized. Admin access required.');
-        }
-
+        // REMOVE THE ADMIN CHECK HERE - allow both admin and staff to view
         // Start query
         $query = Supplier::query();
 
@@ -61,13 +56,11 @@ class SupplierController extends Controller
     }
 
     public function update(Request $request, Supplier $supplier){
-
-        // Admin check
+        // Admin check - KEEP THIS (modification)
         if (Auth::user()->role !== 'admin') {
             abort(403, 'Unauthorized. Admin access required.');
         }
         
-
         $updatedFields = $request->validate([
             'supplierName' => 'required',
             'supplierAddress' => 'required',
@@ -82,16 +75,13 @@ class SupplierController extends Controller
     }
 
     public function destroy(Supplier $supplier){
-
-        // Admin check
+        // Admin check - KEEP THIS (modification)
         if (Auth::user()->role !== 'admin') {
             abort(403, 'Unauthorized. Admin access required.');
         }
         
-
         $supplier->delete();
 
         return redirect()->route('suppliers.index');
     }
-
 }
