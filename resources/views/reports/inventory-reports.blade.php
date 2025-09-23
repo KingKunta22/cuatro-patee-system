@@ -42,14 +42,14 @@
                     <td class="px-2 py-2 text-center truncate" title="{{ $product->productName }}">
                         {{ $product->productName }}
                     </td>
-                    <td class="px-2 py-2 text-center truncate" title="{{ $product->category->name ?? $product->productCategory ?? 'N/A' }}">
-                        {{ $product->category->name ?? $product->productCategory ?? 'N/A' }}
+                    <td class="px-2 py-2 text-center truncate" title="{{ $product->category->name ?? 'N/A' }}">
+                        {{ $product->category->name ?? 'N/A' }}
                     </td>
                     <td class="px-2 py-2 text-center truncate" title="{{ $product->productSKU }}">
                         {{ $product->productSKU }}
                     </td>
-                    <td class="px-2 py-2 text-center truncate" title="{{ $product->brand->name ?? $product->productBrand ?? 'N/A' }}">
-                        {{ $product->brand->name ?? $product->productBrand ?? 'N/A' }}
+                    <td class="px-2 py-2 text-center truncate" title="{{ $product->brand->name ?? 'N/A' }}">
+                        {{ $product->brand->name ?? 'N/A' }}
                     </td>
                     <td class="px-2 py-2 text-center truncate" title="₱{{ number_format($product->productSellingPrice, 2) }}">
                         ₱{{ number_format($product->productSellingPrice, 2) }}

@@ -111,7 +111,7 @@
 
         <!-- ADD USER MODAL -->
         <dialog x-ref="dialogRef" class="w-1/2 my-auto shadow-2xl rounded-md">
-            <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Add Account</h1>
+            <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Add User</h1>
             <div class="container px-3 py-4">
                 <form action="{{ route('users.store') }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6">
                     @csrf

@@ -9,5 +9,11 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['productCategory'];
+    protected $fillable = ['name']; // Changed from 'productCategory'
+
+    // Optional: If you want to use a different display name
+    public function getNameAttribute()
+    {
+        return $this->attributes['name'] ?? $this->attributes['productCategory'] ?? 'N/A';
+    }
 }

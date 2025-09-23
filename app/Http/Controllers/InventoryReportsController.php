@@ -12,7 +12,11 @@ class InventoryReportsController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with(['category', 'brand', 'batches']);
+        $query = Product::with([
+            'category', 
+            'brand', 
+            'batches'
+        ]);
         
         // Apply time period filter
         $timePeriod = $request->timePeriod ?? 'all';
@@ -31,7 +35,6 @@ class InventoryReportsController extends Controller
             }
         }
 
-        // Use products instead of inventories
         $products = $query->orderBy('created_at', 'DESC')
             ->paginate(10, ['*'], 'inventory_page')
             ->withQueryString();

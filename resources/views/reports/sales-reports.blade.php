@@ -45,8 +45,8 @@
                     <td class="px-2 py-2 text-center truncate" title="{{ number_format($sale->total_amount, 2) }} pesos total sale">
                         ₱{{ number_format($sale->total_amount, 2) }}
                     </td>
-                    <td class="px-2 py-2 text-center truncate" title="This sale was processed by {{ $sale->processed_by }}">
-                        {{ $sale->processed_by }}
+                    <td class="px-2 py-2 text-center truncate" title="This sale was processed by {{ $sale->user->name ?? 'System' }}">
+                        {{ $sale->user->name ?? 'System' }}
                     </td>
                     <td class="truncate px-2 py-2 text-center flex place-content-center" title="Click here to view more details">
                         <button onclick="document.getElementById('viewSaleDetails{{ $sale->id }}').showModal()" 
@@ -104,7 +104,10 @@
                         </div>
                         <div class="bg-gray-50 p-3 rounded-md">
                             <p class="font-semibold text-main">Processed By</p>
-                            <p class="text-sm">{{ $sale->processed_by }}</p>
+                            <p class="text-sm">{{ $sale->user->name ?? 'System' }}</p>
+                            @if($sale->user)
+                                <p class="text-xs text-gray-500">({{ $sale->user->role }})</p>
+                            @endif
                         </div>
                     </div>
                 </div>

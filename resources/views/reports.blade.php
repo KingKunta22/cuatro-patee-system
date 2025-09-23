@@ -279,7 +279,7 @@
 
                 <h4 class="font-bold mb-2">Items Breakdown</h4>
                 <div class="border rounded-lg mb-5">
-                    <table class="w-full text-sm">
+                    <table class="w-full text-sm table-fixed">
                         <thead class="rounded-lg bg-main text-white">
                             <tr>
                                 <th class="px-4 py-3 text-center">Product</th>

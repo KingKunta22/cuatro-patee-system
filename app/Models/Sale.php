@@ -16,7 +16,7 @@ class Sale extends Model
         'change',
         'payment_method',
         'status',
-        'employee_id',
+        'user_id',
         'notes'
     ];
 
@@ -24,20 +24,20 @@ class Sale extends Model
         'sale_date' => 'date',
     ];
 
+    // Relationship to User who processed the sale
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(SaleItem::class);
     }
 
-    // Add accessor for processed_by
+    // Accessor for processed_by (fallback)
     public function getProcessedByAttribute()
     {
-        // If you have an employee relationship, use it
-        if ($this->employee_id && method_exists($this, 'employee')) {
-            return $this->employee->name ?? 'System';
-        }
-        
-        // Fallback to a default value
-        return 'System';
+        return $this->user->name ?? 'System';
     }
 }

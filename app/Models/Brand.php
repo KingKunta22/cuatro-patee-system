@@ -9,5 +9,11 @@ class Brand extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['productBrand'];
+    protected $fillable = ['name']; // Changed from 'productBrand'
+
+    // Optional: If you want to use a different display name
+    public function getNameAttribute()
+    {
+        return $this->attributes['name'] ?? $this->attributes['productBrand'] ?? 'N/A';
+    }
 }

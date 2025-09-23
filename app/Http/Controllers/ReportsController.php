@@ -59,8 +59,11 @@ class ReportsController extends Controller
 
     private function getInventoryData($timePeriod)
     {
-
-        $query = Product::with(['brand', 'category', 'batches']);
+        $query = Product::with([
+            'brand', 
+            'category', 
+            'batches'
+        ]);
         
         $this->applyTimeFilter($query, $timePeriod, 'created_at');
         
@@ -109,7 +112,11 @@ class ReportsController extends Controller
 
     private function getSalesData($timePeriod)
     {
-        $query = Sale::with(['items', 'items.productBatch.product']);
+        $query = Sale::with([
+            'items', 
+            'items.productBatch.product',
+            'user'
+        ]);
         
         $this->applyTimeFilter($query, $timePeriod, 'sale_date');
         
