@@ -72,12 +72,16 @@
                 class="w-40 text-center font-bold text-xs py-3 uppercase rounded transition">
                     Product Movements
                 </a>
+                
+                @if(Auth::user()->role === 'admin')
                 <a href="#"
                 @click.prevent="activeTab = 'sales'; updateUrl('sales')"
                 :class="activeTab === 'sales' ? 'bg-main text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                 class="w-40 text-center font-bold text-xs py-3 uppercase rounded transition">
                     Sales Reports
                 </a>
+                @endif
+                
                 <a href="#"
                 @click.prevent="activeTab = 'inventory'; updateUrl('inventory')"
                 :class="activeTab === 'inventory' ? 'bg-main text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
@@ -138,6 +142,14 @@
         <!-- URL update script -->
         <script>
             function updateUrl(tab) {
+
+                // Prevent staff from accessing sales tab via URL
+                @if(Auth::user()->role !== 'admin')
+                    if (tab === 'sales') {
+                        tab = 'product'; // Redirect to product movements if staff tries to access sales
+                    }
+                @endif
+
                 const url = new URL(window.location);
                 url.searchParams.set('tab', tab);
                 // Preserve timePeriod parameter if it exists
@@ -151,6 +163,15 @@
             document.addEventListener('DOMContentLoaded', function() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const tab = urlParams.get('tab');
+
+                // If staff tries to access sales tab via URL, redirect to product movements
+                @if(Auth::user()->role !== 'admin')
+                    if (tab === 'sales') {
+                        tab = 'product';
+                        updateUrl('product');
+                    }
+                @endif
+
                 if (tab) {
                     // Set the active tab based on URL parameter
                     Alpine.data('tabState', () => ({

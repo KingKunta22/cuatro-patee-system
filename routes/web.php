@@ -53,6 +53,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('subcategories/{id}', [ProductClassification::class, 'destroySubcategory'])->name('subcategories.destroy');
     Route::resource('po-notes', PONotesController::class);
     Route::get('/dashboard/sales-trends', [DashboardController::class, 'getSalesTrends'])->name('dashboard.sales-trends');
+
+    // === SEMI STAFF ROUTES (features are hidden from staff access)
+    Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
     
     // === ADMIN-ONLY ROUTES (protected by controller checks) ===
     // REMOVE THE MIDDLEWARE GROUP - just list the routes directly
@@ -60,7 +63,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/manage-account', [UserController::class, 'store'])->name('users.store');
     Route::put('/manage-account/{user}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/manage-account/{user}', [UserController::class, 'destroy'])->name('users.destroy');
-    Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
     Route::resource('suppliers', SupplierController::class);
 });
 

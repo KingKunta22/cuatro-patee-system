@@ -1,6 +1,6 @@
 <x-layout>
     <x-sidebar/>
-    <main x-data="{ activeTab: 'overview', salesTrendPeriod: 'lastMonth' }" class="w-auto ml-64 px-8 pt-6 pb-6 flex flex-col min-h-screen bg-gray-50">
+    <main x-data="{ activeTab: 'overview', salesTrendPeriod: 'lastMonth' }" class="w-auto ml-64 px-8 pt-3 pb-3 flex flex-col min-h-screen bg-gray-50">
         <!-- Notification Messages -->
         @if(session('success'))
             <div id="success-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded shadow-lg">
@@ -40,7 +40,7 @@
         </script>
 
         <!-- Header with filter -->
-        <div class="flex justify-between items-center mb-8">
+        <div class="flex justify-between items-center mb-4">
             <h1 class="text-2xl font-bold text-gray-800">Dashboard Overview</h1>
             <div class="relative">
                 <form method="GET" class="flex">
@@ -61,22 +61,23 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+
             <!-- Total Sales -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="bg-white rounded-xl shadow-sm px-2 py-2 border border-gray-100">
                 <div class="flex items-center">
-                    <div class="p-3 rounded-lg text-lg text-blue-400 bg-blue-50">
+                    <div class="px-6 py-3 rounded-lg text-lg text-blue-400 bg-blue-50">
                         ₱
                     </div>
                     <div class="ml-4">
-                        <h2 class="text-sm font-medium text-gray-500">Total Sales</h2>
-                        <p class="text-2xl font-bold text-gray-800">₱{{ number_format($totalSales, 2) }}</p>
+                        <h2 class="text-xs font-medium text-gray-500">Total Sales</h2>
+                        <p class="text-lg font-bold text-gray-800">₱{{ number_format($totalSales, 2) }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Total Cost -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="bg-white rounded-xl shadow-sm px-2 py-2 border border-gray-100">
                 <div class="flex items-center">
                     <div class="p-3 rounded-lg bg-purple-50">
                         <svg class="w-8 h-8 text-purple-500" fill="none" stroke="currentColor" 
@@ -90,14 +91,14 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <h2 class="text-sm font-medium text-gray-500">Total Cost</h2>
-                        <p class="text-2xl font-bold text-gray-800">₱{{ number_format($totalCost, 2) }}</p>
+                        <h2 class="text-xs font-medium text-gray-500">Total Cost</h2>
+                        <p class="text-lg font-bold text-gray-800">₱{{ number_format($totalCost, 2) }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Products Sold -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="bg-white rounded-xl shadow-sm px-2 py-2 border border-gray-100">
                 <div class="flex items-center">
                     <div class="p-3 rounded-lg bg-green-50">
                         <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,14 +106,14 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <h2 class="text-sm font-medium text-gray-500">Products Sold</h2>
-                        <p class="text-2xl font-bold text-gray-800">{{ $productsSold }}</p>
+                        <h2 class="text-xs font-medium text-gray-500">Products Sold</h2>
+                        <p class="text-lg font-bold text-gray-800">{{ $productsSold }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Total Transactions -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="bg-white rounded-xl shadow-sm px-2 py-2 border border-gray-100">
                 <div class="flex items-center">
                     <div class="p-3 rounded-lg bg-indigo-50">
                         <svg class="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,66 +121,63 @@
                         </svg>
                     </div>
                     <div class="ml-4">
-                        <h2 class="text-sm font-medium text-gray-500">Total Transactions</h2>
-                        <p class="text-2xl font-bold text-gray-800">{{ $totalTransactions }}</p>
+                        <h2 class="text-xs font-medium text-gray-500">Total Transactions</h2>
+                        <p class="text-lg font-bold text-gray-800">{{ $totalTransactions }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Middle Section: Stock Levels, Low Stock, Expiring -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8" style="min-height: 380px;">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
 
             <!-- Stock Level Pie Chart -->
-            <div class="bg-white rounded-xl shadow-sm pb-0 p-6 border border-gray-100 flex flex-col">
+            <div class="bg-white rounded-xl shadow-sm pb-0 px-4 py-3 border border-gray-100 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">Stock Level</h2>
                     <span class="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-600">{{ $inStock + $lowStock + $outOfStock }} products</span>
                 </div>
-                
+                    
                 <!-- Pie Chart -->
-                <div class="h-52 flex items-between justify-center">
+                <div class="h-32 mb-2 flex items-between justify-center">
                     <canvas id="stockLevelChart" class="w-full h-full max-w-xs"></canvas>
                 </div>
                 
                 <!-- Stock Information Below the Chart -->
-                <div class="grid grid-cols-3 gap-4 my-auto pt-8 border-t border-gray-200">
+                <div class="grid grid-cols-3 gap-2 pt-2 my-auto border-t border-gray-200">
                     <!-- In Stock -->
                     <div class="flex flex-col items-center">
                         <div class="flex items-center mb-2">
                             <div class="w-3 h-3 bg-green-500 mr-2"></div>
-                            <span class="text-xs font-medium text-gray-700">In Stock</span>
+                            <span class="text-xs font-medium text-gray-700">In Stock ({{ $inStock }})</span>
                         </div>
-                        <span class="text-xs font-bold text-gray-900">{{ $inStock }} items</span>
                     </div>
                     
                     <!-- Low Stock -->
                     <div class="flex flex-col items-center">
                         <div class="flex items-center mb-2">
                             <div class="w-3 h-3 bg-amber-500 mr-2"></div>
-                            <span class="text-xs font-medium text-gray-700">Low Stock</span>
+                            <span class="text-xs font-medium text-gray-700">Low Stock ({{ $lowStock }})</span>
                         </div>
-                        <span class="text-xs font-bold text-gray-900">{{ $lowStock }} items</span>
                     </div>
                     
                     <!-- Out of Stock -->
                     <div class="flex flex-col items-center">
                         <div class="flex items-center mb-2">
                             <div class="w-3 h-3 bg-red-500 mr-2"></div>
-                            <span class="text-xs font-medium text-gray-700">Out of Stock</span>
+                            <span class="text-xs font-medium text-gray-700">Out of Stock ({{ $outOfStock }})</span>
                         </div>
-                        <span class="text-xs font-bold text-gray-900">{{ $outOfStock }} items</span>
                     </div>
                 </div>
             </div>
 
             <!-- Low Stock Products -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col">
+            <div class="bg-white rounded-xl shadow-sm px-4 py-3 border border-gray-100 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">Low Stock Products</h2>
                     <span class="text-xs font-medium px-2 py-1 rounded-full bg-amber-100 text-amber-800">Attention needed</span>
                 </div>
-                <div class="flex-1 overflow-y-auto space-y-3">
+                <div class="flex-1 overflow-y-auto space-y-3 max-h-44">
                     @forelse($lowStockProducts as $product)
                     <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg">
                         <div class="flex items-center">
@@ -205,12 +203,12 @@
             </div>
 
             <!-- Expiring Products -->
-            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col">
+            <div class="bg-white rounded-xl shadow-sm px-4 py-3 border border-gray-100 flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-gray-800">Expiring Products</h2>
                     <span class="text-xs font-medium px-2 py-1 rounded-full bg-blue-100 text-blue-800">Soon</span>
                 </div>
-                <div class="flex-1 overflow-y-auto space-y-3">
+                <div class="flex-1 overflow-y-auto space-y-3 max-h-44">
                     @forelse($expiringProducts as $product)
                     <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg">
                         <div class="flex items-center">
@@ -224,7 +222,7 @@
                                 <p class="text-xs text-gray-500">{{ $product['productSKU'] ?? 'N/A' }}</p>
                             </div>
                         </div>
-                        <span class="text-xs font-medium text-blue-600" title="Expires on {{ \Carbon\Carbon::parse($product['productExpirationDate'])->format('M d, Y') }}">
+                        <span class="text-xs text-blue-600" title="Expires on {{ \Carbon\Carbon::parse($product['productExpirationDate'])->format('M d, Y') }}">
                             {{ \Carbon\Carbon::parse($product['productExpirationDate'])->diffForHumans() }}
                         </span>
                     </div>
@@ -238,7 +236,7 @@
         </div>
 
         <!-- Top Selling Products Carousel -->
-        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-8">
+        <div class="bg-white rounded-xl shadow-sm px-4 py-3 border border-gray-100 mb-6">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-gray-800">Top Selling Products</h2>
                 <div class="flex space-x-2">

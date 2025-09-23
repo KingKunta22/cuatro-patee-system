@@ -17,12 +17,6 @@ class ReportsController extends Controller
 {
     public function index(Request $request)
     {
-        // Admin check
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'Unauthorized. Admin access required.');
-        }
-        
-
         $timePeriod = $request->timePeriod ?? 'all';
         
         // Data for inventory tab with time period filtering
@@ -31,14 +25,18 @@ class ReportsController extends Controller
         // Data for PO tab with time period filtering
         $purchaseOrders = $this->getPurchaseOrderData($timePeriod);
 
-        // Data for Sales tab with time period filtering
-        $sales = $this->getSalesData($timePeriod);
+        // Data for Sales tab with time period filtering - ONLY FOR ADMINS
+        $sales = $this->canViewSalesReports() ? $this->getSalesData($timePeriod) : null;
 
         // Calculate stock totals with time period filtering
         list($totalStockIn, $totalStockOut) = $this->getStockTotals($timePeriod);
 
-        // Calculate revenue stats with time period filtering
-        list($totalRevenue, $totalCost, $totalProfit) = $this->getRevenueStats($timePeriod);
+        // Calculate revenue stats with time period filtering - ONLY FOR ADMINS
+        if ($this->canViewSalesReports()) {
+            list($totalRevenue, $totalCost, $totalProfit) = $this->getRevenueStats($timePeriod);
+        } else {
+            $totalRevenue = $totalCost = $totalProfit = 0;
+        }
 
         // Get product movements data
         $productMovements = $this->getProductMovementsData($timePeriod);
@@ -196,8 +194,6 @@ class ReportsController extends Controller
 
     private function getProductMovementsData($timePeriod)
     {
-        
-
         // Get sales data for outflow with time filtering
         $salesQuery = Sale::with(['items', 'items.productBatch.product']);
         $this->applyTimeFilter($salesQuery, $timePeriod, 'sale_date');
@@ -305,4 +301,10 @@ class ReportsController extends Controller
             'totalProfit' => $totalProfit
         ];
     }
+
+    private function canViewSalesReports()
+    {
+        return Auth::user()->role === 'admin';
+    }
+
 }
