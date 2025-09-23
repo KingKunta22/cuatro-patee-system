@@ -17,6 +17,8 @@ class DashboardController extends Controller
     {
         // Get time period filter - default to 'today'
         $timePeriod = $request->get('timePeriod', 'today');
+        $salesPeriod = $request->get('salesPeriod', 'lastMonth'); // Add this line
+
         $dateRange = $this->getDateRange($timePeriod);
         
         // Total Sales (revenue)
@@ -55,6 +57,9 @@ class DashboardController extends Controller
         // Stock Level breakdown (FIXED) - Count PRODUCTS by their TOTAL stock
         $productsWithStock = Product::with(['batches'])->get();
 
+        // Sales Trends Data (use the selected period)
+        $salesTrends = $this->getSalesTrendsData($salesPeriod); // Change this line
+
         $inStock = $productsWithStock->filter(function($product) {
             $totalStock = $product->batches->sum('quantity');
             return $totalStock > 10;
@@ -85,16 +90,17 @@ class DashboardController extends Controller
                     'productStock' => $totalStock
                 ];
             });
-        
+
+
         // Top Selling Products (last 30 days)
         $topSellingProducts = SaleItem::whereHas('sale', function($query) {
                 $query->where('sale_date', '>=', now()->subDays(30));
             })
             ->with(['product' => function($query) {
-                $query->select('id', 'productName', 'productImage');
+                $query->select('id', 'productName', 'productImage', 'productSKU', 'productSellingPrice');
             }])
-            ->select('product_id', 'product_name', DB::raw('SUM(quantity) as total_sold'))
-            ->groupBy('product_id', 'product_name')
+            ->select('product_id', 'product_name', 'unit_price', DB::raw('SUM(quantity) as total_sold'))
+            ->groupBy('product_id', 'product_name', 'unit_price')
             ->orderBy('total_sold', 'desc')
             ->limit(5)
             ->get();
@@ -126,7 +132,8 @@ class DashboardController extends Controller
             'lowStockProducts',
             'topSellingProducts',
             'expiringProducts',
-            'timePeriod'
+            'timePeriod',
+            'salesTrends'
         ));
     }
     
@@ -217,5 +224,44 @@ class DashboardController extends Controller
         ]);
     }
 
+    private function getSalesTrendsData($period = 'lastMonth')
+    {
+        // Simple query - get monthly sales for the last 6 months
+        $salesData = Sale::selectRaw('YEAR(sale_date) as year, MONTH(sale_date) as month, SUM(total_amount) as total')
+            ->where('sale_date', '>=', now()->subMonths(6))
+            ->groupBy('year', 'month')
+            ->orderBy('year')
+            ->orderBy('month')
+            ->get();
+
+        $labels = [];
+        $data = [];
+
+        foreach ($salesData as $sale) {
+            $date = Carbon::create($sale->year, $sale->month);
+            $labels[] = $date->format('M Y');
+            $data[] = (float) $sale->total;
+        }
+
+        // If no data, use default values
+        if (empty($data)) {
+            $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            $data = [0, 0, 0, 0, 0, 0];
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data
+        ];
+    }
+
+    // private function getSalesTrendsData($period = 'lastMonth')
+    // {
+    //     // SUPER SIMPLE - Always return test data to make sure chart works
+    //     return [
+    //         'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+    //         'data' => [5000, 8000, 12000, 6000, 15000, 18000]
+    //     ];
+    // }
 
 }
