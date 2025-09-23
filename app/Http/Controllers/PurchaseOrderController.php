@@ -306,4 +306,15 @@ class PurchaseOrderController extends Controller
 
         return redirect()->route('purchase-orders.index');
     }
+
+    // In your PurchaseOrderController.php
+    public function markAsDelivered($purchaseOrderId)
+    {
+        $purchaseOrder = \App\Models\PurchaseOrder::find($purchaseOrderId);
+        $purchaseOrder->update(['status' => 'delivered']);
+        
+        // Show toast using your existing system
+        return redirect()->back()->with('success', 'Purchase Order #' . $purchaseOrderId . ' has been delivered!');
+    }
+
 }

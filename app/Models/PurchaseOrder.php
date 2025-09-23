@@ -39,12 +39,6 @@ class PurchaseOrder extends Model
         return $this->hasMany(PurchaseOrderItem::class);
     }
 
-    // REMOVE THIS OLD RELATIONSHIP - or keep it if you still need it for migration
-    // public function inventory(): HasMany
-    // {
-    //     return $this->hasMany(Inventory::class, 'purchase_order_id');
-    // }
-
     public function deliveries(): HasMany
     {
         return $this->hasMany(Delivery::class);
@@ -60,9 +54,19 @@ class PurchaseOrder extends Model
         return $this->hasMany(PONote::class);
     }
 
-    // ADD THIS NEW RELATIONSHIP FOR BATCHES
     public function productBatches()
     {
         return $this->hasManyThrough(ProductBatch::class, PurchaseOrderItem::class);
     }
+
+    public function markAsDelivered()
+    {
+        $this->update(['status' => 'delivered']);
+        
+        // Just show a toast, no complicated service
+        echo "<script>Toast.success('Purchase Order #{$this->id} has been delivered!');</script>";
+        
+        return $this;
+    }
+
 }

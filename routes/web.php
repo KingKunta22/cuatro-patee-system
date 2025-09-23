@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SalesController;
@@ -60,4 +61,46 @@ Route::middleware('auth')->group(function () {
     Route::delete('/manage-account/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
     Route::resource('suppliers', SupplierController::class);
+});
+
+
+// Add this route to your existing web.php file
+Route::get('/check-notifications', function () {
+    $notifications = [];
+    
+    // Check low stock (stock <= 10)
+    $lowStockProducts = \App\Models\Product::with('batches')->get();
+    
+    foreach ($lowStockProducts as $product) {
+        $totalStock = $product->batches->sum('quantity');
+        if ($totalStock <= 10) {
+            $notifications[] = [
+                'id' => 'low_stock_' . $product->id,
+                'title' => 'Low Stock Alert',
+                'message' => $product->productName . ' is running low! Stock: ' . $totalStock,
+                'url' => '/inventory',
+                'time' => 'Today'
+            ];
+        }
+    }
+    
+    // Check expiring products (within 30 days)
+    $expiringBatches = \App\Models\ProductBatch::where('expiration_date', '<=', now()->addDays(30))
+        ->where('expiration_date', '>', now())
+        ->where('quantity', '>', 0)
+        ->with('product')
+        ->get();
+    
+    foreach ($expiringBatches as $batch) {
+        $days = now()->diffInDays($batch->expiration_date);
+        $notifications[] = [
+            'id' => 'expiring_' . $batch->id,
+            'title' => 'Product Expiring Soon',
+            'message' => $batch->product->productName . " expires in {$days} days",
+            'url' => '/inventory',
+            'time' => 'Today'
+        ];
+    }
+    
+    return response()->json(['notifications' => $notifications]);
 });

@@ -79,4 +79,16 @@ class DeliveryController extends Controller
             return redirect()->back()->with('error', 'Error updating status: ' . $e->getMessage());
         }
     }
+
+    public function markAsDelivered($purchaseOrderId)
+    {
+        $purchaseOrder = \App\Models\PurchaseOrder::find($purchaseOrderId);
+        $purchaseOrder->update(['status' => 'delivered']);
+        
+        // Create a simple notification (if using database approach)
+        // Or it will automatically appear in the next check
+        
+        return redirect()->back()->with('success', 'Purchase Order #' . $purchaseOrderId . ' has been delivered!');
+    }
+
 }
