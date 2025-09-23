@@ -2,6 +2,17 @@
     <x-sidebar/>
     <main x-data class="container w-auto ml-64 px-10 pt-6 pb-3 flex flex-col items-center content-start">
 
+            {{-- Temporary debug - display validation errors --}}
+            @if($errors->any())
+                <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-red-100 border border-red-400 text-red-700 rounded shadow-lg">
+                    <ul>
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             @if(session('success'))
                 <div id="success-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded shadow-lg">
                     <p>{{ session('success') }}</p>
@@ -218,14 +229,14 @@
                                     <p class="font-semibold text-md">Cost Price</p>
                                     <p class="text-sm">₱{{ number_format($product->productCostPrice, 2) }}</p>
                                 </div>
-                                <!-- BATCH DETAILS -->
+                                <!-- BATCH DETAILS SECTION -->
                                 <div class="bg-gray-50 col-span-4 p-3 rounded-md">
                                     <p class="font-semibold text-md">Batch Details</p>
                                     @foreach($product->batches as $batch)
                                         <div class="text-sm border-b py-2">
                                             <strong>Batch {{ $batch->batch_number }}:</strong><br>
                                             Qty: {{ $batch->quantity }} | 
-                                            Exp: {{ $batch->expiration_date->format('M d, Y') }} | <!-- This should work after casting -->
+                                            Exp: {{ $batch->expiration_date ? $batch->expiration_date->format('M d, Y') : 'Non-perishable' }} |
                                             Cost: ₱{{ number_format($batch->cost_price, 2) }}
                                         </div>
                                     @endforeach
@@ -278,12 +289,14 @@
                 batches: [],
                 newBatch: { quantity: '', expiration_date: '' },
                 manual_productStock: 0,
-                
+                isPerishable: false,
+
                 addBatch() {
-                    if (this.newBatch.quantity && this.newBatch.expiration_date) {
+                    // FIXED: Only require expiration date for perishable items
+                    if (this.newBatch.quantity && (this.isPerishable || this.newBatch.expiration_date)) {
                         this.batches.push({
-                            quantity: this.newBatch.quantity,
-                            expiration_date: this.newBatch.expiration_date,
+                            quantity: parseInt(this.newBatch.quantity),
+                            expiration_date: this.isPerishable ? null : this.newBatch.expiration_date,
                             batch_id: 'BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase()
                         });
                         this.newBatch = { quantity: '', expiration_date: '' };
@@ -305,18 +318,26 @@
                 
                 validateForm() {
                     if (this.addMethod === 'manual') {
-                        // Check if batches match total stocks
-                        const totalStock = parseInt(this.manual_productStock || 0);
-                        const assignedStock = this.getTotalStock();
-                        
-                        if (this.batches.length > 0 && assignedStock !== totalStock) {
-                            Toast.error('Batch quantities must equal total stocks');
+                        // Only require batches for perishable items
+                        if (!this.isPerishable && this.batches.length === 0) {
+                            Toast.error('Please add at least one batch for perishable items');
                             return false;
                         }
                         
-                        // Check if we have batches but no total stock
-                        if (this.batches.length > 0 && !this.manual_productStock) {
-                            Toast.error('Please enter total stocks first');
+                        // Check if batches match total stocks (only if batches exist)
+                        if (this.batches.length > 0) {
+                            const totalStock = parseInt(this.manual_productStock || 0);
+                            const assignedStock = this.getTotalStock();
+                            
+                            if (assignedStock !== totalStock) {
+                                Toast.error('Batch quantities must equal total stocks');
+                                return false;
+                            }
+                        }
+                        
+                        // For non-perishable, we don't need batches but should have stock
+                        if (this.isPerishable && (!this.manual_productStock || this.manual_productStock <= 0)) {
+                            Toast.error('Please enter total stocks');
                             return false;
                         }
                     }
@@ -386,6 +407,14 @@
                                     </select>
                                 </div>
 
+                                <div class="container flex flex-col text-start col-span-2">
+                                    <label class="flex items-center mt-6">
+                                        <input type="checkbox" name="manual_is_perishable" value="1" 
+                                            x-model="isPerishable" class="mr-2">
+                                        Non-perishable product (no expiration date)
+                                    </label>
+                                </div>
+
                                 <x-form.form-input label="Selling Price"  class="col-span-1" name="manual_productSellingPrice" value="" 
                                     type="number" step="0.01" min="0" x-bind:required="addMethod === 'manual'"/>
 
@@ -424,42 +453,54 @@
                                         class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
                                         :class="{'bg-gray-100': !manual_productStock || manual_productStock <= 0}">
                                 </div>
-                                <div class="container flex flex-col text-start col-span-2">
+                                <div class="container flex flex-col text-start col-span-2" x-show="!isPerishable">
                                     <label>Expiration Date</label>
                                     <input type="date" x-model="newBatch.expiration_date" 
+                                        :required="!isPerishable"
                                         min="{{ date('Y-m-d') }}"
                                         :disabled="!manual_productStock || manual_productStock <= 0"
                                         class="px-3 py-2 text-sm border rounded-sm border-black"
                                         :class="{'bg-gray-100': !manual_productStock || manual_productStock <= 0}">
                                 </div>
+
+                                <!-- Show message when non-perishable -->
+                                <div class="container flex flex-col text-start col-span-2" x-show="isPerishable">
+                                    <label>Expiration Date</label>
+                                    <div class="px-3 py-2 text-sm border rounded-sm border-black bg-gray-100 text-gray-500">
+                                        Not required for non-perishable items
+                                    </div>
+                                </div>
+
                                 <div class="container flex flex-col mb-1 col-span-2 place-items-end content-end items-center justify-end">
                                     <button type="button" @click="addBatch()" 
-                                        :disabled="!manual_productStock || !newBatch.quantity || !newBatch.expiration_date || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(manual_productStock)"
+                                        :disabled="!manual_productStock || !newBatch.quantity || (!isPerishable && !newBatch.expiration_date) || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(manual_productStock)"
                                         :class="{
-                                            'bg-teal-500 hover:bg-teal-600': manual_productStock && newBatch.quantity && newBatch.expiration_date && (parseInt(newBatch.quantity) + getTotalStock()) <= parseInt(manual_productStock), 
-                                            'bg-gray-300 cursor-not-allowed': !manual_productStock || !newBatch.quantity || !newBatch.expiration_date || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(manual_productStock)
+                                            'bg-teal-500 hover:bg-teal-600': manual_productStock && newBatch.quantity && (isPerishable || newBatch.expiration_date) && (parseInt(newBatch.quantity) + getTotalStock()) <= parseInt(manual_productStock), 
+                                            'bg-gray-300 cursor-not-allowed': !manual_productStock || !newBatch.quantity || (!isPerishable && !newBatch.expiration_date) || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(manual_productStock)
                                         }"
                                         class="px-4 py-2 text-md rounded text-white w-full transition-all duration-100 ease-in-out">
                                         + Add Batch
                                     </button>
                                 </div>
 
-                                <!-- STOCK ASSIGNMENT SUMMARY -->
-                                <div class="text-sm col-span-6" >
-                                    <span class="font-semibold" :class="{
-                                        'text-green-600': getTotalStock() == manual_productStock,
-                                        'text-yellow-600': getTotalStock() < manual_productStock,
-                                        'text-red-600': getTotalStock() > manual_productStock
-                                    }">
-                                        Stocks assigned: <span x-text="getTotalStock()"></span>/<span x-text="manual_productStock || 0"></span>
-                                    </span>
-                                    <span x-show="getTotalStock() < manual_productStock" class="text-red-500 ml-2">
-                                        (Remaining: <span x-text="(manual_productStock || 0) - getTotalStock()"></span> stocks need assignment)
-                                    </span>
-                                    <span x-show="getTotalStock() > manual_productStock" class="text-red-500 ml-2">
-                                        (Warning: Overassigned by <span x-text="getTotalStock() - (manual_productStock || 0)"></span> stocks!)
-                                    </span>
-                                </div>
+                                <!-- STOCK ASSIGNMENT SUMMARY - ONLY SHOW FOR PERISHABLE ITEMS -->
+                                <template x-if="!isPerishable">
+                                    <div class="text-sm col-span-6">
+                                        <span class="font-semibold" :class="{
+                                            'text-green-600': getTotalStock() == manual_productStock,
+                                            'text-yellow-600': getTotalStock() < manual_productStock,
+                                            'text-red-600': getTotalStock() > manual_productStock
+                                        }">
+                                            Stocks assigned: <span x-text="getTotalStock()"></span>/<span x-text="manual_productStock || 0"></span>
+                                        </span>
+                                        <span x-show="getTotalStock() < manual_productStock" class="text-red-500 ml-2">
+                                            (Remaining: <span x-text="(manual_productStock || 0) - getTotalStock()"></span> stocks need assignment)
+                                        </span>
+                                        <span x-show="getTotalStock() > manual_productStock" class="text-red-500 ml-2">
+                                            (Warning: Overassigned by <span x-text="getTotalStock() - (manual_productStock || 0)"></span> stocks!)
+                                        </span>
+                                    </div>
+                                </template>
 
                             </div>
 
@@ -480,7 +521,9 @@
                                                 <tr class="border-b text-xs">
                                                     <td class="px-1 py-1 text-center" x-text="index + 1"></td>
                                                     <td class="px-1 py-1 text-center" x-text="batch.quantity"></td>
-                                                    <td class="px-1 py-1 text-center" x-text="new Date(batch.expiration_date).toLocaleDateString()"></td>
+                                                    <td class="px-1 py-1 text-center" 
+                                                        x-text="batch.expiration_date ? new Date(batch.expiration_date).toLocaleDateString() : 'Non-perishable'">
+                                                    </td>
                                                     <td class="px-1 py-1 text-center mx-auto flex place-items-center items-center justify-center content-center">                            
                                                         <button type="button" @click="removeBatch(index)" class="text-red-500 hover:text-red-700">
                                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 hover:fill-button-delete/70 cursor-pointer">
@@ -499,16 +542,17 @@
                                 <!-- EMPTY STATE -->
                                 <div class="border w-auto rounded-md border-solid border-black mt-3 h-28">
                                     <div class="text-center py-8 text-gray-500">
-                                        <p>No batch added yet. Adding batch is required to assign expiry dates for the items</p>
+                                        <p x-show="!isPerishable">No batch added yet. Adding batch is required to assign expiry dates for the items</p>
+                                        <p x-show="isPerishable">No batch added yet. Click "Add Batch" to create inventory batches</p>
                                     </div>
                                 </div>
                             </template>
 
-                            <!-- HIDDEN INPUTS FOR BATCH DATA -->
+                            <!-- HIDDEN INPUTS FOR BATCH DATA - PROPERLY WORKING -->
                             <template x-for="(batch, index) in batches" :key="index">
                                 <div>
-                                    <input type="hidden" :name="'manual_batches[' + index + '][quantity]'" :value="batch.quantity">
-                                    <input type="hidden" :name="'manual_batches[' + index + '][expiration_date]'" :value="batch.expiration_date">
+                                    <input type="hidden" :name="`manual_batches[${index}][quantity]`" :value="batch.quantity">
+                                    <input type="hidden" :name="`manual_batches[${index}][expiration_date]`" :value="batch.expiration_date || ''">
                                 </div>
                             </template>
                         </div>
@@ -530,6 +574,7 @@
             badItemCount: 0,
             batches: [],
             newBatch: { quantity: '', expiration_date: '' },
+            isPerishable: false,
             
             async getItems(poId) {
                 this.poId = poId;
@@ -586,10 +631,11 @@
             },
             
             addBatch() {
-                if (this.newBatch.quantity && this.newBatch.expiration_date) {
+                // FIXED: Only require expiration date for perishable items
+                if (this.newBatch.quantity && (this.isPerishable || this.newBatch.expiration_date)) {
                     this.batches.push({
                         quantity: parseInt(this.newBatch.quantity),
-                        expiration_date: this.newBatch.expiration_date,
+                        expiration_date: this.isPerishable ? null : this.newBatch.expiration_date,
                         batch_id: 'BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase()
                     });
                     this.newBatch = { quantity: '', expiration_date: '' };
@@ -614,11 +660,15 @@
                     Toast.error('Please select a purchase order item');
                     return false;
                 }
-                if (this.batches.length === 0) {
-                    Toast.error('Please add at least one batch');
+                
+                // Only require batches for NON-perishable items in PO method
+                if (!this.isPerishable && this.batches.length === 0) {
+                    Toast.error('Please add at least one batch for non-perishable items');
                     return false;
                 }
-                if (this.getTotalStock() !== this.productStock) {
+                
+                // Validate batch quantities match stock
+                if (this.batches.length > 0 && this.getTotalStock() !== this.productStock) {
                     Toast.error('Batch quantities must equal total stock');
                     return false;
                 }
@@ -708,6 +758,14 @@
                 </select>
             </div>
 
+            <div class="container flex flex-col text-start col-span-2">
+                <label class="flex items-center mt-6">
+                    <input type="checkbox" name="is_perishable" value="1" 
+                        x-model="isPerishable" class="mr-2">
+                    Non-perishable product (no expiration date)
+                </label>
+            </div>
+
             <!-- HIDDEN PRODUCT STOCK FIELD -->
             <input type="hidden" name="productStock" x-model="productStock" x-bind:required="addMethod === 'po'">
 
@@ -785,18 +843,27 @@
             </div>
             <div class="container flex flex-col text-start col-span-2">
                 <label>Expiration Date</label>
-                <input type="date" x-model="newBatch.expiration_date" 
+                <input type="date" x-model="newBatch.expiration_date"
+                    :required="!isPerishable"
                     min="{{ date('Y-m-d') }}"
                     :disabled="!productStock || productStock <= 0"
                     class="px-3 py-2 text-sm border rounded-sm border-black"
                     :class="{'bg-gray-100': !productStock || productStock <= 0}">
             </div>
+
+            <!-- Show message when non-perishable -->
+            <div class="container flex flex-col text-start col-span-2" x-show="isPerishable">
+                <label>Expiration Date</label>
+                <div class="px-3 py-2 text-sm border rounded-sm border-black bg-gray-100 text-gray-500">
+                    Not required for non-perishable items
+                </div>
+            </div>
             <div class="container flex flex-col mb-1 col-span-2 place-items-end content-end items-center justify-end">
                 <button type="button" @click="addBatch()" 
-                    :disabled="!productStock || !newBatch.quantity || !newBatch.expiration_date || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)"
+                    :disabled="!productStock || !newBatch.quantity || (!isPerishable && !newBatch.expiration_date) || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)"
                     :class="{
-                        'bg-teal-500 hover:bg-teal-600': productStock && newBatch.quantity && newBatch.expiration_date && (parseInt(newBatch.quantity) + getTotalStock()) <= parseInt(productStock), 
-                        'bg-gray-300 cursor-not-allowed': !productStock || !newBatch.quantity || !newBatch.expiration_date || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)
+                        'bg-teal-500 hover:bg-teal-600': productStock && newBatch.quantity && (isPerishable || newBatch.expiration_date) && (parseInt(newBatch.quantity) + getTotalStock()) <= parseInt(productStock), 
+                        'bg-gray-300 cursor-not-allowed': !productStock || !newBatch.quantity || (!isPerishable && !newBatch.expiration_date) || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)
                     }"
                     class="px-4 py-2 text-md rounded text-white w-full transition-all duration-100 ease-in-out">
                     + Add Batch
@@ -862,11 +929,11 @@
             </div>
         </template>
 
-        <!-- HIDDEN INPUTS FOR BATCH DATA -->
+        <!-- HIDDEN INPUTS FOR BATCH DATA - FIXED FOR PO SECTION -->
         <template x-for="(batch, index) in batches" :key="index">
             <div>
-                <input type="hidden" :name="'batches[' + index + '][quantity]'" :value="batch.quantity">
-                <input type="hidden" :name="'batches[' + index + '][expiration_date]'" :value="batch.expiration_date">
+                <input type="hidden" :name="`batches[${index}][quantity]`" :value="batch.quantity">
+                <input type="hidden" :name="`batches[${index}][expiration_date]`" :value="batch.expiration_date || ''">
             </div>
         </template>
     </div>

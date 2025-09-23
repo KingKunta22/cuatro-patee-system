@@ -139,9 +139,11 @@ class InventoryController extends Controller
                 'manual_productCostPrice' => 'required|numeric|min:0',
                 'manual_productStock' => 'required|numeric|min:1',
                 'manual_productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-                'manual_batches' => 'required|array|min:1',
-                'manual_batches.*.quantity' => 'required|numeric|min:1',
-                'manual_batches.*.expiration_date' => 'required|date|after_or_equal:today',
+                'manual_is_perishable' => 'sometimes|boolean',
+                // Make batches nullable and only validate when present
+                'manual_batches' => 'nullable|array',
+                'manual_batches.*.quantity' => 'required_with:manual_batches|numeric|min:1',
+                'manual_batches.*.expiration_date' => 'nullable|date|after_or_equal:today',
             ];
         } else {
             $fieldPrefix = '';
@@ -157,17 +159,20 @@ class InventoryController extends Controller
                 'selectedItemId' => 'required|exists:purchase_order_items,id',
                 'productQuality' => 'required|in:goodCondition,defective,incorrectItem,nearExpiry,rejected,quantityMismatch',
                 'badItemQuantity' => 'nullable|numeric|min:0',
-                'batches' => 'required|array|min:1',
-                'batches.*.quantity' => 'required|numeric|min:1',
-                'batches.*.expiration_date' => 'required|date|after_or_equal:today',
+                'is_perishable' => 'sometimes|boolean',
+                // Make batches nullable like manual method
+                'batches' => 'nullable|array',
+                'batches.*.quantity' => 'required_with:batches|numeric|min:1',
+                'batches.*.expiration_date' => 'nullable|date|after_or_equal:today',
             ];
         }
 
-        // dd($request->all());
         $validated = $request->validate($validationRules);
 
+        // dd($request->all());
+
         // For manual method with batches, validate that total batches equal total stock
-        if ($addMethod === 'manual' && isset($validated['manual_batches'])) {
+        if ($addMethod === 'manual' && isset($validated['manual_batches']) && !empty($validated['manual_batches'])) {
             $totalBatchQuantity = array_sum(array_column($validated['manual_batches'], 'quantity'));
             if ($totalBatchQuantity != $validated['manual_productStock']) {
                 return back()->withInput()->withErrors([
@@ -190,6 +195,9 @@ class InventoryController extends Controller
             $brand = Brand::firstOrCreate(['productBrand' => $productBrand]);
             $category = Category::firstOrCreate(['productCategory' => $productCategory]);
 
+            // Handle perishable checkbox logic
+            $isPerishable = !$request->boolean($fieldPrefix . 'is_perishable');
+
             // Prepare product data using foreign keys, not text fields
             $productData = [
                 'productName' => $productName,
@@ -199,6 +207,7 @@ class InventoryController extends Controller
                 'productItemMeasurement' => $validated[$fieldPrefix . 'productItemMeasurement'],
                 'productSellingPrice' => $validated[$fieldPrefix . 'productSellingPrice'],
                 'productCostPrice' => $validated[$fieldPrefix . 'productCostPrice'],
+                'is_perishable' => $isPerishable,
             ];
 
             // Handle image upload
@@ -213,27 +222,62 @@ class InventoryController extends Controller
                 $productData
             );
 
-            // Create batches
+            // Create batches - handle both cases (with batches and without batches for non-perishable)
             $batchesField = $fieldPrefix . 'batches';
-            foreach ($validated[$batchesField] as $batchIndex => $batch) {
-                $batchNumber = 'BATCH-' . date('Ymd') . '-' . str_pad(($batchIndex + 1), 3, '0', STR_PAD_LEFT);
+            $batchesToCreate = [];
+
+            // Determine the total stock quantity based on the method
+            if ($addMethod === 'po') {
+                // For PO method, get stock from the selected PO item
+                $poItem = PurchaseOrderItem::find($validated['selectedItemId']);
+                $totalStockQuantity = $poItem ? $poItem->quantity : 0;
                 
-                $batchData = [
-                    'product_id' => $product->id,
+                // Adjust for bad items if any
+                if (isset($validated['badItemQuantity']) && $validated['badItemQuantity'] > 0) {
+                    $totalStockQuantity = max(0, $totalStockQuantity - $validated['badItemQuantity']);
+                }
+            } else {
+                // For manual method, use the manual_productStock field
+                $totalStockQuantity = $validated[$fieldPrefix . 'productStock'];
+            }
+
+            if (isset($validated[$batchesField]) && !empty($validated[$batchesField])) {
+                // User provided batches
+                foreach ($validated[$batchesField] as $batchIndex => $batch) {
+                    $batchNumber = 'BATCH-' . date('Ymd') . '-' . str_pad(($batchIndex + 1), 3, '0', STR_PAD_LEFT);
+                    
+                    $batchesToCreate[] = [
+                        'batch_number' => $batchNumber,
+                        'quantity' => $batch['quantity'],
+                        'expiration_date' => $isPerishable ? null : ($batch['expiration_date'] ?? null),
+                    ];
+                }
+            } else {
+                // No batches provided - create a single batch for the entire stock
+                $batchNumber = 'BATCH-' . date('Ymd') . '-001';
+                
+                $batchesToCreate[] = [
                     'batch_number' => $batchNumber,
-                    'quantity' => $batch['quantity'],
+                    'quantity' => $totalStockQuantity, // Use the calculated total stock
+                    'expiration_date' => null, // Non-perishable
+                ];
+            }
+
+            // Create all batches
+            foreach ($batchesToCreate as $batchData) {
+                $fullBatchData = array_merge($batchData, [
+                    'product_id' => $product->id,
                     'cost_price' => $validated[$fieldPrefix . 'productCostPrice'],
                     'selling_price' => $validated[$fieldPrefix . 'productSellingPrice'],
-                    'expiration_date' => $batch['expiration_date'],
-                ];
+                ]);
 
                 // Add PO references for PO method
                 if ($addMethod === 'po') {
-                    $batchData['purchase_order_id'] = $validated['purchaseOrderNumber'];
-                    $batchData['purchase_order_item_id'] = $validated['selectedItemId'];
+                    $fullBatchData['purchase_order_id'] = $validated['purchaseOrderNumber'];
+                    $fullBatchData['purchase_order_item_id'] = $validated['selectedItemId'];
                 }
 
-                ProductBatch::create($batchData);
+                ProductBatch::create($fullBatchData);
             }
 
             // For PO method, handle bad items

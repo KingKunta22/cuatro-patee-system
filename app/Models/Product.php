@@ -19,6 +19,7 @@ class Product extends Model
         'productSellingPrice',
         'productCostPrice',
         'productImage',
+        'is_perishable',
     ];
 
     public function brand()
