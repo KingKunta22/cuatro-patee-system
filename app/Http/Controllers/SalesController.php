@@ -31,19 +31,21 @@ class SalesController extends Controller
         $sales = Sale::with('items.productBatch.product')->latest()->paginate(7);
         
         // Get products for the product dropdown
-        $products = Product::with(['batches' => function($query) {
-                        $query->where('quantity', '>', 0) // Only batches with stock
-                            ->orderBy('expiration_date', 'asc'); // FIFO/FEFO ordering
-                    }])
-                    ->whereHas('batches', function($query) {
-                        $query->where('quantity', '>', 0); // Only products with available stock
-                    })
-                    ->get()
-                    ->map(function($product) {
-                        // Calculate total stock for display
-                        $product->total_stock = $product->batches->sum('quantity');
-                        return $product;
-                    });
+        $products = Product::with([
+                'brand', // Add this line to load the brand relationship
+                'batches' => function($query) {
+                    $query->where('quantity', '>', 0)
+                        ->orderBy('expiration_date', 'asc');
+                }
+            ])
+            ->whereHas('batches', function($query) {
+                $query->where('quantity', '>', 0);
+            })
+            ->get()
+            ->map(function($product) {
+                $product->total_stock = $product->batches->sum('quantity');
+                return $product;
+            });
 
         return view('sales', compact('sales', 'totalRevenue', 'totalCost', 'totalProfit', 'products'));
     }
@@ -79,9 +81,9 @@ class SalesController extends Controller
     // Store a new sale
     public function store(Request $request)
     {
-        // Validate the main form data
+        // Remove customerName validation since it's not needed
         $validated = $request->validate([
-            'customerName' => 'required|string|max:255',
+            // 'customerName' => 'required|string|max:255', // REMOVE THIS LINE
             'salesCash' => 'required|numeric|min:0',
         ]);
 
@@ -111,11 +113,11 @@ class SalesController extends Controller
             $cashReceived = $request->salesCash;
             $change = max(0, $cashReceived - $totalAmount);
 
-            // Create the sale
+            // Create the sale - use a default customer name or empty
             $sale = Sale::create([
                 'invoice_number' => $invoiceNumber,
                 'sale_date' => now(),
-                'customer_name' => $request->customerName,
+                'customer_name' => 'Walk-in Customer', // Or $request->customerName if you still want to accept it
                 'total_amount' => $totalAmount,
                 'cash_received' => $cashReceived,
                 'change' => $change
