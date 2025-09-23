@@ -309,12 +309,6 @@
             </div>
         </div>
 
-        <!-- Debug Sales Trends Data (remove after testing) -->
-        <div style="display: none;">
-            <h3>Sales Trends Debug Info:</h3>
-            <pre>@json($salesTrends, JSON_PRETTY_PRINT)</pre>
-        </div>
-
         <!-- Sales Trends Section -->
         <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div class="flex justify-between items-center mb-6">

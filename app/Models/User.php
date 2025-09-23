@@ -17,32 +17,36 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    // User.php
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'name', 'email', 'password', 'role', 'status', 'employee_id'
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
+    protected $casts = [
+        'email_verified_at' => 'datetime',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    // Role constants
+    const ROLE_ADMIN = 'admin';
+    const ROLE_STAFF = 'staff';
+
+    // Status constants  
+    const STATUS_ACTIVE = 'active';
+    const STATUS_INACTIVE = 'inactive';
+
+    // Helper methods
+    public function isAdmin()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    public function isStaff()
+    {
+        return $this->role === self::ROLE_STAFF;
+    }
+
+    public function isActive()
+    {
+        return $this->status === self::STATUS_ACTIVE;
     }
 }

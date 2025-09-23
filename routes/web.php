@@ -23,6 +23,10 @@ Route::get('/', function() {
 
 Route::post('/login', [UserController::class, 'login']);
 
+// MANAGE ACCOUNT PAGE ROUTE
+Route::get('/manage-account', function () {
+    return view('manage-account');
+})->name('manage.account')->middleware('auth');
 
 // The middleware method doesn't allow unlogged users to open this URL
 Route::get('/main', [DashboardController::class, 'index'])->name('main')->middleware('auth');
