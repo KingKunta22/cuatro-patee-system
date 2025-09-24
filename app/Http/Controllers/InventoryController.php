@@ -196,6 +196,8 @@ class InventoryController extends Controller
             $category = Category::firstOrCreate(['productCategory' => $productCategory]);
 
             // Handle perishable checkbox logic
+            // Frontend sends "is_perishable" as 1 when "No Expiry" is checked.
+            // Therefore: product is perishable when No Expiry is NOT checked.
             $isPerishable = !$request->boolean($fieldPrefix . 'is_perishable');
 
             // Prepare product data using foreign keys, not text fields
@@ -244,22 +246,31 @@ class InventoryController extends Controller
             if (isset($validated[$batchesField]) && !empty($validated[$batchesField])) {
                 // User provided batches
                 foreach ($validated[$batchesField] as $batchIndex => $batch) {
-                    $batchNumber = 'BATCH-' . date('Ymd') . '-' . str_pad(($batchIndex + 1), 3, '0', STR_PAD_LEFT);
+                    // Use the new batch number format
+                    $batchNumber = $this->generateBatchNumber($product->id);
                     
                     $batchesToCreate[] = [
                         'batch_number' => $batchNumber,
                         'quantity' => $batch['quantity'],
-                        'expiration_date' => $isPerishable ? null : ($batch['expiration_date'] ?? null),
+                        // FIX: Set expiration_date based on correct perishable logic
+                        'expiration_date' => $isPerishable ? ($batch['expiration_date'] ?? null) : null,
                     ];
                 }
             } else {
-                // No batches provided - create a single batch for the entire stock
-                $batchNumber = 'BATCH-' . date('Ymd') . '-001';
-                
+                // No batches provided
+                if ($isPerishable) {
+                    // Perishable items must have batches with expiration dates
+                    DB::rollBack();
+                    return back()->withInput()->withErrors([
+                        'error' => 'Perishable items require batch entries with expiration dates.'
+                    ]);
+                }
+                // Non-perishable: create a single batch with null expiration
+                $batchNumber = $this->generateBatchNumber($product->id);
                 $batchesToCreate[] = [
                     'batch_number' => $batchNumber,
-                    'quantity' => $totalStockQuantity, // Use the calculated total stock
-                    'expiration_date' => null, // Non-perishable
+                    'quantity' => $totalStockQuantity,
+                    'expiration_date' => null,
                 ];
             }
 
@@ -377,6 +388,28 @@ class InventoryController extends Controller
         $inventory->delete();
 
         return redirect()->route('inventory.index')->with('success', 'Inventory product successfully deleted!');
+    }
+
+    // Add this method to your InventoryController
+    private function generateBatchNumber($productId)
+    {
+        $year = date('y'); // Last 2 digits of year
+        $product = Product::find($productId);
+        
+        // Get the latest batch for this product in the current year
+        $lastBatch = ProductBatch::where('product_id', $productId)
+            ->where('batch_number', 'like', "B-%")
+            ->orderBy('created_at', 'desc')
+            ->first();
+        
+        if ($lastBatch && preg_match('/B-(\d+)-(\d+)/', $lastBatch->batch_number, $matches)) {
+            $lastYear = $matches[2];
+            $nextNumber = ($lastYear == $year) ? intval($matches[1]) + 1 : 1;
+        } else {
+            $nextNumber = 1;
+        }
+        
+        return "B-" . str_pad($nextNumber, 2, '0', STR_PAD_LEFT) . "-{$year}";
     }
 
 }

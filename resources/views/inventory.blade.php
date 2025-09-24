@@ -289,10 +289,36 @@
                 batches: [],
                 newBatch: { quantity: '', expiration_date: '' },
                 manual_productStock: 0,
-                isPerishable: false, // This will be shared across both sections
+                isPerishable: false,
+                
+                // Computed properties for field states
+                get isManualMode() {
+                    return this.addMethod === 'manual';
+                },
+                get isPOMode() {
+                    return this.addMethod === 'po';
+                },
+                get shouldShowExpiryFields() {
+                    return !this.isPerishable;
+                },
+                get shouldRequireBatches() {
+                    return !this.isPerishable;
+                },
+                get areStocksFullyAssigned() {
+                    if (this.isPerishable) return true; // Non-perishable doesn't need batch assignment
+                    
+                    const totalStock = this.isManualMode ? this.manual_productStock : 
+                                    (this.isPOMode && typeof this.productStock !== 'undefined' ? this.productStock : 0);
+                    return this.getTotalStock() === parseInt(totalStock || 0);
+                },
+                get shouldDisableQuantityField() {
+                    return this.areStocksFullyAssigned && this.batches.length > 0;
+                },
+                get shouldDisableExpiryField() {
+                    return this.areStocksFullyAssigned && this.batches.length > 0;
+                },
 
                 addBatch() {
-                    // FIXED: Only require expiration date for perishable items
                     if (this.newBatch.quantity && (this.isPerishable || this.newBatch.expiration_date)) {
                         this.batches.push({
                             quantity: parseInt(this.newBatch.quantity),
@@ -305,10 +331,17 @@
                 
                 removeBatch(index) {
                     this.batches.splice(index, 1);
+                    // Re-enable fields if stocks are no longer fully assigned
+                    this.updateFieldStates();
                 },
                 
                 getTotalStock() {
                     return this.batches.reduce((total, batch) => total + parseInt(batch.quantity || 0), 0);
+                },
+                
+                updateFieldStates() {
+                    // This method will be called when batches change
+                    // Fields will automatically update due to computed properties
                 },
                 
                 formatDate(dateString) {
@@ -318,13 +351,11 @@
                 
                 validateForm() {
                     if (this.addMethod === 'manual') {
-                        // Only require batches for perishable items
-                        if (!this.isPerishable && this.batches.length === 0) {
-                            Toast.error('Please add at least one batch for perishable items');
+                        if (this.shouldRequireBatches && this.batches.length === 0) {
+                            Toast.error('Please add batches to assign expiry dates');
                             return false;
                         }
                         
-                        // Check if batches match total stocks (only if batches exist)
                         if (this.batches.length > 0) {
                             const totalStock = parseInt(this.manual_productStock || 0);
                             const assignedStock = this.getTotalStock();
@@ -335,8 +366,7 @@
                             }
                         }
                         
-                        // For non-perishable, we don't need batches but should have stock
-                        if (this.isPerishable && (!this.manual_productStock || this.manual_productStock <= 0)) {
+                        if (!this.manual_productStock || this.manual_productStock <= 0) {
                             Toast.error('Please enter total stocks');
                             return false;
                         }
@@ -453,18 +483,18 @@
                                     <label>Quantity</label>
                                     <input type="number" x-model="newBatch.quantity" min="1" 
                                         :max="manual_productStock ? manual_productStock - getTotalStock() : 0"
-                                        :disabled="isPerishable || !manual_productStock || manual_productStock <= 0"
+                                        :disabled="isPerishable || !manual_productStock || manual_productStock <= 0 || shouldDisableQuantityField"
                                         class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
-                                        :class="{'bg-gray-100': isPerishable || !manual_productStock || manual_productStock <= 0}">
+                                        :class="{'bg-gray-100': isPerishable || !manual_productStock || manual_productStock <= 0 || shouldDisableQuantityField}">
                                 </div>
                                 <div class="container flex flex-col text-start col-span-2" x-show="!isPerishable">
                                     <label>Expiration Date</label>
                                     <input type="date" x-model="newBatch.expiration_date" 
-                                        :required="!isPerishable"
+                                        :required="!isPerishable && !shouldDisableExpiryField"
                                         min="{{ date('Y-m-d') }}"
-                                        :disabled="!manual_productStock || manual_productStock <= 0"
+                                        :disabled="!manual_productStock || manual_productStock <= 0 || shouldDisableExpiryField"
                                         class="px-3 py-2 text-sm border rounded-sm border-black"
-                                        :class="{'bg-gray-100': !manual_productStock || manual_productStock <= 0}">
+                                        :class="{'bg-gray-100': !manual_productStock || manual_productStock <= 0 || shouldDisableExpiryField}">
                                 </div>
 
                                 <!-- Show message when non-perishable -->
@@ -565,96 +595,91 @@
 <!-- PURCHASE ORDER SECTION -->
 <section x-show="addMethod === 'po'" class="space-y-6" 
         x-data="{
-            items: [],
-            poId: null,
-            sellingPrice: 0,
-            costPrice: 0,
-            productName: '',
-            productStock: 0,
-            originalStock: 0,
-            itemMeasurement: '',
-            selectedItemId: null,
-            selectedQuality: 'goodCondition',
-            badItemCount: 0,
-            batches: [],
-            newBatch: { quantity: '', expiration_date: '' },
-            // FIX: Remove the broken isPerishable getter
-            isPerishable: false, // Just set it to false initially
+    items: [],
+    poId: null,
+    sellingPrice: 0,
+    costPrice: 0,
+    productName: '',
+    productStock: 0,
+    originalStock: 0,
+    itemMeasurement: '',
+    selectedItemId: null,
+    selectedQuality: 'goodCondition',
+    badItemCount: 0,
+    batches: [],
+    newBatch: { quantity: '', expiration_date: '' },
+    // use the top-level No Expiry checkbox via $root.isPerishable
+
+    async getItems(poId) {
+        this.poId = poId;
+        this.items = [];
+        this.selectedItemId = null;
+        this.costPrice = 0;
+        this.selectedQuality = 'goodCondition';
+        this.badItemCount = 0;
+        this.batches = [];
+        this.newBatch = { quantity: '', expiration_date: '' };
+        this.productStock = 0;
+        this.originalStock = 0;
+        this.itemMeasurement = ''; 
+        
+        if (!poId) return;
+        
+        try {
+            const response = await fetch(`/get-items/${poId}`);
+            this.items = await response.json();
             
-            async getItems(poId) {
-                this.poId = poId;
-                this.items = [];
-                this.selectedItemId = null;
-                this.costPrice = 0;
-                this.selectedQuality = 'goodCondition';
-                this.badItemCount = 0;
-                this.batches = [];
-                this.newBatch = { quantity: '', expiration_date: '' };
-                this.productStock = 0;
-                this.originalStock = 0;
-                this.itemMeasurement = ''; 
-                
-                if (!poId) return;
-                
-                try {
-                    const response = await fetch(`/get-items/${poId}`);
-                    this.items = await response.json();
-                    
-                    if (this.items.length === 0) {
-                        console.log('No items available for this PO');
-                        return;
-                    }
-                    
-                    if (this.items.length === 1) {
-                        this.selectedItemId = this.items[0].id;
-                        this.setCostPrice(this.items[0].id);
-                    }
-                } catch (error) {
-                    console.error('Error fetching items:', error);
-                }
-            },
+            if (this.items.length === 0) return;
             
-            setCostPrice(itemId) {
-                this.selectedItemId = itemId;
-                const item = this.items.find(i => i.id == itemId);
-                if (item) {
-                    this.costPrice = item.unitPrice || 0;
-                    this.productName = item.productName;
-                    this.productStock = item.quantity;
-                    this.originalStock = item.quantity;
-                    this.itemMeasurement = item.itemMeasurement || ''; 
-                }
-            },
-            
-            updateStockBasedOnQuality() {
-                if (this.selectedQuality === 'goodCondition') {
-                    this.productStock = this.originalStock;
-                    this.badItemCount = 0;
-                } else if (this.badItemCount > 0) {
-                    this.productStock = Math.max(0, this.originalStock - this.badItemCount);
-                }
-            },
-            
-            addBatch() {
-                // FIX: Remove the isPerishable check entirely - just check for quantity
-                if (this.newBatch.quantity) {
-                    this.batches.push({
-                        quantity: parseInt(this.newBatch.quantity),
-                        expiration_date: this.newBatch.expiration_date || null,
-                        batch_id: 'BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase()
-                    });
-                    this.newBatch = { quantity: '', expiration_date: '' };
-                }
-            },
-            
-            removeBatch(index) {
-                this.batches.splice(index, 1);
-            },
-            
-            getTotalStock() {
-                return this.batches.reduce((total, batch) => total + parseInt(batch.quantity || 0), 0);
+            if (this.items.length === 1) {
+                this.selectedItemId = this.items[0].id;
+                this.setCostPrice(this.items[0].id);
             }
-        }">
+        } catch (error) {
+            console.error('Error fetching items:', error);
+        }
+    },
+    
+    setCostPrice(itemId) {
+        this.selectedItemId = itemId;
+        const item = this.items.find(i => i.id == itemId);
+        if (item) {
+            this.costPrice = item.unitPrice || 0;
+            this.productName = item.productName;
+            this.productStock = item.quantity;
+            this.originalStock = item.quantity;
+            this.itemMeasurement = item.itemMeasurement || ''; 
+        }
+    },
+    
+    updateStockBasedOnQuality() {
+        if (this.selectedQuality === 'goodCondition') {
+            this.productStock = this.originalStock;
+            this.badItemCount = 0;
+        } else if (this.badItemCount > 0) {
+            this.productStock = Math.max(0, this.originalStock - this.badItemCount);
+        }
+    },
+    
+    addBatch() {
+        if (this.newBatch.quantity && (this.$root.isPerishable || this.newBatch.expiration_date)) {
+            this.batches.push({
+                quantity: parseInt(this.newBatch.quantity),
+                expiration_date: this.$root.isPerishable ? null : this.newBatch.expiration_date,
+                batch_id: 'BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase()
+            });
+            this.newBatch = { quantity: '', expiration_date: '' };
+        }
+    },
+    
+    removeBatch(index) {
+        this.batches.splice(index, 1);
+    },
+    
+    getTotalStock() {
+        return this.batches.reduce((total, batch) => total + parseInt(batch.quantity || 0), 0);
+    }
+}">
 
     <!-- PRODUCT DETAILS -->
     <div class="bg-gray-50 px-4 pt-4 pb-0 rounded-md">
@@ -806,26 +831,29 @@
                 </p>
             </div>
 
+            <!-- Quantity Input - PO SECTION ONLY -->
             <div class="container flex flex-col text-start col-span-1">
                 <label>Quantity</label>
                 <input type="number" x-model="newBatch.quantity" min="1" 
                     :max="productStock ? productStock - getTotalStock() : 0"
-                    :disabled="isPerishable || !productStock || productStock <= 0"
+                    :disabled="getTotalStock() === productStock || $root.isPerishable || !productStock || productStock <= 0"
                     class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
-                    :class="{'bg-gray-100': isPerishable || !productStock || productStock <= 0}">
+                    :class="{'bg-gray-100': getTotalStock() === productStock || $root.isPerishable || !productStock || productStock <= 0}">
             </div>
-            <div class="container flex flex-col text-start col-span-2" x-show="!isPerishable">
+
+            <!-- Expiry Date Input - PO SECTION ONLY -->
+            <div class="container flex flex-col text-start col-span-2" x-show="!$root.isPerishable">
                 <label>Expiration Date</label>
                 <input type="date" x-model="newBatch.expiration_date"
-                    :required="!isPerishable"
+                    :required="!$root.isPerishable && !(getTotalStock() === productStock)"
                     min="{{ date('Y-m-d') }}"
-                    :disabled="!productStock || productStock <= 0"
+                    :disabled="getTotalStock() === productStock || !productStock || productStock <= 0"
                     class="px-3 py-2 text-sm border rounded-sm border-black"
-                    :class="{'bg-gray-100': !productStock || productStock <= 0}">
+                    :class="{'bg-gray-100': getTotalStock() === productStock || !productStock || productStock <= 0}">
             </div>
 
             <!-- Show message when non-perishable -->
-            <div class="container flex flex-col text-start col-span-2" x-show="isPerishable">
+            <div class="container flex flex-col text-start col-span-2" x-show="$root.isPerishable">
                 <label>Expiration Date</label>
                 <div class="px-3 py-2 text-sm border rounded-sm border-black bg-gray-100 text-gray-500">
                     Not required
@@ -833,10 +861,10 @@
             </div>
             <div class="container flex flex-col mb-1 col-span-2 place-items-end content-end items-center justify-end">
                 <button type="button" @click="addBatch()" 
-                    :disabled="!productStock || !newBatch.quantity || (!isPerishable && !newBatch.expiration_date) || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)"
+                    :disabled="getTotalStock() === productStock || !productStock || !newBatch.quantity || (!isPerishable && !newBatch.expiration_date) || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)"
                     :class="{
-                        'bg-teal-500 hover:bg-teal-600': productStock && newBatch.quantity && (isPerishable || newBatch.expiration_date) && (parseInt(newBatch.quantity) + getTotalStock()) <= parseInt(productStock), 
-                        'bg-gray-300 cursor-not-allowed': !productStock || !newBatch.quantity || (!isPerishable && !newBatch.expiration_date) || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)
+                        'bg-teal-500 hover:bg-teal-600': !(getTotalStock() === productStock) && productStock && newBatch.quantity && (isPerishable || newBatch.expiration_date) && (parseInt(newBatch.quantity) + getTotalStock()) <= parseInt(productStock), 
+                        'bg-gray-300 cursor-not-allowed': getTotalStock() === productStock || !productStock || !newBatch.quantity || (!isPerishable && !newBatch.expiration_date) || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)
                     }"
                     class="px-4 py-2 text-md rounded text-white w-full transition-all duration-100 ease-in-out">
                     + Add Batch

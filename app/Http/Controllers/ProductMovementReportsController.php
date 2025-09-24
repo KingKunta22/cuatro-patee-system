@@ -6,8 +6,6 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\ProductBatch;
-use App\Models\PurchaseOrder;
-use App\Models\PurchaseOrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -17,32 +15,25 @@ class ProductMovementReportsController extends Controller
     {
         $timePeriod = $request->timePeriod ?? 'all';
         
-        // Get sales data for outflow with new structure
+        // Get sales data for outflow
         $sales = Sale::with(['items', 'items.productBatch.product'])
                     ->orderBy('sale_date', 'DESC')
                     ->get();
         
-        // Get product additions for inflow (ACTUAL product additions from batches)
-        $products = Product::with(['brand', 'category', 'batches'])
+        // Get products with their batches for inflow
+        $products = Product::with(['brand', 'category', 'batches', 'batches.purchaseOrder'])
                             ->orderBy('created_at', 'DESC')
                             ->get();
         
         // Combine data into movements array
         $movements = $this->combineMovements($sales, $products);
         
-        // Sort movements by date (newest first)
+        // FIXED: Simple date-based sorting (newest first)
         usort($movements, function($a, $b) {
-            // First compare dates
-            $dateCompare = strtotime($b['date']) <=> strtotime($a['date']);
-            if ($dateCompare !== 0) {
-                return $dateCompare;
-            }
-            
-            // If dates are equal, use reference number as secondary sort
-            return $b['reference_number'] <=> $a['reference_number'];
+            return strtotime($b['date']) <=> strtotime($a['date']);
         });
         
-        // Calculate stats with new structure
+        // Calculate stats
         $stats = $this->calculateStats($timePeriod);
         
         // Paginate movements
@@ -58,7 +49,7 @@ class ProductMovementReportsController extends Controller
     {
         $movements = [];
 
-        // Process sales (outflow)
+        // Process sales (outflow) - UNCHANGED (this works correctly)
         foreach ($sales as $sale) {
             foreach ($sale->items as $item) {
                 $productName = $this->getProductNameForSaleItem($item);
@@ -74,30 +65,22 @@ class ProductMovementReportsController extends Controller
             }
         }
         
-        // Process product additions (inflow) - ACTUAL product additions from batches
+        // FIXED: Process product additions as INDIVIDUAL batch additions
         foreach ($products as $product) {
-            // Calculate total stock from batches
-            $totalStock = $product->batches->sum('quantity');
-            
-            // Only show as inflow if product has stock
-            if ($totalStock > 0) {
+            foreach ($product->batches as $batch) {
                 $source = 'Manual Addition';
                 $referenceNumber = 'Manually added (' . ($product->productSKU ?? 'No SKU') . ')';
                 
-                // Check if from purchase order by checking batches
-                $poBatch = $product->batches->firstWhere('purchase_order_id', '!=', null);
-                
-                if ($poBatch && $poBatch->purchaseOrder) {
-                    $po = $poBatch->purchaseOrder;
+                if ($batch->purchase_order_id && $batch->purchaseOrder) {
                     $source = 'Purchase Order';
-                    $referenceNumber = $po->orderNumber;
+                    $referenceNumber = $batch->purchaseOrder->orderNumber;
                 }
                 
                 $movements[] = [
-                    'date' => $product->created_at,
+                    'date' => $batch->created_at, // When batch was actually added
                     'reference_number' => $referenceNumber,
                     'product_name' => $product->productName,
-                    'quantity' => $totalStock,
+                    'quantity' => $batch->quantity, // Original batch quantity
                     'type' => 'inflow',
                     'remarks' => $source
                 ];
@@ -107,40 +90,34 @@ class ProductMovementReportsController extends Controller
         return $movements;
     }
 
-    // NEW HELPER METHOD FOR SALE ITEMS with new structure
     private function getProductNameForSaleItem($item)
     {
-        // Priority 1: Use sale item's product_name if available (without SKU)
         if (!empty($item->product_name)) {
             return preg_replace('/\s*\([^)]*\)\s*$/', '', $item->product_name);
         }
         
-        // Priority 2: Use product batch's product name if relationship exists
         if ($item->productBatch && $item->productBatch->product && !empty($item->productBatch->product->productName)) {
             return preg_replace('/\s*\([^)]*\)\s*$/', '', $item->productBatch->product->productName);
         }
         
-        // Priority 3: Fallback to product batch ID
         return 'Product Batch #' . $item->product_batch_id;
     }
     
     private function calculateStats($timePeriod)
     {
-        // Calculate total stock in (from product batches)
+        // Keep your existing stats calculation (this is correct)
         $stockInQuery = ProductBatch::query();
         if ($timePeriod !== 'all') {
             $this->applyTimeFilterToQuery($stockInQuery, $timePeriod, 'created_at');
         }
         $totalStockIn = $stockInQuery->sum('quantity');
 
-        // Calculate total stock out (from sales)
         $stockOutQuery = SaleItem::query();
         if ($timePeriod !== 'all') {
             $this->applyTimeFilterToQuery($stockOutQuery, $timePeriod, 'created_at');
         }
         $totalStockOut = $stockOutQuery->sum('quantity');
         
-        // Calculate revenue and cost with new structure
         $revenueQuery = Sale::query();
         $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id');
         
@@ -156,7 +133,6 @@ class ProductMovementReportsController extends Controller
         return compact('totalStockIn', 'totalStockOut', 'totalRevenue', 'totalCost', 'totalProfit');
     }
     
-    // Helper method for time filtering
     private function applyTimeFilterToQuery($query, $timePeriod, $dateField)
     {
         switch ($timePeriod) {

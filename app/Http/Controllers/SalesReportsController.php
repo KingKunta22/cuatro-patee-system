@@ -39,7 +39,7 @@ class SalesReportsController extends Controller
         $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
             ->join('purchase_orders', 'product_batches.purchase_order_id', '=', 'purchase_orders.id')
             ->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
-            ->where('deliveries.orderStatus', 'Delivered'); // ← ADD THIS FILTER
+            ->where('deliveries.orderStatus', 'Delivered'); // ← CRITICAL FILTER
 
         if ($timePeriod !== 'all') {
             switch ($timePeriod) {

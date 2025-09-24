@@ -140,7 +140,7 @@ class ReportsController extends Controller
         $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
             ->join('purchase_orders', 'product_batches.purchase_order_id', '=', 'purchase_orders.id')
             ->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
-            ->where('deliveries.orderStatus', 'Delivered'); // ← ADD THIS FILTER
+            ->where('deliveries.orderStatus', 'Delivered'); // ← CRITICAL FILTER
         
         $this->applyTimeFilter($revenueQuery, $timePeriod, 'sale_date');
         $this->applyTimeFilter($costQuery, $timePeriod, 'sale_date', 'sale');
@@ -196,14 +196,14 @@ class ReportsController extends Controller
         $this->applyTimeFilter($salesQuery, $timePeriod, 'sale_date');
         $sales = $salesQuery->orderBy('sale_date', 'DESC')->get();
         
-        // Get product additions for inflow with time filtering
-        $productsQuery = Product::with(['brand', 'category', 'batches']);
+        // Get products with their batches for inflow with time filtering
+        $productsQuery = Product::with(['brand', 'category', 'batches', 'batches.purchaseOrder']);
         $this->applyTimeFilter($productsQuery, $timePeriod, 'created_at');
         $products = $productsQuery->orderBy('created_at', 'DESC')->get();
         
         $movements = [];
         
-        // Process sales (outflow)
+        // Process sales (outflow) - UNCHANGED (this works correctly)
         foreach ($sales as $sale) {
             foreach ($sale->items as $item) {
                 $productName = $item->product_name;
@@ -228,43 +228,31 @@ class ReportsController extends Controller
             }
         }
         
-        // Process product additions (inflow) - ACTUAL product additions
+        // FIXED: Process product additions as INDIVIDUAL batch additions
         foreach ($products as $product) {
-            // Calculate total stock from batches
-            $totalStock = $product->batches->sum('quantity');
-            
-            // Only show as inflow if product has stock
-            if ($totalStock > 0) {
+            foreach ($product->batches as $batch) {
                 $source = 'Manual Addition';
                 $referenceNumber = 'Manually added (' . ($product->productSKU ?? 'No SKU') . ')';
                 
-                // Check if from purchase order by checking batches
-                $poBatch = $product->batches->firstWhere('purchase_order_id', '!=', null);
-                
-                if ($poBatch && $poBatch->purchaseOrder) {
-                    $po = $poBatch->purchaseOrder;
+                if ($batch->purchase_order_id && $batch->purchaseOrder) {
                     $source = 'Purchase Order';
-                    $referenceNumber = $po->orderNumber;
+                    $referenceNumber = $batch->purchaseOrder->orderNumber;
                 }
                 
                 $movements[] = [
-                    'date' => $product->created_at,
+                    'date' => $batch->created_at, // When batch was actually added
                     'reference_number' => $referenceNumber,
                     'product_name' => $product->productName,
-                    'quantity' => $totalStock,
+                    'quantity' => $batch->quantity, // Original batch quantity
                     'type' => 'inflow',
                     'remarks' => $source
                 ];
             }
         }
         
-        // Sort movements by date (newest first)
+        // FIXED: Simple date-based sorting (newest first)
         usort($movements, function($a, $b) {
-            $dateCompare = strtotime($b['date']) <=> strtotime($a['date']);
-            if ($dateCompare !== 0) {
-                return $dateCompare;
-            }
-            return $b['reference_number'] <=> $a['reference_number'];
+            return strtotime($b['date']) <=> strtotime($a['date']);
         });
         
         // Paginate movements

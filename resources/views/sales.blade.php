@@ -474,13 +474,10 @@
                 <div class="flex justify-between items-center w-full px-6 pt-4 pb-2 border-t mt-4">
                     <!-- Buttons on left -->
                     <div class="flex items-center space-x-4">
-                        <button onclick="downloadSalePDF({{ $sale->id }})" class="flex items-center space-x-1 cursor-pointer bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition-colors">
-                            <span>Download PDF</span>
+                        <button onclick="downloadSalePDF({{ $sale->id }})" class="flex items-center space-x-1 cursor-pointer bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-400 transition-colors">
+                            <span>Download</span>
                         </button>
-                        <button onclick="printSaleDetails({{ $sale->id }})" class="flex items-center space-x-1 cursor-pointer bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition-colors">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-                            </svg>
+                        <button onclick="printSaleDetails({{ $sale->id }})" class="flex items-center space-x-1 cursor-pointer bg-green-500 text-white rounded hover:bg-green-400 ml-auto font-semibold px-6 py-2 w-auto  content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
                             <span>Print</span>
                         </button>
                     </div>
