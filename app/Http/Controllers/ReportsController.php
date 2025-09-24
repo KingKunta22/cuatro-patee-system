@@ -136,9 +136,11 @@ class ReportsController extends Controller
 
     private function getRevenueStats($timePeriod)
     {
-
         $revenueQuery = Sale::query();
-        $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id');
+        $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
+            ->join('purchase_orders', 'product_batches.purchase_order_id', '=', 'purchase_orders.id')
+            ->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
+            ->where('deliveries.orderStatus', 'Delivered'); // ← ADD THIS FILTER
         
         $this->applyTimeFilter($revenueQuery, $timePeriod, 'sale_date');
         $this->applyTimeFilter($costQuery, $timePeriod, 'sale_date', 'sale');

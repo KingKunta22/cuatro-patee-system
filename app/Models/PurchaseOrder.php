@@ -59,9 +59,11 @@ class PurchaseOrder extends Model
         return $this->hasManyThrough(ProductBatch::class, PurchaseOrderItem::class);
     }
 
+    // In PurchaseOrder model - FIX the markAsDelivered method
     public function markAsDelivered()
     {
-        $this->update(['status' => 'delivered']);
+        // Update the delivery status instead of purchase order status
+        $this->deliveries()->update(['orderStatus' => 'Delivered']);
         
         // Just show a toast, no complicated service
         echo "<script>Toast.success('Purchase Order #{$this->id} has been delivered!');</script>";

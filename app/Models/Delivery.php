@@ -27,7 +27,7 @@ class Delivery extends Model
             
             // Set initial values
             if (empty($model->last_updated_by)) {
-                $model->last_updated_by = 'System';
+                $model->last_updated_by = 'N/A';
             }
             
             if (empty($model->status_updated_at)) {
@@ -40,7 +40,7 @@ class Delivery extends Model
             if ($model->isDirty('orderStatus')) {
                 $model->status_updated_at = now();
                 
-                $model->last_updated_by = optional(auth()->user())->name ?? 'System';
+                $model->last_updated_by = optional(auth()->user())->name ?? 'N/A';
             }
         });
     }

@@ -59,11 +59,11 @@ class DeliveryController extends Controller
 
             $purchaseOrder = PurchaseOrder::findOrFail($request->order_id);
             
-            // Get the delivery record (should already exist due to model event)
+            // Get the delivery record
             $delivery = $purchaseOrder->deliveries->first();
             
             if (!$delivery) {
-                // Fallback: create delivery if it doesn't exist (for existing orders)
+                // Fallback: create delivery if it doesn't exist
                 $delivery = $purchaseOrder->deliveries()->create([
                     'deliveryId' => Delivery::generateDeliveryId(),
                     'orderStatus' => 'Pending'
@@ -78,7 +78,8 @@ class DeliveryController extends Controller
             // Update the status
             $delivery->update([
                 'orderStatus' => $request->status,
-                'status_updated_at' => now() // Make sure this field is updated
+                'status_updated_at' => now(),
+                'last_updated_by' => auth()->user()->name ?? 'System'
             ]);
             
             return redirect()->back()->with('success', 'Delivery status updated successfully!');

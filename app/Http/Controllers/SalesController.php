@@ -23,8 +23,11 @@ class SalesController extends Controller
         // Total Revenue (based on selling price)
         $totalRevenue = SaleItem::sum(DB::raw('quantity * unit_price'));
         
-        // Total Cost (based on cost price from product batches)
+        // Total Cost - ONLY from purchase orders with DELIVERED status
         $totalCost = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
+            ->join('purchase_orders', 'product_batches.purchase_order_id', '=', 'purchase_orders.id')
+            ->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
+            ->where('deliveries.orderStatus', 'Delivered') // ← CRITICAL FIX
             ->sum(DB::raw('sale_items.quantity * product_batches.cost_price'));
         
         // Total Profit (revenue minus cost)

@@ -450,7 +450,7 @@
                                             <!-- EDIT BUTTON: Opens edit dialog -->
                                             <button 
                                                 @click="$refs['editDialog{{ $purchaseOrder->id }}'].showModal()" 
-                                                class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 items-center content-center hover:bg-button-create/70 transition-all duration-100 ease-in">
+                                                class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 gititems-center content-center hover:bg-button-create/70 transition-all duration-100 ease-in">
                                                 Edit
                                             </button>
 

@@ -29,13 +29,17 @@ class DashboardController extends Controller
             })
             ->sum(DB::raw('quantity * unit_price'));
         
-        // Total Cost (updated for new structure)
+        // In DashboardController::index() - FIXED
+        // Total Cost (ONLY from delivered POs)
         $totalCost = SaleItem::when($dateRange, function($query) use ($dateRange) {
                 $query->whereHas('sale', function($q) use ($dateRange) {
                     $q->whereBetween('sale_date', [$dateRange['start'], $dateRange['end']]);
                 });
             })
             ->join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
+            ->join('purchase_orders', 'product_batches.purchase_order_id', '=', 'purchase_orders.id')
+            ->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
+            ->where('deliveries.orderStatus', 'Delivered') // ← CRITICAL FIX
             ->sum(DB::raw('sale_items.quantity * product_batches.cost_price'));
         
         // Products Sold (count of items sold)
@@ -224,44 +228,44 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function getSalesTrendsData($period = 'lastMonth')
-    {
-        // Simple query - get monthly sales for the last 6 months
-        $salesData = Sale::selectRaw('YEAR(sale_date) as year, MONTH(sale_date) as month, SUM(total_amount) as total')
-            ->where('sale_date', '>=', now()->subMonths(6))
-            ->groupBy('year', 'month')
-            ->orderBy('year')
-            ->orderBy('month')
-            ->get();
-
-        $labels = [];
-        $data = [];
-
-        foreach ($salesData as $sale) {
-            $date = Carbon::create($sale->year, $sale->month);
-            $labels[] = $date->format('M Y');
-            $data[] = (float) $sale->total;
-        }
-
-        // If no data, use default values
-        if (empty($data)) {
-            $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-            $data = [0, 0, 0, 0, 0, 0];
-        }
-
-        return [
-            'labels' => $labels,
-            'data' => $data
-        ];
-    }
-
     // private function getSalesTrendsData($period = 'lastMonth')
     // {
-    //     // SUPER SIMPLE - Always return test data to make sure chart works
+    //     // Simple query - get monthly sales for the last 6 months
+    //     $salesData = Sale::selectRaw('YEAR(sale_date) as year, MONTH(sale_date) as month, SUM(total_amount) as total')
+    //         ->where('sale_date', '>=', now()->subMonths(6))
+    //         ->groupBy('year', 'month')
+    //         ->orderBy('year')
+    //         ->orderBy('month')
+    //         ->get();
+
+    //     $labels = [];
+    //     $data = [];
+
+    //     foreach ($salesData as $sale) {
+    //         $date = Carbon::create($sale->year, $sale->month);
+    //         $labels[] = $date->format('M Y');
+    //         $data[] = (float) $sale->total;
+    //     }
+
+    //     // If no data, use default values
+    //     if (empty($data)) {
+    //         $labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    //         $data = [0, 0, 0, 0, 0, 0];
+    //     }
+
     //     return [
-    //         'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    //         'data' => [5000, 8000, 12000, 6000, 15000, 18000]
+    //         'labels' => $labels,
+    //         'data' => $data
     //     ];
     // }
+
+    private function getSalesTrendsData($period = 'lastMonth')
+    {
+        // SUPER SIMPLE - Always return test data to make sure chart works
+        return [
+            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            'data' => [5000, 8000, 12000, 6000, 15000, 18000]
+        ];
+    }
 
 }

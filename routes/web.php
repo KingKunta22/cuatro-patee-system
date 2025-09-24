@@ -143,3 +143,22 @@ Route::get('/check-notifications', function () {
     
     return response()->json(['notifications' => $notifications]);
 });
+
+// Route::get('/test-costs', function() {
+//     // Test delivered purchase orders cost
+//     $deliveredCost = \App\Models\SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
+//         ->join('purchase_orders', 'product_batches.purchase_order_id', '=', 'purchase_orders.id')
+//         ->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
+//         ->where('deliveries.orderStatus', 'Delivered')
+//         ->sum(\DB::raw('sale_items.quantity * product_batches.cost_price'));
+
+//     // Test all purchase orders cost (should be higher)
+//     $allCost = \App\Models\SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
+//         ->sum(\DB::raw('sale_items.quantity * product_batches.cost_price'));
+
+//     return [
+//         'delivered_cost' => $deliveredCost,
+//         'all_cost' => $allCost,
+//         'difference' => $allCost - $deliveredCost
+//     ];
+// });

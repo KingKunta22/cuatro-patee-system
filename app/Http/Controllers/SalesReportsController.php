@@ -36,8 +36,11 @@ class SalesReportsController extends Controller
         
         // Calculate stats
         $revenueQuery = Sale::query();
-        $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id');
-        
+        $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
+            ->join('purchase_orders', 'product_batches.purchase_order_id', '=', 'purchase_orders.id')
+            ->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
+            ->where('deliveries.orderStatus', 'Delivered'); // ← ADD THIS FILTER
+
         if ($timePeriod !== 'all') {
             switch ($timePeriod) {
                 case 'today':
@@ -54,9 +57,9 @@ class SalesReportsController extends Controller
                     break;
             }
         }
-        
-        $totalRevenue = $revenueQuery->sum('total_amount');
+
         $totalCost = $costQuery->sum(DB::raw('sale_items.quantity * product_batches.cost_price'));
+        $totalRevenue = $revenueQuery->sum('total_amount');
         $totalProfit = $totalRevenue - $totalCost;
         
         return view('reports.sales-reports', compact(

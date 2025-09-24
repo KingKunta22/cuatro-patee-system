@@ -18,10 +18,6 @@
         <span class="font-semibold text-xl">{{ number_format($totalStockOut) }}</span>
         <span class="text-xs">Total Stock Out</span>
     </div>
-    <div class="container flex flex-col px-6 py-3 w-64 text-start rounded-md bg-[#5C717B]">
-        <span class="font-semibold text-xl">{{ number_format($totalStockIn - $totalStockOut) }}</span>
-        <span class="text-xs">Net Stock Movement</span>
-    </div>
 </div>
 
 <section class="border w-full rounded-md border-solid border-black my-3 shadow-sm">

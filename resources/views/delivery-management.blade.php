@@ -348,7 +348,6 @@
                                 </tbody>
                             </table>
                         </div>
-
                         <!-- Order Status Form -->
                         @if($deliveryStatus === 'Pending' || $deliveryStatus === 'Confirmed')
                             <form action="{{ route('delivery-management.updateStatus')}}" method="POST" class="w-full" id="statusForm{{ $order->id }}">
@@ -365,7 +364,7 @@
                                     </select>
                                     
                                     <button type="button" 
-                                            onclick="handleStatusUpdate({{ $order->id }})" 
+                                            onclick="handleStatusUpdate({{ $order->id }}, '{{ $deliveryStatus }}')" 
                                             class="mt-2 w-full uppercase px-2 py-2 font-bold text-xs bg-button-save text-white rounded-sm hover:bg-green-600 transition-colors duration-200">
                                         Update Status
                                     </button>
@@ -527,37 +526,63 @@
             </div>
         </x-modal.createModal>
 
-        <!-- Confirmation Modal Component -->
-        <x-modal.confirmModal x-ref="confirmStatusUpdate" class="w-1/3">
-            <x-slot:dialogTitle>Confirm Status Update</x-slot:dialogTitle>
-            <div class="container">
+        <!-- Simple Confirmation Modal -->
+        <dialog
+            id="confirmModal{{ $order->id }}"
+            class="w-1/3 my-auto shadow-2xl rounded-md"
+            @keydown.escape.window="this.close()">
+            <div class="container w-auto bg-main text-white flex items-center px-6 py-4">
+                <h1 class="italic text-2xl font-bold mr-auto"> 
+                    Confirm Status Update
+                </h1>
+                <button type="button" onclick="closeConfirmModal({{ $order->id }})" class="text-lg font-bold hover:opacity-75">
+                    ✕
+                </button>
+            </div>
+            <div class="container px-6 py-4">
                 <p class="text-sm text-gray-700 mb-2">Are you sure you want to update the delivery status?</p>
                 <p class="text-xs text-red-600 font-medium">Note: This action cannot be undone once confirmed.</p>
+                
+                <div class="flex justify-end gap-3 mt-4">
+                    <button onclick="closeConfirmModal({{ $order->id }})" 
+                            class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button id="confirmButton{{ $order->id }}" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 transition-all ease-in-out duration-100">
+                        Confirm
+                    </button>
+                </div>
             </div>
-        </x-modal.confirmModal>
+        </dialog>
 
         @endforeach
 
         <script>
-        function handleStatusUpdate(orderId) {
+        function handleStatusUpdate(orderId, currentStatus) {
             const select = document.getElementById('orderStatus' + orderId);
             const selectedStatus = select.value;
-            const currentStatus = '{{ $deliveryStatus }}'; // This will be dynamic per modal
             
             // Only show confirmation for Delivered or Cancelled status changes
             if (selectedStatus === 'Delivered' || selectedStatus === 'Cancelled') {
+                // Show the confirmation modal
+                const modal = document.getElementById('confirmModal' + orderId);
+                modal.showModal();
+                
                 // Set up the confirm action
-                const confirmButton = document.querySelector('[x-ref="confirmStatusUpdate"] [x-on\\:click="modalConfirm()"]');
+                const confirmButton = document.getElementById('confirmButton' + orderId);
                 confirmButton.onclick = function() {
                     document.getElementById('statusForm' + orderId).submit();
                 };
-                
-                // Show the confirmation modal
-                Alpine.raw($refs.confirmStatusUpdate).showModal();
             } else {
                 // For Pending or Confirmed, submit directly
                 document.getElementById('statusForm' + orderId).submit();
             }
+        }
+
+        function closeConfirmModal(orderId) {
+            const modal = document.getElementById('confirmModal' + orderId);
+            modal.close();
         }
         </script>
 
