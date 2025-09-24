@@ -441,10 +441,16 @@
                                         <!-- FORM BUTTONS AND DIALOGS -->
                                         <div class="container col-span-4 gap-x-4 place-content-start w-full flex items-start content-center px-6">
 
+                                            <!-- DOWNLOAD PDF BUTTON -->
+                                            <a href="{{ route('purchase-orders.download-pdf', $purchaseOrder->id) }}" 
+                                            class="flex items-center space-x-1 cursor-pointer bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-600 transition-colors">
+                                                Download
+                                            </a>
+
                                             <!-- EDIT BUTTON: Opens edit dialog -->
                                             <button 
                                                 @click="$refs['editDialog{{ $purchaseOrder->id }}'].showModal()" 
-                                                class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/70 transition-all duration-100 ease-in">
+                                                class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 items-center content-center hover:bg-button-create/70 transition-all duration-100 ease-in">
                                                 Edit
                                             </button>
 
