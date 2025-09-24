@@ -17,6 +17,7 @@ use App\Http\Controllers\PurchaseOrderController;
 use App\Http\Controllers\InventoryReportsController;
 use App\Http\Controllers\PurchaseOrderReportsController;
 use App\Http\Controllers\ProductMovementReportsController;
+use App\Http\Controllers\ForgotPasswordController;
 
 // Authentication routes
 Route::get('/', function() {
@@ -24,6 +25,7 @@ Route::get('/', function() {
 })->name('login');
 
 Route::post('/login', [UserController::class, 'login']);
+Route::post('/forgot-password/send-code', [ForgotPasswordController::class, 'sendCode'])->name('forgot.send');
 Route::post('/logout', [UserController::class, 'logout']);
 
 // All routes that require authentication

@@ -39,6 +39,14 @@ class UserController extends Controller
             'role' => 'required|in:admin,staff',
         ]);
 
+        // Enforce max 2 admins
+        if ($validated['role'] === 'admin') {
+            $adminCount = User::where('role', 'admin')->count();
+            if ($adminCount >= 2) {
+                return back()->with('error', 'Maximum of 2 admins allowed.')->withInput();
+            }
+        }
+
         User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -67,6 +75,14 @@ class UserController extends Controller
             'status' => 'required|in:active,inactive',
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
         ]);
+
+        // Enforce max 2 admins when changing role to admin
+        if ($validated['role'] === 'admin' && $user->role !== 'admin') {
+            $adminCount = User::where('role', 'admin')->count();
+            if ($adminCount >= 2) {
+                return back()->with('error', 'Maximum of 2 admins allowed.')->withInput();
+            }
+        }
 
         $updateData = [
             'name' => $validated['name'],

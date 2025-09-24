@@ -88,6 +88,13 @@ class ProductMovementReportsController extends Controller
                 $soldQty = (int) ($soldByBatch[$batch->id] ?? 0);
                 $originalQty = (int) $batch->quantity + $soldQty;
 
+                // Exclude defective/bad items from inflow: subtract bad items tied to this PO item
+                if ($batch->purchase_order_item_id) {
+                    $badCount = \App\Models\BadItem::where('purchase_order_item_id', $batch->purchase_order_item_id)
+                        ->sum('item_count');
+                    $originalQty = max(0, $originalQty - (int) $badCount);
+                }
+
                 $movements[] = [
                     'date' => $batch->created_at, // precise timestamp when batch was added
                     'reference_number' => $referenceNumber,

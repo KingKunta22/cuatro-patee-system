@@ -157,13 +157,10 @@ class SalesController extends Controller
             // Commit the transaction
             DB::commit();
 
-            // Handle PDF download if requested
-            if ($request->has('salesDownload') && $request->salesDownload) {
-                return $this->downloadReceipt($sale->id);
-            }
-
+            // Post-save behavior: set session flags for download/print and redirect with success
             return redirect()->route('sales.index')
-                ->with('success', 'Sale completed successfully!');
+                ->with('success', 'Sale completed successfully!')
+                ->with('download_sale_id', $request->boolean('salesDownload') ? $sale->id : null);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -178,7 +175,11 @@ class SalesController extends Controller
         
         $pdf = Pdf::loadView('pdf.receipt', compact('sale'));
         $filename = 'receipt-' . $sale->invoice_number . '.pdf';
-        
+
+        // Stream inline if requested (for print view), else force download
+        if (request()->boolean('inline')) {
+            return $pdf->stream($filename);
+        }
         return $pdf->download($filename);
     }
 

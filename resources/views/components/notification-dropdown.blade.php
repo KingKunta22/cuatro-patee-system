@@ -2,7 +2,7 @@
     open: false, 
     notifications: [], 
     unreadCount: 0,
-    readNotifications: new Set(),
+    readNotifications: new Set(JSON.parse(localStorage.getItem('readNotifications') || '[]')),
     
     loadNotifications() {
         fetch('/check-notifications')
@@ -18,6 +18,7 @@
     markAsRead(notificationId) {
         this.readNotifications.add(notificationId);
         this.unreadCount = Math.max(0, this.notifications.length - this.readNotifications.size);
+        localStorage.setItem('readNotifications', JSON.stringify(Array.from(this.readNotifications)));
     },
     
     markAllAsRead() {
@@ -25,6 +26,7 @@
             this.readNotifications.add(notification.id);
         });
         this.unreadCount = 0;
+        localStorage.setItem('readNotifications', JSON.stringify(Array.from(this.readNotifications)));
     },
     
     isRead(notificationId) {

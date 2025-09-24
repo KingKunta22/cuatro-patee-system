@@ -31,7 +31,34 @@
             <button type="submit" class="uppercase font-bold text-xl rounded-2xl bg-main text-white px-8 py-3 w-full hover:bg-main-light transition-all duration-200 ease-in my-6">
                 Log in
             </button>
+            <div class="text-center">
+                <button type="button" onclick="document.getElementById('forgotDialog').showModal()" class="text-sm text-blue-600 hover:underline">Forgot password?</button>
+            </div>
         </div>
         <div class='{{ $errors->has('login') ? 'h-auto' : 'h-0'}} transition-all duration-100 ease-in text-center w-72 mx-auto my-0 rounded-md text-white bg-red-500 text-[0.75rem]'>Incorrect credentials, please try again.</div>
+        @if($errors->has('forgot'))
+            <div class='h-auto transition-all duration-100 ease-in text-center w-72 mx-auto my-2 rounded-md text-white bg-red-500 text-[0.75rem]'>{{ $errors->first('forgot') }}</div>
+        @endif
+        @if(session('forgot_success'))
+            <div class='h-auto transition-all duration-100 ease-in text-center w-72 mx-auto my-2 rounded-md text-white bg-green-500 text-[0.75rem]'>{{ session('forgot_success') }}</div>
+        @endif
     </form>
+
+    <!-- Forgot Password Modal -->
+    <dialog id="forgotDialog" class="w-96 my-auto shadow-2xl rounded-md">
+        <h1 class="italic text-xl px-6 py-4 text-start font-bold bg-main text-white">Forgot Password</h1>
+        <div class="container px-4 py-4">
+            <form method="POST" action="{{ route('forgot.send') }}" class="grid grid-cols-1 gap-3">
+                @csrf
+                <label class="text-sm">Username</label>
+                <input type="text" name="username" class="border border-black rounded px-3 py-2" required autocomplete="off">
+                <label class="text-sm">Email</label>
+                <input type="email" name="email" class="border border-black rounded px-3 py-2" required autocomplete="off">
+                <div class="flex justify-end gap-2 mt-2">
+                    <button type="button" onclick="document.getElementById('forgotDialog').close()" class="px-3 py-2 bg-gray-300 rounded">Cancel</button>
+                    <button type="submit" class="px-3 py-2 bg-blue-600 text-white rounded">Send Code</button>
+                </div>
+            </form>
+        </div>
+    </dialog>
 </x-layout>
