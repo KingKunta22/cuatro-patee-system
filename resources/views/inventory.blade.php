@@ -847,9 +847,9 @@
                 <input type="date" x-model="newBatch.expiration_date"
                     :required="!$root.isPerishable && !(getTotalStock() === productStock)"
                     min="{{ date('Y-m-d') }}"
-                    :disabled="getTotalStock() === productStock || !productStock || productStock <= 0"
+                    :disabled="$root.isPerishable || getTotalStock() === productStock || !productStock || productStock <= 0"
                     class="px-3 py-2 text-sm border rounded-sm border-black"
-                    :class="{'bg-gray-100': getTotalStock() === productStock || !productStock || productStock <= 0}">
+                    :class="{'bg-gray-100': $root.isPerishable || getTotalStock() === productStock || !productStock || productStock <= 0}">
             </div>
 
             <!-- Show message when non-perishable -->

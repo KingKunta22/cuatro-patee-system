@@ -62,7 +62,7 @@ class DashboardController extends Controller
         $productsWithStock = Product::with(['batches'])->get();
 
         // Sales Trends Data (use the selected period)
-        $salesTrends = $this->getSalesTrendsData($salesPeriod); // Change this line
+        $salesTrends = $this->getSalesTrendsData($salesPeriod);
 
         $inStock = $productsWithStock->filter(function($product) {
             $totalStock = $product->batches->sum('quantity');
@@ -172,59 +172,61 @@ class DashboardController extends Controller
     public function getSalesTrends(Request $request)
     {
         $period = $request->get('period', 'lastMonth');
-        
-        switch ($period) {
-            case 'lastWeek':
-                // Get sales data for the last week
-                $salesData = Sale::selectRaw('DAYNAME(sale_date) as day, SUM(total_amount) as total')
-                    ->whereBetween('sale_date', [now()->subWeek(), now()])
-                    ->groupBy('day')
-                    ->orderByRaw("FIELD(day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')")
-                    ->get();
-                
-                $labels = $salesData->pluck('day');
-                $data = $salesData->pluck('total');
-                break;
-                
-            case 'lastMonth':
-                // Get sales data for the last month by weeks
-                $salesData = Sale::selectRaw('WEEK(sale_date, 1) as week, SUM(total_amount) as total')
-                    ->whereBetween('sale_date', [now()->subMonth(), now()])
-                    ->groupBy('week')
-                    ->orderBy('week')
-                    ->get();
-                
-                $labels = $salesData->map(function($item) {
-                    return 'Week ' . $item->week;
-                });
-                
-                $data = $salesData->pluck('total');
-                break;
-                
-            case 'last6Months':
-                // Get sales data for the last 6 months
-                $salesData = Sale::selectRaw('MONTHNAME(sale_date) as month, YEAR(sale_date) as year, SUM(total_amount) as total')
-                    ->whereBetween('sale_date', [now()->subMonths(6), now()])
-                    ->groupBy('year', 'month')
-                    ->orderBy('year')
-                    ->orderByRaw('MONTH(STR_TO_DATE(month, "%M"))')
-                    ->get();
-                
-                $labels = $salesData->map(function($item) {
-                    return $item->month . ' ' . $item->year;
-                });
-                
-                $data = $salesData->pluck('total');
-                break;
-                
-            default:
-                $labels = [];
-                $data = [];
+        $labels = collect();
+        $data = collect();
+
+        if ($period === 'lastWeek') {
+            // Past 7 days, label by day name
+            $salesData = Sale::selectRaw('DATE(sale_date) as d, SUM(total_amount) as total')
+                ->whereBetween('sale_date', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
+                ->groupBy('d')
+                ->orderBy('d')
+                ->get();
+
+            $range = collect(range(0, 6))->map(fn($i) => now()->subDays(6 - $i)->startOfDay());
+            $labels = $range->map(fn($dt) => $dt->format('D'));
+            $data = $range->map(function($dt) use ($salesData) {
+                $row = $salesData->firstWhere('d', $dt->toDateString());
+                return (float) ($row->total ?? 0);
+            });
+        } elseif ($period === 'lastMonth') {
+            // Past 4 full weeks (ISO week numbers)
+            $start = now()->subWeeks(3)->startOfWeek();
+            $end = now()->endOfWeek();
+            $salesData = Sale::selectRaw('YEARWEEK(sale_date, 1) as yw, SUM(total_amount) as total')
+                ->whereBetween('sale_date', [$start, $end])
+                ->groupBy('yw')
+                ->orderBy('yw')
+                ->get();
+
+            $weeks = collect(range(0, 3))->map(fn($i) => $start->copy()->addWeeks($i));
+            $labels = $weeks->map(fn($dt) => 'Week ' . $dt->isoWeek);
+            $data = $weeks->map(function($dt) use ($salesData) {
+                $yw = (int) $dt->format('oW');
+                $row = $salesData->firstWhere('yw', $yw);
+                return (float) ($row->total ?? 0);
+            });
+        } elseif ($period === 'last6Months') {
+            // Past 6 months by month name
+            $start = now()->subMonths(5)->startOfMonth();
+            $salesData = Sale::selectRaw('DATE_FORMAT(sale_date, "%Y-%m-01") as m, SUM(total_amount) as total')
+                ->where('sale_date', '>=', $start)
+                ->groupBy('m')
+                ->orderBy('m')
+                ->get();
+
+            $months = collect(range(0, 5))->map(fn($i) => $start->copy()->addMonths($i));
+            $labels = $months->map(fn($dt) => $dt->format('M Y'));
+            $data = $months->map(function($dt) use ($salesData) {
+                $mkey = $dt->format('Y-m-01');
+                $row = $salesData->firstWhere('m', $mkey);
+                return (float) ($row->total ?? 0);
+            });
         }
-        
+
         return response()->json([
-            'labels' => $labels,
-            'data' => $data
+            'labels' => $labels->values(),
+            'data' => $data->values()
         ]);
     }
 
@@ -261,11 +263,10 @@ class DashboardController extends Controller
 
     private function getSalesTrendsData($period = 'lastMonth')
     {
-        // SUPER SIMPLE - Always return test data to make sure chart works
-        return [
-            'labels' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-            'data' => [5000, 8000, 12000, 6000, 15000, 18000]
-        ];
+        // Return initial data to render page without AJAX
+        $request = new Request(['period' => $period]);
+        $response = $this->getSalesTrends($request);
+        return $response->getData(true);
     }
 
 }

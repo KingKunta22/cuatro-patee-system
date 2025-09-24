@@ -49,7 +49,7 @@
                             type="text" 
                             name="search" 
                             value="{{ request('search') }}"
-                            placeholder="Search sales..." 
+                            placeholder="Search invoice number.." 
                             class="pl-10 pr-4 py-2 border border-black rounded-md w-64"
                             autocomplete="off"
                         >

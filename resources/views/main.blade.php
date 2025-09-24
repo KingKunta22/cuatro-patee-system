@@ -60,7 +60,8 @@
             </div>
         </div>
 
-        <!-- Stats Cards -->
+        @if(Auth::user()->role === 'admin')
+        <!-- Stats Cards (Admin only) -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
 
             <!-- Total Sales -->
@@ -127,6 +128,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Middle Section: Stock Levels, Low Stock, Expiring -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
@@ -258,15 +260,15 @@
                     <div class="flex transition-transform duration-300 ease-in-out">
                         @forelse($topSellingProducts as $index => $product)
                         <div class="w-1/3 flex-shrink-0 px-3 carousel-item">
-                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow h-auto flex flex-col">
+                            <div class="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-sm transition-shadow h-auto flex flex-col">
                                 <div class="flex flex-col items-center mb-3 flex-grow">
-                                    <div class="w-56 h-60 rounded-md bg-gray-200 flex items-center justify-center overflow-hidden mb-3">
+                                    <div class="w-36 h-36 rounded-md bg-gray-50 flex items-center justify-center overflow-hidden mb-2">
                                         @if(isset($product['product']) && $product['product']->productImage)
                                             <img src="{{ asset('storage/' . $product['product']->productImage) }}" 
                                                 alt="{{ $product['product_name'] }}" 
-                                                class="w-full h-full object-cover">
+                                                class="w-full h-full object-contain">
                                         @else
-                                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                                             </svg>
                                         @endif
@@ -281,12 +283,12 @@
                                                 $sku = $product['inventory']['productSKU'] ?? 'N/A';
                                             }
                                         @endphp
-                                        <h3 class="text-sm font-semibold text-gray-800 mb-1">{{ \Illuminate\Support\Str::limit($productName, 30) }}</h3>
-                                        <p class="text-xs text-gray-500">SKU: {{ $sku }}</p>
+                                        <h3 class="text-sm font-semibold text-gray-800 mb-0">{{ \Illuminate\Support\Str::limit($productName, 30) }}</h3>
+                                        <p class="text-[11px] text-gray-500">SKU: {{ $sku }}</p>
                                     </div>
                                 </div>
                                 <div class="flex justify-between items-center mt-auto">
-                                    <span class="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                                    <span class="text-[11px] font-medium px-2 py-1 rounded bg-green-50 text-green-700 border border-green-100">
                                         Sold: {{ $product['total_sold'] }}
                                     </span>
                                     <span class="text-sm font-semibold text-gray-800">
@@ -425,17 +427,17 @@
 
 
         // SALES TRENDS CHART
-        function initSalesTrendChart() {
+        async function initSalesTrendChart() {
             const ctx = document.getElementById('salesTrendChart').getContext('2d');
             const trendsData = @json($salesTrends);
             
-            new Chart(ctx, {
+            window.salesTrendChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: trendsData.labels,
+                    labels: trendsData.labels || [],
                     datasets: [{
                         label: 'Sales',
-                        data: trendsData.data,
+                        data: trendsData.data || [],
                         borderColor: 'rgb(79, 70, 229)',
                         backgroundColor: 'rgba(79, 70, 229, 0.1)',
                         fill: true,
@@ -461,11 +463,17 @@
         }
 
         // Simple update function (optional)
-        function updateSalesTrendChart(period) {
-            // Just reload with new period parameter
-            const url = new URL(window.location.href);
-            url.searchParams.set('salesPeriod', period);
-            window.location.href = url.toString();
+        async function updateSalesTrendChart(period) {
+            try {
+                const res = await fetch(`{{ route('dashboard.sales-trends') }}?period=${encodeURIComponent(period)}`);
+                const json = await res.json();
+                const chart = window.salesTrendChart;
+                chart.data.labels = json.labels || [];
+                chart.data.datasets[0].data = json.data || [];
+                chart.update();
+            } catch (e) {
+                console.error('Failed to update sales trend chart', e);
+            }
         }
     </script>
 </x-layout>

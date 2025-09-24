@@ -393,23 +393,24 @@ class InventoryController extends Controller
     // Add this method to your InventoryController
     private function generateBatchNumber($productId)
     {
-        $year = date('y'); // Last 2 digits of year
-        $product = Product::find($productId);
-        
-        // Get the latest batch for this product in the current year
+        // Simplified per-product incremental format: B-001, B-002, ...
         $lastBatch = ProductBatch::where('product_id', $productId)
-            ->where('batch_number', 'like', "B-%")
+            ->where('batch_number', 'like', 'B-%')
             ->orderBy('created_at', 'desc')
             ->first();
-        
-        if ($lastBatch && preg_match('/B-(\d+)-(\d+)/', $lastBatch->batch_number, $matches)) {
-            $lastYear = $matches[2];
-            $nextNumber = ($lastYear == $year) ? intval($matches[1]) + 1 : 1;
+
+        if ($lastBatch && preg_match('/^B-(\d{3})$/', $lastBatch->batch_number, $matches)) {
+            $nextNumber = intval($matches[1]) + 1;
         } else {
-            $nextNumber = 1;
+            // Fallback: try to parse any B-<number> pattern
+            if ($lastBatch && preg_match('/^B-(\d+)/', $lastBatch->batch_number, $m2)) {
+                $nextNumber = intval($m2[1]) + 1;
+            } else {
+                $nextNumber = 1;
+            }
         }
-        
-        return "B-" . str_pad($nextNumber, 2, '0', STR_PAD_LEFT) . "-{$year}";
+
+        return 'B-' . str_pad((string)$nextNumber, 3, '0', STR_PAD_LEFT);
     }
 
 }
