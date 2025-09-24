@@ -289,7 +289,7 @@
                 batches: [],
                 newBatch: { quantity: '', expiration_date: '' },
                 manual_productStock: 0,
-                isPerishable: false,
+                isPerishable: false, // This will be shared across both sections
 
                 addBatch() {
                     // FIXED: Only require expiration date for perishable items
@@ -344,21 +344,32 @@
                     return true;
                 }
             }" class="px-3 pt-1">
-                <div class="container mb-1 px-4 font-semibold flex">
-                    <label class="cursor-pointer">
+                <div class="container mb-1 px-4 font-semibold flex w-full">
+                    <label class="cursor-pointer flex-nowrap text-nowrap whitespace-nowrap">
                         <input type="radio" name="addMethod" value="manual" x-model="addMethod">
                         Add Manually
                     </label>
-                    <label class="ml-4 cursor-pointer">
+                    <label class="ml-4 cursor-pointer flex-nowrap text-nowrap whitespace-nowrap">
                         <input type="radio" name="addMethod" value="po" x-model="addMethod">
                         Add from Purchase Order
                     </label>
+
+                    <div class="container place-items-end ml-auto" title="Products without expiry dates (Non-perishable products)">
+                        <label class="flex items-center text-sm">
+                            <input type="checkbox" name="shared_is_perishable" value="1" 
+                                x-model="isPerishable" class="mr-1">
+                            No Expiry
+                        </label>
+                    </div>
                 </div>
 
                 <!-- FORM WRAPS EVERYTHING -->
                 <form id="addProductForm" x-ref="addProductForm" action="{{ route('inventory.store')}}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="add_method" x-model="addMethod">
+
+                    <input type="hidden" name="manual_is_perishable" :value="isPerishable ? '1' : '0'">
+                    <input type="hidden" name="is_perishable" :value="isPerishable ? '1' : '0'">
 
                     <!-- MANUAL SECTION -->
                     <section x-show="addMethod === 'manual'" class="space-y-6">
@@ -407,13 +418,6 @@
                                     </select>
                                 </div>
 
-                                <div class="container flex flex-col text-start col-span-2">
-                                    <label class="flex items-center mt-6">
-                                        <input type="checkbox" name="manual_is_perishable" value="1" 
-                                            x-model="isPerishable" class="mr-2">
-                                        Non-perishable product (no expiration date)
-                                    </label>
-                                </div>
 
                                 <x-form.form-input label="Selling Price"  class="col-span-1" name="manual_productSellingPrice" value="" 
                                     type="number" step="0.01" min="0" x-bind:required="addMethod === 'manual'"/>
@@ -439,19 +443,19 @@
                                 </div>
 
                                 <!-- INFORMATION TEXT -->
-                                <div class="container text-xs col-span-6">
-                                    <p class='text-xs text-gray-400'>
-                                        <strong>Batch Management:</strong> Add batches with quantities and expiry dates. Total batches must equal total stock.
+                                <div class="container text-xs col-span-6 flex items-center content-start justify-start">
+                                    <p class='text-xs text-gray-400 w-auto'>
+                                        <strong>Batch Management:</strong> '
+                                        Add batches with quantities and expiry dates. Total batches must equal total stock. <br> You may check the No Expiry box (upper right corner) for non-perishable items.
                                     </p>
                                 </div>
-
                                 <div class="container flex flex-col text-start col-span-1">
                                     <label>Quantity</label>
                                     <input type="number" x-model="newBatch.quantity" min="1" 
                                         :max="manual_productStock ? manual_productStock - getTotalStock() : 0"
-                                        :disabled="!manual_productStock || manual_productStock <= 0"
+                                        :disabled="isPerishable || !manual_productStock || manual_productStock <= 0"
                                         class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
-                                        :class="{'bg-gray-100': !manual_productStock || manual_productStock <= 0}">
+                                        :class="{'bg-gray-100': isPerishable || !manual_productStock || manual_productStock <= 0}">
                                 </div>
                                 <div class="container flex flex-col text-start col-span-2" x-show="!isPerishable">
                                     <label>Expiration Date</label>
@@ -467,7 +471,7 @@
                                 <div class="container flex flex-col text-start col-span-2" x-show="isPerishable">
                                     <label>Expiration Date</label>
                                     <div class="px-3 py-2 text-sm border rounded-sm border-black bg-gray-100 text-gray-500">
-                                        Not required for non-perishable items
+                                        Not required
                                     </div>
                                 </div>
 
@@ -484,7 +488,7 @@
                                 </div>
 
                                 <!-- STOCK ASSIGNMENT SUMMARY - ONLY SHOW FOR PERISHABLE ITEMS -->
-                                <template x-if="!isPerishable">
+                                <template x-if="!isPerishable && manual_productStock > 0">
                                     <div class="text-sm col-span-6">
                                         <span class="font-semibold" :class="{
                                             'text-green-600': getTotalStock() == manual_productStock,
@@ -543,7 +547,7 @@
                                 <div class="border w-auto rounded-md border-solid border-black mt-3 h-28">
                                     <div class="text-center py-8 text-gray-500">
                                         <p x-show="!isPerishable">No batch added yet. Adding batch is required to assign expiry dates for the items</p>
-                                        <p x-show="isPerishable">No batch added yet. Click "Add Batch" to create inventory batches</p>
+                                        <p x-show="isPerishable">Disabled for non-perishable items</p>
                                     </div>
                                 </div>
                             </template>
@@ -574,7 +578,6 @@
             badItemCount: 0,
             batches: [],
             newBatch: { quantity: '', expiration_date: '' },
-            isPerishable: false,
             
             async getItems(poId) {
                 this.poId = poId;
@@ -758,14 +761,6 @@
                 </select>
             </div>
 
-            <div class="container flex flex-col text-start col-span-2">
-                <label class="flex items-center mt-6">
-                    <input type="checkbox" name="is_perishable" value="1" 
-                        x-model="isPerishable" class="mr-2">
-                    Non-perishable product (no expiration date)
-                </label>
-            </div>
-
             <!-- HIDDEN PRODUCT STOCK FIELD -->
             <input type="hidden" name="productStock" x-model="productStock" x-bind:required="addMethod === 'po'">
 
@@ -828,8 +823,9 @@
 
             <!-- INFORMATION TEXT -->
             <div class="container text-xs col-span-6">
-                <p class='text-xs text-gray-400'>
-                    <strong>Batch Management:</strong> Add batches with quantities and expiry dates. Total batches must equal total stock.
+                <p class='text-xs text-gray-400 w-auto'>
+                    <strong>Batch Management:</strong> '
+                    Add batches with quantities and expiry dates. Total batches must equal total stock. <br> You may check the No Expiry box (upper right corner) for non-perishable items.
                 </p>
             </div>
 
@@ -837,11 +833,11 @@
                 <label>Quantity</label>
                 <input type="number" x-model="newBatch.quantity" min="1" 
                     :max="productStock ? productStock - getTotalStock() : 0"
-                    :disabled="!productStock || productStock <= 0"
+                    :disabled="isPerishable || !productStock || productStock <= 0"
                     class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
-                    :class="{'bg-gray-100': !productStock || productStock <= 0}">
+                    :class="{'bg-gray-100': isPerishable || !productStock || productStock <= 0}">
             </div>
-            <div class="container flex flex-col text-start col-span-2">
+            <div class="container flex flex-col text-start col-span-2" x-show="!isPerishable">
                 <label>Expiration Date</label>
                 <input type="date" x-model="newBatch.expiration_date"
                     :required="!isPerishable"
@@ -855,7 +851,7 @@
             <div class="container flex flex-col text-start col-span-2" x-show="isPerishable">
                 <label>Expiration Date</label>
                 <div class="px-3 py-2 text-sm border rounded-sm border-black bg-gray-100 text-gray-500">
-                    Not required for non-perishable items
+                    Not required
                 </div>
             </div>
             <div class="container flex flex-col mb-1 col-span-2 place-items-end content-end items-center justify-end">
@@ -872,7 +868,7 @@
         </div>
 
         <!-- STOCK ASSIGNMENT SUMMARY -->
-        <div class="mt-3 text-sm col-span-6" x-show="productStock > 0 || batches.length > 0">
+        <div class="mt-3 text-sm col-span-6" x-show="(!isPerishable && productStock > 0) || batches.length > 0">
             <span class="font-semibold" :class="{
                 'text-green-600': getTotalStock() == productStock, 
                 'text-yellow-600': getTotalStock() < productStock,
@@ -924,7 +920,8 @@
             <!-- EMPTY STATE -->
             <div class="border w-auto rounded-md border-solid border-black mt-3 h-28">
                 <div class="text-center py-8 text-gray-500">
-                    <p>No batch added yet. Adding batch is required to assign expiry dates for the items</p>
+                    <p x-show="!isPerishable">No batch added yet. Adding batch is required to assign expiry dates for the items</p>
+                    <p x-show="isPerishable">Disabled for non-perishable items</p>
                 </div>
             </div>
         </template>
