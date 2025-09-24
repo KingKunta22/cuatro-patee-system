@@ -191,34 +191,37 @@ class ReportsController extends Controller
 
     private function getProductMovementsData($timePeriod)
     {
-        // Get sales data for outflow with time filtering
+        // Get sales data for outflow with time filtering (fetch with items and batch)
         $salesQuery = Sale::with(['items', 'items.productBatch.product']);
         $this->applyTimeFilter($salesQuery, $timePeriod, 'sale_date');
-        $sales = $salesQuery->orderBy('sale_date', 'DESC')->get();
-        
+        $sales = $salesQuery->orderBy('created_at', 'DESC')->get();
+
         // Get products with their batches for inflow with time filtering
         $productsQuery = Product::with(['brand', 'category', 'batches', 'batches.purchaseOrder']);
         $this->applyTimeFilter($productsQuery, $timePeriod, 'created_at');
         $products = $productsQuery->orderBy('created_at', 'DESC')->get();
-        
+
+        // Prefetch total sold quantities per batch to reconstruct original inflow
+        $soldByBatch = SaleItem::select('product_batch_id', DB::raw('SUM(quantity) as qty_sold'))
+            ->groupBy('product_batch_id')
+            ->pluck('qty_sold', 'product_batch_id');
+
         $movements = [];
-        
-        // Process sales (outflow) - UNCHANGED (this works correctly)
+
+        // Outflow movements: use precise timestamp for ordering
         foreach ($sales as $sale) {
             foreach ($sale->items as $item) {
                 $productName = $item->product_name;
-                
-                // Clean up product name by removing SKU if it exists
                 if (!empty($productName)) {
                     $productName = preg_replace('/\s*\([^)]*\)\s*$/', '', $productName);
                 } elseif ($item->product && !empty($item->product->productName)) {
                     $productName = preg_replace('/\s*\([^)]*\)\s*$/', '', $item->product->productName);
                 } else {
-                    $productName = 'Product #' . $item->product_id;
+                    $productName = 'Product #' . ($item->product_id ?? $item->product_batch_id);
                 }
-                
+
                 $movements[] = [
-                    'date' => $sale->sale_date,
+                    'date' => $sale->created_at,
                     'reference_number' => $sale->invoice_number,
                     'product_name' => $productName,
                     'quantity' => -$item->quantity,
@@ -227,34 +230,36 @@ class ReportsController extends Controller
                 ];
             }
         }
-        
-        // FIXED: Process product additions as INDIVIDUAL batch additions
+
+        // Inflow movements: reconstruct immutable original batch quantity
         foreach ($products as $product) {
             foreach ($product->batches as $batch) {
                 $source = 'Manual Addition';
                 $referenceNumber = 'Manually added (' . ($product->productSKU ?? 'No SKU') . ')';
-                
                 if ($batch->purchase_order_id && $batch->purchaseOrder) {
                     $source = 'Purchase Order';
                     $referenceNumber = $batch->purchaseOrder->orderNumber;
                 }
-                
+
+                $soldQty = (int) ($soldByBatch[$batch->id] ?? 0);
+                $originalQty = (int) $batch->quantity + $soldQty;
+
                 $movements[] = [
-                    'date' => $batch->created_at, // When batch was actually added
+                    'date' => $batch->created_at,
                     'reference_number' => $referenceNumber,
                     'product_name' => $product->productName,
-                    'quantity' => $batch->quantity, // Original batch quantity
+                    'quantity' => $originalQty,
                     'type' => 'inflow',
                     'remarks' => $source
                 ];
             }
         }
-        
-        // FIXED: Simple date-based sorting (newest first)
+
+        // Strict newest-first sort by timestamp only
         usort($movements, function($a, $b) {
             return strtotime($b['date']) <=> strtotime($a['date']);
         });
-        
+
         // Paginate movements
         $perPage = 10;
         $currentPage = request()->get('product_page', 1);

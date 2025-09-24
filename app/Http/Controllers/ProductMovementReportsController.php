@@ -24,13 +24,21 @@ class ProductMovementReportsController extends Controller
         $products = Product::with(['brand', 'category', 'batches', 'batches.purchaseOrder'])
                             ->orderBy('created_at', 'DESC')
                             ->get();
+
+        // Prefetch total sold quantities per batch to reconstruct original inflow quantities
+        $soldByBatch = SaleItem::select('product_batch_id', DB::raw('SUM(quantity) as qty_sold'))
+            ->groupBy('product_batch_id')
+            ->pluck('qty_sold', 'product_batch_id');
         
         // Combine data into movements array
-        $movements = $this->combineMovements($sales, $products);
+        $movements = $this->combineMovements($sales, $products, $soldByBatch);
         
-        // FIXED: Simple date-based sorting (newest first)
+        // Strict date-time sorting (newest first). Expect full timestamps for both inflow/outflow.
         usort($movements, function($a, $b) {
-            return strtotime($b['date']) <=> strtotime($a['date']);
+            $cmp = strtotime($b['date']) <=> strtotime($a['date']);
+            if ($cmp !== 0) return $cmp;
+            // Secondary tie-breaker: outflow after inflow for identical timestamps
+            return strcmp($a['type'], $b['type']);
         });
         
         // Calculate stats
@@ -45,17 +53,17 @@ class ProductMovementReportsController extends Controller
         ]));
     }
     
-    private function combineMovements($sales, $products)
+    private function combineMovements($sales, $products, $soldByBatch)
     {
         $movements = [];
 
-        // Process sales (outflow) - UNCHANGED (this works correctly)
+        // Process sales (outflow) with precise timestamps (use sale created_at)
         foreach ($sales as $sale) {
             foreach ($sale->items as $item) {
                 $productName = $this->getProductNameForSaleItem($item);
                 
                 $movements[] = [
-                    'date' => $sale->sale_date,
+                    'date' => $sale->created_at, // precise timestamp for ordering
                     'reference_number' => $sale->invoice_number,
                     'product_name' => $productName,
                     'quantity' => -$item->quantity,
@@ -65,7 +73,7 @@ class ProductMovementReportsController extends Controller
             }
         }
         
-        // FIXED: Process product additions as INDIVIDUAL batch additions
+        // Process product additions as INDIVIDUAL batch additions
         foreach ($products as $product) {
             foreach ($product->batches as $batch) {
                 $source = 'Manual Addition';
@@ -76,11 +84,15 @@ class ProductMovementReportsController extends Controller
                     $referenceNumber = $batch->purchaseOrder->orderNumber;
                 }
                 
+                // Reconstruct original inflow: current qty + total sold from this batch
+                $soldQty = (int) ($soldByBatch[$batch->id] ?? 0);
+                $originalQty = (int) $batch->quantity + $soldQty;
+
                 $movements[] = [
-                    'date' => $batch->created_at, // When batch was actually added
+                    'date' => $batch->created_at, // precise timestamp when batch was added
                     'reference_number' => $referenceNumber,
                     'product_name' => $product->productName,
-                    'quantity' => $batch->quantity, // Original batch quantity
+                    'quantity' => $originalQty, // immutable original inflow for display
                     'type' => 'inflow',
                     'remarks' => $source
                 ];

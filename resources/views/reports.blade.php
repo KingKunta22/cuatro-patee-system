@@ -95,7 +95,7 @@
                     PO Reports
                 </a>
             </div>
-            <button onclick="Q  E" class="flex items-center space-x-1 cursor-pointer bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition-colors">
+            <button @click="printCurrentReport(activeTab)" class="flex items-center space-x-1 cursor-pointer bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 transition-colors">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                 </svg>
@@ -105,7 +105,7 @@
 
         <!-- MAIN CONTENT (TAB SWITCHING with x-show) -->
         <div class="bg-white rounded-lg w-full h-full">
-            <div x-show="activeTab === 'product'">
+            <div x-show="activeTab === 'product'" id="reports-product">
                 @include('reports.product-movement-reports', [
                     'movementsPaginator' => $productMovements['movementsPaginator'],
                     'totalStockIn' => $productMovements['totalStockIn'],
@@ -118,21 +118,21 @@
                 ])
             </div>
 
-            <div x-show="activeTab === 'sales'">
+            <div x-show="activeTab === 'sales'" id="reports-sales">
                 @include('reports.sales-reports', [
                     'timePeriod' => $timePeriod ?? 'all',
                     'sales' => $sales
                 ])
             </div>
 
-            <div x-show="activeTab === 'inventory'">
+            <div x-show="activeTab === 'inventory'" id="reports-inventory">
                 @include('reports.inventory-reports', [
                     'products' => $inventories, // This passes the products data
                     'timePeriod' => $timePeriod ?? 'all'
                 ])
             </div>
 
-            <div x-show="activeTab === 'po'">
+            <div x-show="activeTab === 'po'" id="reports-po">
                 @include('reports.purchase-order-reports', [
                     'purchaseOrders' => $purchaseOrders, 
                     'timePeriod' => $timePeriod ?? 'all'
