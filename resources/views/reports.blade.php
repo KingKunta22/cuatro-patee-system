@@ -125,8 +125,6 @@
             <div x-show="activeTab === 'inventory'">
                 @include('reports.inventory-reports', [
                     'products' => $inventories, // This passes the products data
-                    'totalStockIn' => $totalStockIn, 
-                    'totalStockOut' => $totalStockOut,
                     'timePeriod' => $timePeriod ?? 'all'
                 ])
             </div>

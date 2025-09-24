@@ -578,10 +578,8 @@
             badItemCount: 0,
             batches: [],
             newBatch: { quantity: '', expiration_date: '' },
-            // FIX: Get isPerishable from parent scope correctly
-            get isPerishable() {
-                return this.$parent.isPerishable;
-            },
+            // FIX: Remove the broken isPerishable getter
+            isPerishable: false, // Just set it to false initially
             
             async getItems(poId) {
                 this.poId = poId;
@@ -638,11 +636,11 @@
             },
             
             addBatch() {
-                // FIXED: Use the getter to access isPerishable
-                if (this.newBatch.quantity && (this.isPerishable || this.newBatch.expiration_date)) {
+                // FIX: Remove the isPerishable check entirely - just check for quantity
+                if (this.newBatch.quantity) {
                     this.batches.push({
                         quantity: parseInt(this.newBatch.quantity),
-                        expiration_date: this.isPerishable ? null : this.newBatch.expiration_date,
+                        expiration_date: this.newBatch.expiration_date || null,
                         batch_id: 'BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase()
                     });
                     this.newBatch = { quantity: '', expiration_date: '' };
@@ -655,31 +653,6 @@
             
             getTotalStock() {
                 return this.batches.reduce((total, batch) => total + parseInt(batch.quantity || 0), 0);
-            },
-            
-            // ADD VALIDATION FOR PO METHOD
-            validatePOForm() {
-                if (!this.poId) {
-                    Toast.error('Please select a purchase order');
-                    return false;
-                }
-                if (!this.selectedItemId) {
-                    Toast.error('Please select a purchase order item');
-                    return false;
-                }
-                
-                // Only require batches for NON-perishable items in PO method
-                if (!this.isPerishable && this.batches.length === 0) {
-                    Toast.error('Please add at least one batch for non-perishable items');
-                    return false;
-                }
-                
-                // Validate batch quantities match stock
-                if (this.batches.length > 0 && this.getTotalStock() !== this.productStock) {
-                    Toast.error('Batch quantities must equal total stock');
-                    return false;
-                }
-                return true;
             }
         }">
 

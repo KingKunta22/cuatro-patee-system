@@ -7,6 +7,23 @@
     $totalCost = $totalCost ?? 0;
     $totalProfit = $totalProfit ?? 0;
 @endphp
+
+<!-- STOCK IN/OUT STATS -->
+<div class="container flex items-start justify-start place-content-start w-auto gap-x-4 text-white mr-auto mb-4 pl-0 p-4">
+    <div class="container flex flex-col px-6 py-3 w-64 text-start rounded-md bg-[#5C717B]">
+        <span class="font-semibold text-xl">{{ number_format($totalStockIn) }}</span>
+        <span class="text-xs">Total Stock In</span>
+    </div>
+    <div class="container flex flex-col px-6 py-3 w-64 text-start rounded-md bg-[#2C3747]">
+        <span class="font-semibold text-xl">{{ number_format($totalStockOut) }}</span>
+        <span class="text-xs">Total Stock Out</span>
+    </div>
+    <div class="container flex flex-col px-6 py-3 w-64 text-start rounded-md bg-[#5C717B]">
+        <span class="font-semibold text-xl">{{ number_format($totalStockIn - $totalStockOut) }}</span>
+        <span class="text-xs">Net Stock Movement</span>
+    </div>
+</div>
+
 <section class="border w-full rounded-md border-solid border-black my-3 shadow-sm">
     <table class="w-full border-collapse table-fixed">
         <thead class="bg-main text-white">

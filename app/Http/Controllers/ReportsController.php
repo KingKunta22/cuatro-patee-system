@@ -28,9 +28,6 @@ class ReportsController extends Controller
         // Data for Sales tab with time period filtering - ONLY FOR ADMINS
         $sales = $this->canViewSalesReports() ? $this->getSalesData($timePeriod) : null;
 
-        // Calculate stock totals with time period filtering
-        list($totalStockIn, $totalStockOut) = $this->getStockTotals($timePeriod);
-
         // Calculate revenue stats with time period filtering - ONLY FOR ADMINS
         if ($this->canViewSalesReports()) {
             list($totalRevenue, $totalCost, $totalProfit) = $this->getRevenueStats($timePeriod);
@@ -38,15 +35,13 @@ class ReportsController extends Controller
             $totalRevenue = $totalCost = $totalProfit = 0;
         }
 
-        // Get product movements data
+        // Get product movements data (this already includes stock totals)
         $productMovements = $this->getProductMovementsData($timePeriod);
 
         return view('reports', compact(
             'inventories', 
             'purchaseOrders', 
             'sales', 
-            'totalStockIn', 
-            'totalStockOut', 
             'totalRevenue', 
             'totalCost', 
             'totalProfit',
