@@ -265,7 +265,7 @@
         <x-modal.createModal x-ref="viewOrderDetails{{ $order->id}}" class="w-4/5">
             <x-slot:dialogTitle>DELIVERY ID: {{ $deliveryId }}</x-slot:dialogTitle>            
             <div class="container">
-                <div class="container grid grid-cols-6 px-2 py-4">
+                <div class="container grid grid-cols-6">
                     {{-- ORDER DETAILS SECTION --}}
                     <div class="container col-span-2 px-4 py-1">
                         <h1 class="flex items-start font-bold text-lg mb-4">
@@ -350,24 +350,36 @@
                         </div>
 
                         <!-- Order Status Form -->
-                        <form action="{{ route('delivery-management.updateStatus')}}" method="POST" class="w-full" id="statusForm{{ $order->id }}">
-                            @csrf
-                            <input type="hidden" name="order_id" value="{{ $order->id }}">
-                            
-                            <div class="w-full">
-                                <label for="orderStatus{{ $order->id }}" class="block text-xs font-medium mb-1">Update Order Status</label>
-                                <select name="status" id="orderStatus{{ $order->id }}" class="w-full px-2 py-1 text-sm border rounded-xs border-black" required>
-                                    <option value="Pending" {{ $deliveryStatus === 'Pending' ? 'selected' : '' }}>Pending</option>
-                                    <option value="Confirmed" {{ $deliveryStatus === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
-                                    <option value="Delivered" {{ $deliveryStatus === 'Delivered' ? 'selected' : '' }}>Delivered</option>
-                                    <option value="Cancelled" {{ $deliveryStatus === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                                </select>
+                        @if($deliveryStatus === 'Pending' || $deliveryStatus === 'Confirmed')
+                            <form action="{{ route('delivery-management.updateStatus')}}" method="POST" class="w-full" id="statusForm{{ $order->id }}">
+                                @csrf
+                                <input type="hidden" name="order_id" value="{{ $order->id }}">
                                 
-                                <button type="submit" class="mt-2 w-full uppercase px-2 py-2 font-bold text-xs bg-button-save text-white rounded-sm hover:bg-green-600 transition-colors duration-200">
-                                    Update Status
-                                </button>
+                                <div class="w-full">
+                                    <label for="orderStatus{{ $order->id }}" class="block text-xs font-medium mb-1">Update Order Status</label>
+                                    <select name="status" id="orderStatus{{ $order->id }}" class="w-full px-2 py-1 text-sm border rounded-xs border-black" required>
+                                        <option value="Pending" {{ $deliveryStatus === 'Pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="Confirmed" {{ $deliveryStatus === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
+                                        <option value="Delivered" {{ $deliveryStatus === 'Delivered' ? 'selected' : '' }}>Delivered</option>
+                                        <option value="Cancelled" {{ $deliveryStatus === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
+                                    </select>
+                                    
+                                    <button type="button" 
+                                            onclick="handleStatusUpdate({{ $order->id }})" 
+                                            class="mt-2 w-full uppercase px-2 py-2 font-bold text-xs bg-button-save text-white rounded-sm hover:bg-green-600 transition-colors duration-200">
+                                        Update Status
+                                    </button>
+                                </div>
+                            </form>
+                        @else
+                            <div class="w-full">
+                                <label class="block text-xs font-medium mb-1">Current Status</label>
+                                <div class="w-full px-2 py-1 text-sm border rounded-xs border-black bg-gray-100">
+                                    {{ $deliveryStatus }}
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">Status can no longer be changed for delivered or cancelled orders.</p>
                             </div>
-                        </form>
+                        @endif
                     </div>
 
                     {{-- SUPPLIER INFORMATION SECTION --}}
@@ -393,127 +405,161 @@
                         </div>
                     </div>
 
-{{-- ESTIMATED PROGRESS SECTION --}}
-<div class="container col-span-2 px-6 py-1">
-    <h1 class="flex items-start font-semibold text-lg mb-4">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 mr-2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
-        </svg>
-        Delivery Progress
-    </h1>
+                    {{-- ESTIMATED PROGRESS SECTION --}}
+                    <div class="container col-span-2 px-6 py-1">
+                        <h1 class="flex items-start font-semibold text-lg mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8 mr-2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12" />
+                            </svg>
+                            Delivery Progress
+                        </h1>
 
-    @if($deliveryStatus === 'Cancelled')
-        <!-- Cancelled Status Display -->
-        <div class="p-4 rounded-lg border mb-4 bg-red-50 border-red-200">
-            <p class="text-sm font-semibold mb-1 text-red-800">Delivery Cancelled</p>
-            <p class="text-md font-medium text-red-900">Order has been cancelled</p>
-            <p class="text-sm text-red-700 mt-1">This delivery will not be processed further.</p>
-            <p class="text-xs text-red-600 mt-2">
-                Cancelled on 
-                @if($delivery && $delivery->status_updated_at)
-                    {{ \Carbon\Carbon::parse($delivery->status_updated_at)->format('M d, Y') }}
-                @else
-                    {{ \Carbon\Carbon::now()->format('M d, Y') }}
-                @endif
-            </p>
-        </div>
-    @else
-        <!-- Progress Bar (Only show for non-cancelled statuses) -->
-        <div class="mb-5">
-            <div class="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Order Date: {{ $orderDate->format('M d, Y') }}</span>
-                <span>Expected: {{ $deliveryDate->format('M d, Y') }}</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                <div class="h-2.5 rounded-full {{ $isDelivered ? 'bg-green-600' : ($isDelayed ? 'bg-red-600' : 'bg-blue-600') }}" 
-                    style="width: {{ $percentage }}%"></div>
-            </div>
-            <div class="flex justify-between text-xs text-gray-500">
-                <span>{{ $daysPassed }} day{{ $daysPassed != 1 ? 's' : '' }} passed</span>
-                @if($isDelivered)
-                    <div class="flex items-center text-green-600">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>
-                            Delivered on 
-                            @if($delivery && $delivery->status_updated_at)
-                                {{ \Carbon\Carbon::parse($delivery->status_updated_at)->format('M d, Y') }}
-                            @else
-                                {{ $deliveryDate->format('M d, Y') }}
-                            @endif
-                        </span>
+                        @if($deliveryStatus === 'Cancelled')
+                            <!-- Cancelled Status Display -->
+                            <div class="p-4 rounded-lg border mb-4 bg-red-50 border-red-200">
+                                <p class="text-sm font-semibold mb-1 text-red-800">Delivery Cancelled</p>
+                                <p class="text-md font-medium text-red-900">Order has been cancelled</p>
+                                <p class="text-sm text-red-700 mt-1">This delivery will not be processed further.</p>
+                                <p class="text-xs text-red-600 mt-2">
+                                    Cancelled on 
+                                    @if($delivery && $delivery->status_updated_at)
+                                        {{ \Carbon\Carbon::parse($delivery->status_updated_at)->format('M d, Y') }}
+                                    @else
+                                        {{ \Carbon\Carbon::now()->format('M d, Y') }}
+                                    @endif
+                                </p>
+                            </div>
+                        @else
+                            <!-- Progress Bar (Only show for non-cancelled statuses) -->
+                            <div class="mb-5">
+                                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                                    <span>Order Date: {{ $orderDate->format('M d, Y') }}</span>
+                                    <span>Expected: {{ $deliveryDate->format('M d, Y') }}</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                                    <div class="h-2.5 rounded-full {{ $isDelivered ? 'bg-green-600' : ($isDelayed ? 'bg-red-600' : 'bg-blue-600') }}" 
+                                        style="width: {{ $percentage }}%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500">
+                                    <span>{{ $daysPassed }} day{{ $daysPassed != 1 ? 's' : '' }} passed</span>
+                                    @if($isDelivered)
+                                        <div class="flex items-center text-green-600">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span>
+                                                Delivered on 
+                                                @if($delivery && $delivery->status_updated_at)
+                                                    {{ \Carbon\Carbon::parse($delivery->status_updated_at)->format('M d, Y') }}
+                                                @else
+                                                    {{ $deliveryDate->format('M d, Y') }}
+                                                @endif
+                                            </span>
+                                        </div>
+                                    @elseif($isDelayed)
+                                        <span class="text-red-600">{{ abs($daysRemaining) }} day{{ abs($daysRemaining) != 1 ? 's' : '' }} delayed</span>
+                                    @else
+                                        <span>{{ $daysRemaining }} day{{ $daysRemaining != 1 ? 's' : '' }} remaining</span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Phase Indicators -->
+                            <div class="relative mb-6">
+                                <div class="absolute left-0 right-0 top-3 h-0.5 bg-gray-200"></div>
+                                <div class="absolute left-0 top-3 h-0.5 {{ $isDelivered ? 'bg-green-600' : ($isDelayed ? 'bg-red-600' : 'bg-blue-600') }}" 
+                                    style="width: {{ $percentage }}%"></div>
+                                
+                                <div class="flex justify-between relative">
+                                    @for($i = 1; $i <= 4; $i++)
+                                        <div class="flex flex-col items-center">
+                                            <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs z-10
+                                                {{ $i <= $currentPhase ? ($isDelivered ? 'bg-green-600 text-white' : ($isDelayed ? 'bg-red-600 text-white' : 'bg-blue-600 text-white')) : 'bg-gray-200 text-gray-600' }}">
+                                                {{ $i }}
+                                            </div>
+                                            <div class="text-center mt-2 w-20">
+                                                <p class="text-xs font-medium {{ $i <= $currentPhase ? ($isDelivered ? 'text-green-600' : ($isDelayed ? 'text-red-600' : 'text-blue-600')) : 'text-gray-500' }}">
+                                                    {{ $phases[$i]['name'] }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    @endfor
+                                </div>
+                            </div>
+
+                            <!-- Current Status -->
+                            <div class="p-4 rounded-lg border mb-4 {{ $isDelivered ? 'bg-green-50 border-green-200' : ($isDelayed ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-100') }}">
+                                <p class="text-sm font-semibold mb-1 {{ $isDelivered ? 'text-green-800' : ($isDelayed ? 'text-red-800' : 'text-blue-800') }}">Current Status</p>
+                                
+                                @if($isDelivered)
+                                    <p class="text-md font-medium text-green-900">{{ $phases[4]['name'] }}</p>
+                                    <p class="text-sm text-green-700 mt-1">{{ $phases[4]['desc'] }}</p>
+                                    <p class="text-xs text-green-600 mt-2">Delivery completed on {{ \Carbon\Carbon::parse($delivery->status_updated_at)->format('M d, Y') }}</p>
+                                @elseif($isDelayed)
+                                    <p class="text-md font-medium text-red-900">Delayed</p>
+                                    <p class="text-sm text-red-700 mt-1">Expected delivery was {{ abs($daysRemaining) }} day{{ abs($daysRemaining) != 1 ? 's' : '' }} ago</p>
+                                    <p class="text-xs text-red-600 mt-2">Please contact the supplier for an update</p>
+                                @else
+                                    <p class="text-md font-medium text-blue-900">{{ $phases[$currentPhase]['name'] }}</p>
+                                    <p class="text-sm text-blue-700 mt-1">{{ $phases[$currentPhase]['desc'] }}</p>
+                                    <p class="text-xs text-blue-600 mt-2">
+                                        Estimated delivery in {{ $daysRemaining }} day{{ $daysRemaining != 1 ? 's' : '' }}
+                                        ({{ $deliveryDate->format('M d, Y') }})
+                                    </p>
+                                @endif
+                            </div>
+
+                            <!-- Note -->
+                            <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                                <p class="text-xs text-yellow-800 font-medium mb-1">Please Note:</p>
+                                <p class="text-xs text-yellow-700">
+                                    This progress tracker shows estimated timelines based on order and expected delivery dates. 
+                                    The status shown here is for planning purposes only. The actual delivery status is determined
+                                    by the "Status" field in the order details, which may be updated by your team.
+                                </p>
+                                <p class="text-xs text-yellow-700 mt-1">
+                                    Progress is divided into 4 equal phases based on the lead time between order and expected delivery dates.
+                                </p>
+                            </div>
+                        @endif
                     </div>
-                @elseif($isDelayed)
-                    <span class="text-red-600">{{ abs($daysRemaining) }} day{{ abs($daysRemaining) != 1 ? 's' : '' }} delayed</span>
-                @else
-                    <span>{{ $daysRemaining }} day{{ $daysRemaining != 1 ? 's' : '' }} remaining</span>
-                @endif
-            </div>
-        </div>
-
-        <!-- Phase Indicators -->
-        <div class="relative mb-6">
-            <div class="absolute left-0 right-0 top-3 h-0.5 bg-gray-200"></div>
-            <div class="absolute left-0 top-3 h-0.5 {{ $isDelivered ? 'bg-green-600' : ($isDelayed ? 'bg-red-600' : 'bg-blue-600') }}" 
-                style="width: {{ $percentage }}%"></div>
-            
-            <div class="flex justify-between relative">
-                @for($i = 1; $i <= 4; $i++)
-                    <div class="flex flex-col items-center">
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center text-xs z-10
-                            {{ $i <= $currentPhase ? ($isDelivered ? 'bg-green-600 text-white' : ($isDelayed ? 'bg-red-600 text-white' : 'bg-blue-600 text-white')) : 'bg-gray-200 text-gray-600' }}">
-                            {{ $i }}
-                        </div>
-                        <div class="text-center mt-2 w-20">
-                            <p class="text-xs font-medium {{ $i <= $currentPhase ? ($isDelivered ? 'text-green-600' : ($isDelayed ? 'text-red-600' : 'text-blue-600')) : 'text-gray-500' }}">
-                                {{ $phases[$i]['name'] }}
-                            </p>
-                        </div>
-                    </div>
-                @endfor
-            </div>
-        </div>
-
-        <!-- Current Status -->
-        <div class="p-4 rounded-lg border mb-4 {{ $isDelivered ? 'bg-green-50 border-green-200' : ($isDelayed ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-100') }}">
-            <p class="text-sm font-semibold mb-1 {{ $isDelivered ? 'text-green-800' : ($isDelayed ? 'text-red-800' : 'text-blue-800') }}">Current Status</p>
-            
-            @if($isDelivered)
-                <p class="text-md font-medium text-green-900">{{ $phases[4]['name'] }}</p>
-                <p class="text-sm text-green-700 mt-1">{{ $phases[4]['desc'] }}</p>
-                <p class="text-xs text-green-600 mt-2">Delivery completed on {{ \Carbon\Carbon::parse($delivery->status_updated_at)->format('M d, Y') }}</p>
-            @elseif($isDelayed)
-                <p class="text-md font-medium text-red-900">Delayed</p>
-                <p class="text-sm text-red-700 mt-1">Expected delivery was {{ abs($daysRemaining) }} day{{ abs($daysRemaining) != 1 ? 's' : '' }} ago</p>
-                <p class="text-xs text-red-600 mt-2">Please contact the supplier for an update</p>
-            @else
-                <p class="text-md font-medium text-blue-900">{{ $phases[$currentPhase]['name'] }}</p>
-                <p class="text-sm text-blue-700 mt-1">{{ $phases[$currentPhase]['desc'] }}</p>
-                <p class="text-xs text-blue-600 mt-2">
-                    Estimated delivery in {{ $daysRemaining }} day{{ $daysRemaining != 1 ? 's' : '' }}
-                    ({{ $deliveryDate->format('M d, Y') }})
-                </p>
-            @endif
-        </div>
-
-        <!-- Note -->
-        <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-            <p class="text-xs text-yellow-800 font-medium mb-1">Please Note:</p>
-            <p class="text-xs text-yellow-700">
-                This progress tracker shows estimated timelines based on order and expected delivery dates. 
-                The status shown here is for planning purposes only. The actual delivery status is determined
-                by the "Status" field in the order details, which may be updated by your team.
-            </p>
-            <p class="text-xs text-yellow-700 mt-1">
-                Progress is divided into 4 equal phases based on the lead time between order and expected delivery dates.
-            </p>
-        </div>
-    @endif
-</div>
                 </div>
             </div>
         </x-modal.createModal>
+
+        <!-- Confirmation Modal Component -->
+        <x-modal.confirmModal x-ref="confirmStatusUpdate" class="w-1/3">
+            <x-slot:dialogTitle>Confirm Status Update</x-slot:dialogTitle>
+            <div class="container">
+                <p class="text-sm text-gray-700 mb-2">Are you sure you want to update the delivery status?</p>
+                <p class="text-xs text-red-600 font-medium">Note: This action cannot be undone once confirmed.</p>
+            </div>
+        </x-modal.confirmModal>
+
         @endforeach
+
+        <script>
+        function handleStatusUpdate(orderId) {
+            const select = document.getElementById('orderStatus' + orderId);
+            const selectedStatus = select.value;
+            const currentStatus = '{{ $deliveryStatus }}'; // This will be dynamic per modal
+            
+            // Only show confirmation for Delivered or Cancelled status changes
+            if (selectedStatus === 'Delivered' || selectedStatus === 'Cancelled') {
+                // Set up the confirm action
+                const confirmButton = document.querySelector('[x-ref="confirmStatusUpdate"] [x-on\\:click="modalConfirm()"]');
+                confirmButton.onclick = function() {
+                    document.getElementById('statusForm' + orderId).submit();
+                };
+                
+                // Show the confirmation modal
+                Alpine.raw($refs.confirmStatusUpdate).showModal();
+            } else {
+                // For Pending or Confirmed, submit directly
+                document.getElementById('statusForm' + orderId).submit();
+            }
+        }
+        </script>
+
     </main>
 </x-layout>

@@ -22,6 +22,7 @@ class Product extends Model
         'is_perishable',
     ];
 
+
     public function brand()
     {
         return $this->belongsTo(Brand::class);
@@ -37,7 +38,8 @@ class Product extends Model
      */
     public function batches()
     {
-        return $this->hasMany(ProductBatch::class);
+        return $this->hasMany(ProductBatch::class)
+            ->where('quantity', '>', 0); // filter out zero qty
     }
 
     /**

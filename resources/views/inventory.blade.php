@@ -234,7 +234,7 @@
                                     <p class="font-semibold text-md">Batch Details</p>
                                     @foreach($product->batches as $batch)
                                         <div class="text-sm border-b py-2">
-                                            <strong>Batch {{ $batch->batch_number }}:</strong><br>
+                                            <strong>{{ $batch->batch_number }}:</strong><br>
                                             Qty: {{ $batch->quantity }} | 
                                             Exp: {{ $batch->expiration_date ? $batch->expiration_date->format('M d, Y') : 'Non-perishable' }} |
                                             Cost: ₱{{ number_format($batch->cost_price, 2) }}

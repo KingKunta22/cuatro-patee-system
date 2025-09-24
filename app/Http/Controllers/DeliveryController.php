@@ -70,6 +70,11 @@ class DeliveryController extends Controller
                 ]);
             }
             
+            // Prevent status changes if already Delivered or Cancelled
+            if (in_array($delivery->orderStatus, ['Delivered', 'Cancelled'])) {
+                return redirect()->back()->with('error', 'Cannot change status for delivered or cancelled orders.');
+            }
+            
             // Update the status
             $delivery->update([
                 'orderStatus' => $request->status,
