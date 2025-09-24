@@ -349,8 +349,8 @@
                     <tr class="rounded-lg">
                         <th class=" bg-main px-4 py-3">Order Number</th>
                         <th class=" bg-main px-4 py-3">Supplier Name</th>
-                        <th class=" bg-main px-4 py-3">Date</th>
-                        <th class=" bg-main px-4 py-3">Items</th>
+                        <th class=" bg-main px-4 py-3">Date Ordered</th>
+                        <th class=" bg-main px-4 py-3">Total Items</th>
                         <th class=" bg-main px-4 py-3">Total</th>
                         <th class=" bg-main px-4 py-3">Action</th>
                     </tr>
@@ -365,12 +365,12 @@
                                 {{ $purchaseOrder->supplier->supplierName}} 
                             </td>
                             <td class="truncate px-2 py-2 text-center">{{ $purchaseOrder->created_at->format('m-d-Y') }}</td>
-                            <td class="truncate px-2 py-2 text-center">
-                                @foreach($purchaseOrder->items as $item)
-                                    {{ $item->productName }} ({{ $item->quantity }})
-                                    @if(!$loop->last)<br>@endif
-                                @endforeach
+
+                            <td class="truncate px-2 py-2 text-center" title="{{ $purchaseOrder->items->sum('quantity') }} units from {{ $purchaseOrder->items->count() }} products ">
+                                {{ $purchaseOrder->items->count() }} products 
+                                ({{ $purchaseOrder->items->sum('quantity') }} units)
                             </td>
+
                             <td class="truncate px-2 py-2 text-center">₱{{ number_format($purchaseOrder->totalAmount, 2) }}</td>
                             
                             <!-- VIEW DETAILS ACTIONS -->
