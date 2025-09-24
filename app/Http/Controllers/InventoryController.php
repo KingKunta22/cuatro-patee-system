@@ -286,9 +286,11 @@ class InventoryController extends Controller
                 if ($badItemCount > 0) {
                     BadItem::create([
                         'purchase_order_item_id' => $validated['selectedItemId'],
+                        'purchase_order_id' => $validated['purchaseOrderNumber'],
                         'quality_status' => $validated['productQuality'],
                         'item_count' => $badItemCount,
-                        'notes' => 'Added via inventory system'
+                        'notes' => 'Added via inventory system',
+                        'status' => 'Pending'
                     ]);
                 }
             }

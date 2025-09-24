@@ -350,7 +350,7 @@
                         <th class=" bg-main px-4 py-3">Order Number</th>
                         <th class=" bg-main px-4 py-3">Supplier Name</th>
                         <th class=" bg-main px-4 py-3">Date Ordered</th>
-                        <th class=" bg-main px-4 py-3">Total Items</th>
+                        <th class=" bg-main px-4 py-3">Total Items Ordered</th>
                         <th class=" bg-main px-4 py-3">Total</th>
                         <th class=" bg-main px-4 py-3">Action</th>
                     </tr>

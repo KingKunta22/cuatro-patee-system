@@ -11,7 +11,6 @@ class BadItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'inventory_id',
         'purchase_order_id',
         'purchase_order_item_id',
         'quality_status',
@@ -20,17 +19,10 @@ class BadItem extends Model
         'status'
     ];
 
-    /**
-     * Get the inventory item that owns the bad item report.
-     */
-    public function inventory(): BelongsTo
-    {
-        return $this->belongsTo(Inventory::class);
-    }
+    protected $attributes = [
+        'status' => 'Pending',
+    ];
 
-    /**
-     * Get the purchase order that owns the bad item report.
-     */
     public function purchaseOrder(): BelongsTo
     {
         return $this->belongsTo(PurchaseOrder::class);
@@ -40,5 +32,4 @@ class BadItem extends Model
     {
         return $this->belongsTo(PurchaseOrderItem::class);
     }
-
 }

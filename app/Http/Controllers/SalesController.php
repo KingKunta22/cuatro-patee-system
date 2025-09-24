@@ -9,9 +9,10 @@ use App\Models\SaleItem;
 use App\Models\Inventory;
 use App\Models\ProductBatch;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 
 
 class SalesController extends Controller
@@ -121,7 +122,9 @@ class SalesController extends Controller
                 // 'customer_name' => 'Walk-in Customer', Or $request->customerName
                 'total_amount' => $totalAmount,
                 'cash_received' => $cashReceived,
-                'change' => $change
+                'change' => $change,
+                'user_id' => Auth::id(), // Store the logged-in user
+
             ]);
 
             // Process each item in the cart

@@ -4,7 +4,7 @@
             <tr class="rounded-lg">
                 <th class="px-4 py-3 text-center">PO Number</th>
                 <th class="px-4 py-3 text-center">Supplier</th>
-                <th class="px-4 py-3 text-center">Date Received</th>
+                <th class="px-4 py-3 text-center">Date</th>
                 <th class="px-4 py-3 text-center">Total Items</th>
                 <th class="px-4 py-3 text-center">Good Items</th>
                 <th class="px-4 py-3 text-center">Bad Items</th>

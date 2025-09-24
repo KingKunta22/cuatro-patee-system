@@ -578,6 +578,10 @@
             badItemCount: 0,
             batches: [],
             newBatch: { quantity: '', expiration_date: '' },
+            // FIX: Get isPerishable from parent scope correctly
+            get isPerishable() {
+                return this.$parent.isPerishable;
+            },
             
             async getItems(poId) {
                 this.poId = poId;
@@ -634,7 +638,7 @@
             },
             
             addBatch() {
-                // FIXED: Only require expiration date for perishable items
+                // FIXED: Use the getter to access isPerishable
                 if (this.newBatch.quantity && (this.isPerishable || this.newBatch.expiration_date)) {
                     this.batches.push({
                         quantity: parseInt(this.newBatch.quantity),
