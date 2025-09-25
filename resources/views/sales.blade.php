@@ -550,7 +550,7 @@
                                 @forelse($sale->items as $index => $item)
                                     <tr class="bg-white border-b hover:bg-gray-50">
                                         <td class="px-4 py-3">
-                                            <input type="text" value="{{ $item->inventory->productName ?? 'N/A' }}" 
+                                            <input type="text" value="{{ $item->product->productName ?? 'N/A' }}" 
                                                 class="border-0 bg-transparent px-2 py-1 w-full" readonly>
                                         </td>
                                         <td class="px-2 py-3">
