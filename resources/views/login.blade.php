@@ -35,12 +35,24 @@
                 <button type="button" onclick="document.getElementById('forgotDialog').showModal()" class="text-sm text-blue-600 hover:underline">Forgot password?</button>
             </div>
         </div>
-        <div class='{{ $errors->has('login') ? 'h-auto' : 'h-0'}} transition-all duration-100 ease-in text-center w-72 mx-auto my-0 rounded-md text-white bg-red-500 text-[0.75rem]'>Incorrect credentials, please try again.</div>
+        <div class='h-auto transition-all duration-100 ease-in text-center w-72 mx-auto my-0 rounded-md text-white bg-red-500 text-[0.75rem]' x-show="$wire.errors.has('login')" style="display: {{ $errors->has('login') && !session('forgot_success') && !$errors->has('forgot') && !$errors->has('code_validation') && !session('code_success') && !$errors->has('reset') && !session('reset_success') ? 'block' : 'none' }};">Incorrect credentials, please try again.</div>
         @if($errors->has('forgot'))
             <div class='h-auto transition-all duration-100 ease-in text-center w-72 mx-auto my-2 rounded-md text-white bg-red-500 text-[0.75rem]'>{{ $errors->first('forgot') }}</div>
         @endif
         @if(session('forgot_success'))
             <div class='h-auto transition-all duration-100 ease-in text-center w-72 mx-auto my-2 rounded-md text-white bg-green-500 text-[0.75rem]'>{{ session('forgot_success') }}</div>
+        @endif
+        @if($errors->has('code_validation'))
+            <div class='h-auto transition-all duration-100 ease-in text-center w-72 mx-auto my-2 rounded-md text-white bg-red-500 text-[0.75rem]'>{{ $errors->first('code_validation') }}</div>
+        @endif
+        @if(session('code_success'))
+            <div class='h-auto transition-all duration-100 ease-in text-center w-72 mx-auto my-2 rounded-md text-white bg-green-500 text-[0.75rem]'>{{ session('code_success') }}</div>
+        @endif
+        @if($errors->has('reset'))
+            <div class='h-auto transition-all duration-100 ease-in text-center w-72 mx-auto my-2 rounded-md text-white bg-red-500 text-[0.75rem]'>{{ $errors->first('reset') }}</div>
+        @endif
+        @if(session('reset_success'))
+            <div class='h-auto transition-all duration-100 ease-in text-center w-72 mx-auto my-2 rounded-md text-white bg-green-500 text-[0.75rem]'>{{ session('reset_success') }}</div>
         @endif
     </form>
 
@@ -48,17 +60,84 @@
     <dialog id="forgotDialog" class="w-96 my-auto shadow-2xl rounded-md">
         <h1 class="italic text-xl px-6 py-4 text-start font-bold bg-main text-white">Forgot Password</h1>
         <div class="container px-4 py-4">
-            <form method="POST" action="{{ route('forgot.send') }}" class="grid grid-cols-1 gap-3">
-                @csrf
-                <label class="text-sm">Username</label>
-                <input type="text" name="username" class="border border-black rounded px-3 py-2" required autocomplete="off">
-                <label class="text-sm">Email</label>
-                <input type="email" name="email" class="border border-black rounded px-3 py-2" required autocomplete="off">
-                <div class="flex justify-end gap-2 mt-2">
-                    <button type="button" onclick="document.getElementById('forgotDialog').close()" class="px-3 py-2 bg-gray-300 rounded">Cancel</button>
-                    <button type="submit" class="px-3 py-2 bg-blue-600 text-white rounded">Send Code</button>
-                </div>
-            </form>
+            <!-- Step 1: Send Code -->
+            <div id="step1" class="grid grid-cols-1 gap-3">
+                <form method="POST" action="{{ route('forgot.send') }}" class="grid grid-cols-1 gap-3">
+                    @csrf
+                    <label class="text-sm">Username</label>
+                    <input type="text" name="username" class="border border-black rounded px-3 py-2" required autocomplete="off" value="{{ old('username') }}">
+                    <label class="text-sm">Email</label>
+                    <input type="email" name="email" class="border border-black rounded px-3 py-2" required autocomplete="off" value="{{ old('email') }}">
+                    <div class="flex justify-end gap-2 mt-2">
+                        <button type="button" onclick="document.getElementById('forgotDialog').close()" class="px-3 py-2 bg-gray-300 rounded">Cancel</button>
+                        <button type="submit" class="px-3 py-2 bg-blue-600 text-white rounded">Send Code</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 2: Validate Code -->
+            <div id="step2" class="grid grid-cols-1 gap-3 hidden">
+                <form method="POST" action="{{ route('forgot.validate') }}" class="grid grid-cols-1 gap-3">
+                    @csrf
+                    <label class="text-sm">Username</label>
+                    <input type="text" name="username" class="border border-black rounded px-3 py-2" required autocomplete="off" value="{{ old('username') }}">
+                    <label class="text-sm">Email</label>
+                    <input type="email" name="email" class="border border-black rounded px-3 py-2" required autocomplete="off" value="{{ old('email') }}">
+                    <label class="text-sm">Verification Code</label>
+                    <input type="text" name="code" class="border border-black rounded px-3 py-2" required autocomplete="off" placeholder="Enter 6-digit code" maxlength="6">
+                    <div class="flex justify-end gap-2 mt-2">
+                        <button type="button" onclick="document.getElementById('forgotDialog').close()" class="px-3 py-2 bg-gray-300 rounded">Cancel</button>
+                        <button type="submit" class="px-3 py-2 bg-green-600 text-white rounded">Validate Code</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 3: Reset Password -->
+            <div id="step3" class="grid grid-cols-1 gap-3 hidden">
+                <form method="POST" action="{{ route('forgot.reset') }}" class="grid grid-cols-1 gap-3">
+                    @csrf
+                    <label class="text-sm">New Password</label>
+                    <input type="password" name="new_password" class="border border-black rounded px-3 py-2" required autocomplete="off">
+                    <label class="text-sm">Confirm New Password</label>
+                    <input type="password" name="new_password_confirmation" class="border border-black rounded px-3 py-2" required autocomplete="off">
+                    <div class="flex justify-end gap-2 mt-2">
+                        <button type="button" onclick="document.getElementById('forgotDialog').close()" class="px-3 py-2 bg-gray-300 rounded">Cancel</button>
+                        <button type="submit" class="px-3 py-2 bg-red-600 text-white rounded">Reset Password</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </dialog>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle modal step transitions based on session data
+            @if(session('forgot_success'))
+                // Show step 2 (code validation) if code was sent successfully
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.remove('hidden');
+                document.getElementById('step3').classList.add('hidden');
+                // Open modal if not already open
+                document.getElementById('forgotDialog').showModal();
+            @endif
+            
+            @if(session('code_success'))
+                // Show step 3 (password reset) if code was validated successfully
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.remove('hidden');
+                // Ensure modal is open
+                if (!document.getElementById('forgotDialog').open) {
+                    document.getElementById('forgotDialog').showModal();
+                }
+            @endif
+
+            // Reset modal when closed
+            document.getElementById('forgotDialog').addEventListener('close', function() {
+                document.getElementById('step1').classList.remove('hidden');
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.add('hidden');
+            });
+        });
+    </script>
 </x-layout>

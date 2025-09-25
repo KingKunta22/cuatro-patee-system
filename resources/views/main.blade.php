@@ -62,7 +62,7 @@
 
         @if(Auth::user()->role === 'admin')
         <!-- Stats Cards (Admin only) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
 
             <!-- Total Sales -->
             <div class="bg-white rounded-xl shadow-sm px-2 py-2 border border-gray-100">
@@ -238,7 +238,7 @@
         </div>
 
         <!-- Top Selling Products Carousel -->
-            <div class="bg-white rounded-xl shadow-sm px-4 py-3 border border-gray-100 mb-6">
+        <div class="bg-white rounded-xl shadow-sm px-4 py-3 border border-gray-100 mb-6">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-lg font-semibold text-gray-800">Top Selling Products</h2>
                 <div class="flex space-x-2">
@@ -259,7 +259,7 @@
                 <div class="top-selling-carousel overflow-hidden">
                     <div class="flex transition-transform duration-300 ease-in-out">
                         @forelse($topSellingProducts as $index => $product)
-                        <div class="w-full sm:w-1/2 lg:w-1/3 flex-shrink-0 px-3 carousel-item">
+                        <div class="w-1/3 flex-shrink-0 px-3 carousel-item">
                             <div class="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-sm transition-shadow h-auto flex flex-col">
                                 <div class="flex flex-col items-center mb-3 flex-grow">
                                     <div class="w-36 h-36 rounded-md bg-gray-50 flex items-center justify-center overflow-hidden mb-2">

@@ -26,6 +26,8 @@ Route::get('/', function() {
 
 Route::post('/login', [UserController::class, 'login']);
 Route::post('/forgot-password/send-code', [ForgotPasswordController::class, 'sendCode'])->name('forgot.send');
+Route::post('/forgot-password/validate-code', [ForgotPasswordController::class, 'validateCode'])->name('forgot.validate');
+Route::post('/forgot-password/reset', [ForgotPasswordController::class, 'resetPassword'])->name('forgot.reset');
 Route::post('/logout', [UserController::class, 'logout']);
 
 // All routes that require authentication
