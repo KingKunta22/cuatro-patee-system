@@ -95,7 +95,7 @@
                                 <td class="truncate py-3 max-w-32 px-2 flex place-content-center">
                                     <x-form.editBtn @click="$refs['editDialog{{ $supplier->id }}'].showModal()" />
                                     <dialog x-ref="editDialog{{ $supplier->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
-                                        <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Update Supplier</h1>
+                                        <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Edit Supplier</h1>
                                         <div class="container px-3 py-4">
                                             <form action="{{ route('suppliers.update', $supplier->id) }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6">
                                                 @csrf
@@ -113,7 +113,7 @@
                                                 </div>
                                                 <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
                                                     <x-form.closeBtn @click="closeEdit()">Cancel</x-form.closeBtn>
-                                                    <x-form.saveBtn>Update</x-form.saveBtn>
+                                                    <x-form.saveBtn>Edit</x-form.saveBtn>
                                                 </div>
                                             </form>
                                         </div>

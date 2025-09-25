@@ -990,10 +990,10 @@
         <!-- VIEW INVENTORY MODAL IS INLINE PARA WAY HASOL ALPINE JS -->
         <!-- ======================================================= -->
 
-        <!-- UPDATE MODAL -->
+        <!-- EDIT MODAL -->
         @foreach($products as $product)
             <x-modal.createModal x-ref="editProductDetails{{ $product->id }}">
-                <x-slot:dialogTitle>Update {{ $product->productName }}</x-slot:dialogTitle>
+                <x-slot:dialogTitle>Edit {{ $product->productName }}</x-slot:dialogTitle>
 
                 <div class="container px-3 py-4">
                     <form id="updateInventoryForm{{ $product->id }}" action="{{ route('inventory.update', $product->id) }}" method="POST" enctype="multipart/form-data"
@@ -1086,7 +1086,7 @@
                                     class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out">
                                 Cancel
                             </button>
-                            <x-form.saveBtn @click="$refs['confirmEditProduct{{ $product->id }}'].showModal()" type="button">Update</x-form.saveBtn>
+                            <x-form.saveBtn @click="$refs['confirmEditProduct{{ $product->id }}'].showModal()" type="button">Edit</x-form.saveBtn>
                         </div>
                     </form>
                 </div>

@@ -516,7 +516,7 @@
         <!-- EDIT DIALOG -->
         @foreach($sales as $sale)
         <x-modal.createModal x-ref="editDialog{{ $sale->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
-            <x-slot:dialogTitle>Update Sale: {{ $sale->invoice_number }}</x-slot:dialogTitle>
+            <x-slot:dialogTitle>Edit Sale: {{ $sale->invoice_number }}</x-slot:dialogTitle>
 
             <div class="container px-3 py-4">
                 <form action="{{ route('sales.update', $sale->id) }}" method="POST" class="px-6 py-4 container grid grid-cols-4 gap-x-8 gap-y-6">
@@ -591,7 +591,7 @@
                             class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out">
                             Cancel
                         </button>
-                        <x-form.saveBtn>Update</x-form.saveBtn>
+                        <x-form.saveBtn>Edit</x-form.saveBtn>
                     </div>
                 </form>
             </div>

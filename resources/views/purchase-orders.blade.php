@@ -470,7 +470,7 @@
                                             <dialog x-ref="editDialog{{ $purchaseOrder->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
                                                 
                                                 <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">
-                                                    Update {{ $purchaseOrder->orderNumber }}
+                                                    Edit {{ $purchaseOrder->orderNumber }}
                                                 </h1>
 
                                                 <div class="container px-3 py-4">
@@ -565,7 +565,7 @@
                                                                 Cancel
                                                             </button>
 
-                                                            <x-form.saveBtn name="action" value="update">Save</x-form.saveBtn>
+                                                            <x-form.saveBtn name="action" value="update">Edit</x-form.saveBtn>
                                                         </div>
                                                     </form>
                                                 </div>
