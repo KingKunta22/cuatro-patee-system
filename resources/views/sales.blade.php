@@ -25,19 +25,18 @@
                 // Close the add sales modal on successful submission
                 const successMessage = document.getElementById('success-message');
                 if (successMessage) {
+                    // Close the modal immediately when success message appears
+                    const addSalesModal = document.querySelector('[x-ref="addSalesRef"]');
+                    if (addSalesModal) {
+                        addSalesModal.close();
+                    }
+                    
                     setTimeout(() => {
-                        // Try to close modal via Alpine reference
-                        const alpineComponent = document.querySelector('main').__x;
-                        if (alpineComponent && alpineComponent.$refs.addSalesRef) {
-                            alpineComponent.$refs.addSalesRef.close();
-                        }
-                        
-                        // Also try direct DOM approach
-                        const modal = document.querySelector('[x-ref="addSalesRef"]');
-                        if (modal) {
-                            modal.close();
-                        }
-                    }, 100);
+                        successMessage.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                        successMessage.style.opacity = '0';
+                        successMessage.style.transform = 'translate(-50%, -20px)';
+                        setTimeout(() => { successMessage.remove(); }, 500);
+                    }, 3000);
                 }
 
                 // After redirect, trigger download or print if flagged

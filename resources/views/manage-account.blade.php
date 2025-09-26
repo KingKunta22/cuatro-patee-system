@@ -4,12 +4,12 @@
         <div class="container">
             <!-- Success/Error Messages -->
             @if(session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded shadow-lg">
                     {{ session('success') }}
                 </div>
             @endif
             @if(session('error'))
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <div class="bg-red-100 border border-red-400 text-red-700 fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded shadow-lg">
                     {{ session('error') }}
                 </div>
             @endif
@@ -76,7 +76,10 @@
                                             </select>
                                         </div>
                                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
-                                            <x-form.closeBtn type="button" @click="document.getElementById('editDialog{{ $user->id }}').close()">Cancel</x-form.closeBtn>
+                                            <x-form.closeBtn type="button" @click="document.getElementById('editDialog{{ $user->id }}').close()"
+                                                class="mr-2 px-4 py-2 rounded text-white hover:bg-gray-300 bg-gray-400">
+                                                Cancel
+                                            </x-form.closeBtn>
                                             <x-form.saveBtn>Update</x-form.saveBtn>
                                         </div>
                                     </form>
@@ -96,7 +99,9 @@
                                             <p class="text-xs text-gray-600 mt-2">This action cannot be undone.</p>
                                         </div>
                                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
-                                            <x-form.closeBtn type="button" @click="document.getElementById('deleteDialog{{ $user->id }}').close()">Cancel</x-form.closeBtn>
+                                            <x-form.closeBtn type="button" @click="document.getElementById('deleteDialog{{ $user->id }}').close()"
+                                                class="mr-2 px-4 py-2 rounded text-white hover:bg-gray-300 bg-gray-400">
+                                                Cancel</x-form.closeBtn>
                                             <x-form.saveBtn class="bg-red-600 hover:bg-red-700">Delete</x-form.saveBtn>
                                         </div>
                                     </form>
@@ -128,7 +133,7 @@
                         </select>
                     </div>
                     <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
-                        <x-form.closeBtn type="button" @click="$refs.dialogRef.close()">Cancel</x-form.closeBtn>
+                        <x-form.closeBtn type="button" @click="$refs.dialogRef.close()" class="mr-2 px-4 py-2 rounded text-white hover:bg-gray-300 bg-gray-400">Cancel</x-form.closeBtn>
                         <x-form.saveBtn>Save</x-form.saveBtn>
                     </div>
                 </form>
