@@ -132,15 +132,15 @@
 						<tr>
 							<td class="border px-2 py-1">{{ $q }}</td>
 							<td class="border px-2 py-1">{{ $name }}</td>
-							<td class="border px-2 py-1 text-right">₱ {{ number_format((float) $unit, 2) }}</td>
-							<td class="border px-2 py-1 text-right">₱ {{ number_format((float) $amt, 2) }}</td>
+							<td class="border px-2 py-1 text-right">PHP {{ number_format((float) $unit, 2) }}</td>
+							<td class="border px-2 py-1 text-right">PHP {{ number_format((float) $amt, 2) }}</td>
 						</tr>
 						@endif
 					@endforeach
 					<tr>
 						<td class="border px-2 py-1 font-semibold" colspan="3">Total</td>
 						<td class="border px-2 py-1 text-right font-semibold">
-							₱ {{ number_format((float) ($po->totalAmount ?? $items->sum(function($i){ return is_array($i) ? ($i['totalAmount'] ?? 0) : ($i->totalAmount ?? 0); })), 2) }}
+							PHP {{ number_format((float) ($po->totalAmount ?? $items->sum(function($i){ return is_array($i) ? ($i['totalAmount'] ?? 0) : ($i->totalAmount ?? 0); })), 2) }}
 						</td>
 					</tr>
 				</tbody>

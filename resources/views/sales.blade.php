@@ -22,18 +22,28 @@
         <!-- AUTO-HIDE SUCCESS MESSAGES -->
         <script>
             document.addEventListener('DOMContentLoaded', function() {
+                // Close the add sales modal on successful submission
                 const successMessage = document.getElementById('success-message');
                 if (successMessage) {
                     setTimeout(() => {
-                        successMessage.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
-                        successMessage.style.opacity = '0';
-                        successMessage.style.transform = 'translate(-50%, -20px)';
-                        setTimeout(() => { successMessage.remove(); }, 500);
-                    }, 3000);
+                        // Try to close modal via Alpine reference
+                        const alpineComponent = document.querySelector('main').__x;
+                        if (alpineComponent && alpineComponent.$refs.addSalesRef) {
+                            alpineComponent.$refs.addSalesRef.close();
+                        }
+                        
+                        // Also try direct DOM approach
+                        const modal = document.querySelector('[x-ref="addSalesRef"]');
+                        if (modal) {
+                            modal.close();
+                        }
+                    }, 100);
                 }
 
                 // After redirect, trigger download or print if flagged
                 const downloadId = @json(session('download_sale_id'));
+                const printId = @json(session('print_sale_id'));
+
                 if (downloadId) {
                     // Trigger file download without blocking UI
                     const link = document.createElement('a');
@@ -42,6 +52,13 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
+                }
+
+                if (printId) {
+                    // Small delay to ensure page is fully loaded
+                    setTimeout(() => {
+                        printSaleReceipt(printId);
+                    }, 1000);
                 }
             });
         </script>
@@ -325,15 +342,15 @@
                             Cancel
                         </button>
 
-                        <div class="absolute bottom-2 left-0 flex flex-row">
-
+                        <div class="absolute bottom-2 left-0 flex flex-row space-x-4">
                             <label class="flex items-center space-x-1 cursor-pointer">
                                 <input type="checkbox" name="salesDownload">
                                 <span>Download</span>
                             </label>
-
-                            
-
+                            <label class="flex items-center space-x-1 cursor-pointer">
+                                <input type="checkbox" name="salesPrint">
+                                <span>Print</span>
+                            </label>
                         </div>
                 
                         <x-form.saveBtn type="submit">Save</x-form.saveBtn>
@@ -482,10 +499,10 @@
                         <button onclick="downloadSalePDF({{ $sale->id }})" class="flex items-center space-x-1 cursor-pointer bg-blue-500 text-white px-3 py-2 rounded hover:bg-blue-400 transition-colors">
                             <span>Download</span>
                         </button>
-                        <a href="{{ route('sales.download-receipt', ['sale' => $sale->id]) }}?inline=1" target="_blank"
-                           class="flex items-center space-x-1 cursor-pointer bg-green-500 text-white rounded hover:bg-green-400 ml-auto font-semibold px-6 py-2 w-auto transition-all duration-100 ease-in">
+                        <button onclick="printSaleReceipt({{ $sale->id }})" 
+                                class="flex items-center space-x-1 cursor-pointer bg-green-500 text-white rounded hover:bg-green-400 ml-auto font-semibold px-6 py-2 w-auto transition-all duration-100 ease-in">
                             <span>Print</span>
-                        </a>
+                        </button>
                     </div>
 
                     <!-- Action buttons on right -->
@@ -1102,30 +1119,7 @@
         });
     });
 
-    // Simple Toast function for notifications
-    window.Toast = {
-        success: function(message) {
-            this.show(message, 'green');
-        },
-        error: function(message) {
-            this.show(message, 'red');
-        },
-        info: function(message) {
-            this.show(message, 'blue');
-        },
-        show: function(message, color) {
-            const toast = document.createElement('div');
-            toast.className = `fixed top-4 right-4 p-4 rounded-lg text-white bg-${color}-500 z-50`;
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }
-    };
-
-    // Hndle print on form submission
+    // Handle print on form submission
     document.getElementById('addSales').addEventListener('submit', function(e) {
         if (!validateFormBeforeSubmit()) {
             e.preventDefault();
@@ -1137,11 +1131,11 @@
             return;
         }
         
-        // Handle print after successful submission
+        // Store print preference before submission
         const shouldPrint = document.querySelector('input[name="salesPrint"]').checked;
         if (shouldPrint) {
-            // You might want to store this flag and handle printing after redirect
-            localStorage.setItem('printAfterSave', 'true');
+            // Store in sessionStorage for after redirect
+            sessionStorage.setItem('printAfterSave', 'true');
         }
     });
 
@@ -1156,6 +1150,38 @@
             }, 1000);
         }
     }
+
+    // Function to handle printing after successful form submission
+    function checkAndPrintAfterSave() {
+        const shouldPrint = sessionStorage.getItem('printAfterSave');
+        if (shouldPrint === 'true') {
+            // Wait a bit for the page to fully load and find the new sale
+            setTimeout(() => {
+                // Look for the most recent sale in the table (first row)
+                const firstSaleRow = document.querySelector('table tbody tr:first-child');
+                if (firstSaleRow) {
+                    const viewDetailsButton = firstSaleRow.querySelector('button');
+                    if (viewDetailsButton) {
+                        // Extract sale ID from the button's onclick attribute
+                        const onclickText = viewDetailsButton.getAttribute('onclick');
+                        const saleIdMatch = onclickText.match(/viewSaleDetails(\d+)/);
+                        if (saleIdMatch) {
+                            const saleId = saleIdMatch[1];
+                            printSaleReceipt(saleId);
+                        }
+                    }
+                }
+                // Clear the flag
+                sessionStorage.removeItem('printAfterSave');
+            }, 1000);
+        }
+    }
+
+    // Call this function when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        checkAndPrintAfterSave();
+    });
+
 
 
     // Enhanced print function with better data extraction
@@ -1429,6 +1455,26 @@
             console.error('Print error:', error);
             Toast.error('Error generating print preview');
         }
+    }
+
+    // Function to print sale receipt (opens print dialog without showing PDF)
+    function printSaleReceipt(saleId) {
+        // Create a hidden iframe to load the PDF
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = `/sales/${saleId}/download-receipt?inline=1`;
+        document.body.appendChild(iframe);
+        
+        // Wait for the PDF to load then trigger print
+        iframe.onload = function() {
+            setTimeout(() => {
+                iframe.contentWindow.print();
+                // Remove the iframe after printing
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 1000);
+            }, 500);
+        };
     }
 </script>
 

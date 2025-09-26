@@ -156,11 +156,12 @@ class SalesController extends Controller
 
             // Commit the transaction
             DB::commit();
-
+            
             // Post-save behavior: set session flags for download/print and redirect with success
             return redirect()->route('sales.index')
                 ->with('success', 'Sale completed successfully!')
-                ->with('download_sale_id', $request->boolean('salesDownload') ? $sale->id : null);
+                ->with('download_sale_id', $request->boolean('salesDownload') ? $sale->id : null)
+                ->with('print_sale_id', $request->boolean('salesPrint') ? $sale->id : null);
 
         } catch (\Exception $e) {
             DB::rollBack();
