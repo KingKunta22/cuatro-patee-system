@@ -6,7 +6,6 @@ use App\Models\Brand;
 use App\Models\BadItem;
 use App\Models\Product;
 use App\Models\Category;
-use App\Models\SaleItem;
 use App\Models\Inventory;
 use App\Models\ProductBatch;
 use Illuminate\Http\Request;
@@ -17,9 +16,10 @@ use Illuminate\Support\Facades\Storage;
 
 class InventoryController extends Controller
 {
+    // Shows the main logic for retrieving inventory data
     public function index(Request $request)
     {
-        // Get delivered POs that haven't been added to inventory yet (UPDATED)
+        // Get delivered POs that haven't been added to inventory yet
         $unaddedPOs = PurchaseOrder::whereHas('deliveries', function($query) {
                 $query->where('orderStatus', 'Delivered');
             })

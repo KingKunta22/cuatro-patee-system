@@ -9,5 +9,5 @@ class Subcategory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['productSubcategory'];
+    protected $fillable = ['productSubcategory']; // This one is correct
 }

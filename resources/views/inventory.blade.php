@@ -1,42 +1,44 @@
+{{-- This is from the layout and sidebar components made from another file for separation of concerns --}}
 <x-layout>
     <x-sidebar/>
+    {{-- The main container for all of the contents inside the inventory blade --}}
     <main x-data class="container w-auto ml-64 px-10 pt-6 pb-3 flex flex-col items-center content-start">
+        {{-- Display validation errors if there are any --}}
+        @if($errors->any())
+            <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-red-100 border border-red-400 text-red-700 rounded shadow-lg">
+                <ul>
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-            {{-- Temporary debug - display validation errors --}}
-            @if($errors->any())
-                <div class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-red-100 border border-red-400 text-red-700 rounded shadow-lg">
-                    <ul>
-                        @foreach($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
+        {{-- Display success toast if there are any --}}
+        @if(session('success'))
+            <div id="success-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded shadow-lg">
+                <p>{{ session('success') }}</p>
+            </div>
+        @endif
 
-            @if(session('success'))
-                <div id="success-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-green-100 border border-green-400 text-green-700 rounded shadow-lg">
-                    <p>{{ session('success') }}</p>
-                </div>
-            @endif
-
-            <!-- AUTO-HIDE SUCCESS MESSAGES -->
-            <script>
-                // Hide success messages after 3 seconds
-                document.addEventListener('DOMContentLoaded', function() {
-                    const successMessage = document.getElementById('success-message');
-                    
-                    if (successMessage) {
+        <!-- AUTO-HIDE SUCCESS MESSAGES -->
+        <script>
+            // Hide success messages after 3 seconds
+            document.addEventListener('DOMContentLoaded', function() {
+                const successMessage = document.getElementById('success-message');
+                
+                if (successMessage) {
+                    setTimeout(() => {
+                        successMessage.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                        successMessage.style.opacity = '0';
+                        successMessage.style.transform = 'translate(-50%, -20px)';
                         setTimeout(() => {
-                            successMessage.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
-                            successMessage.style.opacity = '0';
-                            successMessage.style.transform = 'translate(-50%, -20px)';
-                            setTimeout(() => {
-                                successMessage.remove();
-                            }, 500);
-                        }, 3000);
-                    }
-                });
-            </script>
+                            successMessage.remove();
+                        }, 500);
+                    }, 3000);
+                }
+            });
+        </script>
 
         <!-- CONTAINER OUTSIDE THE TABLE -->
         <section class="container flex flex-col items-center place-content-start">
@@ -131,6 +133,7 @@
                     </tr>
                 </thead>
                 <tbody>
+                    {{--  Loops through each product which was assigned from the eager loaded relationship from InventoryController --}}
                     @foreach($products as $product)
                     <tr class="border-b">
                         <td class="truncate px-2 py-2 text-center" title="{{ $product->productName }}">

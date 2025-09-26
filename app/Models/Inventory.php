@@ -8,22 +8,6 @@ class Inventory extends Model
 {
     protected $fillable = [
         'product_id',
-        // 'productName',
-        // 'productSKU',
-        // 'productBatch',
-        // 'productBrand', // Text field
-        // 'productCategory', // Text field
-        // 'productStock',
-        // 'productSellingPrice',
-        // 'productCostPrice',
-        // 'productProfitMargin',
-        // 'productItemMeasurement',
-        // 'productExpirationDate',
-        // 'productImage',
-        // 'purchase_order_id',
-        // 'purchase_order_item_id',
-        // 'brand_id', // Add for relationship
-        // 'category_id', // Add for relationship
     ];
 
     public function purchaseOrder() {

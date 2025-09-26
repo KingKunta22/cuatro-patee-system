@@ -13,8 +13,8 @@ class Product extends Model
     protected $fillable = [
         'productName',
         'productSKU', 
-        'brand_id',           // ← Changed from productBrand
-        'category_id',        // ← Changed from productCategory
+        'brand_id',
+        'category_id',
         'productItemMeasurement',
         'productSellingPrice',
         'productCostPrice',
@@ -25,12 +25,12 @@ class Product extends Model
 
     public function brand()
     {
-        return $this->belongsTo(Brand::class);
+        return $this->belongsTo(Brand::class, 'brand_id');
     }
 
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id');
     }
     
     /**

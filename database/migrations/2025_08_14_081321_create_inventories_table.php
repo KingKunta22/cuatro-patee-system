@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('inventories', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('product_id'); // Change from foreignId to unsignedBigInteger
+            $table->unsignedBigInteger('product_id');
             $table->integer('total_quantity')->default(0);
             $table->timestamp('last_updated')->nullable();
             $table->timestamps();

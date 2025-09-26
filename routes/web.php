@@ -62,7 +62,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');
     
     // === ADMIN-ONLY ROUTES (protected by controller checks) ===
-    // REMOVE THE MIDDLEWARE GROUP - just list the routes directly
     Route::get('/manage-account', [UserController::class, 'index'])->name('manage.account');
     Route::post('/manage-account', [UserController::class, 'store'])->name('users.store');
     Route::put('/manage-account/{user}', [UserController::class, 'update'])->name('users.update');

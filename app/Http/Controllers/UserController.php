@@ -14,10 +14,10 @@ class UserController extends Controller
     public function index()
     {
 
-        // // ADD THIS SECURITY CHECK:
-        // if (Auth::user()->role !== 'admin') {
-        //     abort(403, 'Unauthorized. Admin access required.');
-        // }
+        // ADD THIS SECURITY CHECK:
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Admin access required.');
+        }
 
         $users = User::all();
         return view('manage-account', compact('users'));
@@ -27,10 +27,10 @@ class UserController extends Controller
     public function store(Request $request)
     {
 
-        // // ADD THIS SECURITY CHECK:
-        // if (Auth::user()->role !== 'admin') {
-        //     abort(403, 'Unauthorized. Admin access required.');
-        // }
+        // ADD THIS SECURITY CHECK:
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Admin access required.');
+        }
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
@@ -62,10 +62,10 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
 
-        // // SECURITY CHECK:
-        // if (Auth::user()->role !== 'admin') {
-        //     abort(403, 'Unauthorized. Admin access required.');
-        // }
+        // SECURITY CHECK:
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Admin access required.');
+        }
 
 
         $validated = $request->validate([
@@ -103,10 +103,10 @@ class UserController extends Controller
     // Delete user
     public function destroy(User $user)
     {
-        // // SECURITY CHECK:
-        // if (Auth::user()->role !== 'admin') {
-        //     abort(403, 'Unauthorized. Admin access required.');
-        // }
+        // SECURITY CHECK:
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Unauthorized. Admin access required.');
+        }
 
         // Prevent users from deleting themselves - using Auth facade
         if ($user->id === Auth::id()) {

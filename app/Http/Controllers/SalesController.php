@@ -30,7 +30,7 @@ class SalesController extends Controller
             ->where('deliveries.orderStatus', 'Delivered') // ← CRITICAL FIX
             ->sum(DB::raw('sale_items.quantity * product_batches.cost_price'));
         
-        // Total Profit (revenue minus cost)
+        // Total Profit
         $totalProfit = $totalRevenue - $totalCost;
         
         // Get sales data
