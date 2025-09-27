@@ -33,8 +33,8 @@ class SalesController extends Controller
         // Total Profit
         $totalProfit = $totalRevenue - $totalCost;
         
-        // Get sales data
-        $sales = Sale::with('items.productBatch.product')->latest()->paginate(7);
+        // Get sales data with user relationship
+        $sales = Sale::with(['items.productBatch.product', 'user'])->latest()->paginate(7);
         
         // Get products for the product dropdown
         $products = Product::with([
@@ -169,7 +169,7 @@ class SalesController extends Controller
         }
     }
 
-        // PDF Download method
+    // PDF Download method
     public function downloadReceipt($saleId)
     {
         $sale = Sale::with(['items.productBatch'])->findOrFail($saleId);
@@ -194,77 +194,93 @@ class SalesController extends Controller
     // Edit method - Show edit form
     public function edit($id)
     {
-        $sale = Sale::with(['items.inventory', 'customer'])->findOrFail($id);
+        $sale = Sale::with(['items.productBatch.product'])->findOrFail($id);
         
-        return view('sales.edit', compact('sale', 'customers'));
+        return view('sales.edit', compact('sale'));
     }
 
     // Update method - Process edit form
     public function update(Request $request, $id)
     {
-        $sale = Sale::findOrFail($id);
-        
-        // Validate request
-        $validated = $request->validate([
-            'customerName' => 'required|string|max:255',
-            'sale_date' => 'required|date',
-            'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0'
-        ]);
-        
-        // Update sale details
-        $sale->update([
-            'customer_name' => $validated['customerName'],
-            'sale_date' => $validated['sale_date']
-        ]);
-        
-        // Update sale items and handle deletions
-        $totalAmount = 0;
-        
-        if ($request->has('items')) {
-            foreach ($request->items as $itemId => $itemData) {
-                // Check if item is marked for deletion
-                if (isset($itemData['_delete']) && $itemData['_delete'] == '1') {
+        DB::beginTransaction();
+
+        try {
+            $sale = Sale::findOrFail($id);
+            
+            // Validate request
+            $validated = $request->validate([
+                'sale_date' => 'required|date',
+                'items.*.quantity' => 'required|integer|min:1',
+                'items.*.unit_price' => 'required|numeric|min:0'
+            ]);
+            
+            // Update sale details
+            $sale->update([
+                'sale_date' => $validated['sale_date']
+            ]);
+            
+            // Update sale items
+            $totalAmount = 0;
+            
+            if ($request->has('items')) {
+                foreach ($request->items as $itemId => $itemData) {                
                     $saleItem = SaleItem::find($itemId);
                     if ($saleItem && $saleItem->sale_id == $sale->id) {
-                        $saleItem->delete();
+                        $saleItem->update([
+                            'quantity' => $itemData['quantity'],
+                            'unit_price' => $itemData['unit_price'],
+                            'total_price' => $itemData['quantity'] * $itemData['unit_price']
+                        ]);
+                        
+                        $totalAmount += $saleItem->total_price;
                     }
-                    continue;
-                }
-                
-                $saleItem = SaleItem::find($itemId);
-                if ($saleItem && $saleItem->sale_id == $sale->id) {
-                    $saleItem->update([
-                        'quantity' => $itemData['quantity'],
-                        'unit_price' => $itemData['unit_price'],
-                        'total_price' => $itemData['quantity'] * $itemData['unit_price']
-                    ]);
-                    
-                    $totalAmount += $saleItem->total_price;
                 }
             }
+            
+            // Update sale total
+            $sale->update(['total_amount' => $totalAmount]);
+            
+            DB::commit();
+            
+            return redirect()->route('sales.index')
+                ->with('success', 'Sale updated successfully!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Failed to update sale: ' . $e->getMessage()]);
         }
-        
-        // Update sale total
-        $sale->update(['total_amount' => $totalAmount]);
-        
-        return redirect()->route('sales.index')
-            ->with('success', 'Sale updated successfully!');
     }
 
-    // Destroy method - Delete sale
+    // Destroy method - Delete sale and return stock to inventory
     public function destroy($id)
     {
-        $sale = Sale::findOrFail($id);
-        
-        // Delete associated items first
-        $sale->items()->delete();
-        
-        // Delete the sale
-        $sale->delete();
-        
-        return redirect()->route('sales.index')
-            ->with('success', 'Sale deleted successfully!');
+        DB::beginTransaction();
+
+        try {
+            $sale = Sale::with('items.productBatch')->findOrFail($id);
+            
+            // Return stock to inventory before deleting
+            foreach ($sale->items as $item) {
+                if ($item->productBatch) {
+                    $item->productBatch->increment('quantity', $item->quantity);
+                }
+            }
+            
+            // Delete associated items first
+            $sale->items()->delete();
+            
+            // Delete the sale
+            $sale->delete();
+            
+            DB::commit();
+            
+            return redirect()->route('sales.index')
+                ->with('success', 'Sale deleted successfully! Stock has been returned to inventory.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withErrors(['error' => 'Failed to delete sale: ' . $e->getMessage()]);
+        }
     }
 
 }

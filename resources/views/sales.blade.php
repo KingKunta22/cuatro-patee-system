@@ -388,7 +388,7 @@
                     <!-- Sale Information -->
                     <div class="col-span-1">
                         <h2 class="text-xl font-bold mb-4">Sale Information</h2>
-                        <div class="grid grid-cols-4 gap-3">
+                        <div class="grid grid-cols-3 gap-4">
                             <div class="bg-gray-50 p-3 rounded-md">
                                 <p class="font-semibold text-md">Invoice Number</p>
                                 <p class="text-sm truncate" title="{{ $sale->invoice_number }}">{{ $sale->invoice_number }}</p>
@@ -398,66 +398,48 @@
                                 <p class="text-sm">{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</p>
                             </div>
                             <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-md">Items Count</p>
-                                <p class="text-sm">{{ $sale->items->count() }} items</p>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-md">
                                 <p class="font-semibold text-md">Processed by</p>
-                                <p class="text-sm">System</p>
+                                <p class="text-sm">{{ $sale->user->name ?? 'System' }}</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Batch Information -->
-                    <div class="col-span-1">
-                        <h3 class="text-lg font-semibold mb-3">Batch Information</h3>
-                        <div class="grid grid-cols-1 @if($sale->items->groupBy('product_batch_id')->count() == 1) grid-cols-1 @elseif($sale->items->groupBy('product_batch_id')->count() == 2) grid-cols-2 @else grid-cols-3 @endif gap-4">
-                            @php
-                                $batchGroups = $sale->items->groupBy('product_batch_id');
-                            @endphp
-                            @foreach($batchGroups as $batchId => $items)
-                                @php
-                                    $batch = $items->first()->productBatch;
-                                    $totalQuantity = $items->sum('quantity');
-                                @endphp
-                                <div class="bg-gray-50 p-4 rounded-md">
-                                    <p class="font-semibold text-sm text-gray-800">{{ $batch->batch_number ?? 'N/A' }}</p>
-                                    <p class="text-xs text-gray-600 mt-1">Exp: {{ $batch ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'N/A' }}</p>
-                                    <p class="text-xs text-gray-700 mt-1">Quantity Sold: {{ $totalQuantity }}</p>
-                                    <p class="text-xs text-gray-700">Product: {{ $items->first()->product_name }}</p>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <!-- Items in this sale -->
+                    <!-- Items in this sale with Batch Information -->
                     <div class="col-span-1">
                         <div class="flex gap-2">
                             <!-- Table (3/4 width) -->
                             <div class="w-4/6">
                                 <h2 class="text-xl font-bold mb-4">Items Sold</h2>
                                 <div class="border rounded-md border-solid border-black">
-                                    <table class="w-full">
+                                    <table class="w-full table-fixed">
                                         <thead class="rounded-lg bg-main text-white">
                                             <tr class="rounded-lg">
-                                                <th class="bg-main px-2 py-2 text-sm">Product</th>
-                                                <th class="bg-main px-2 py-2 text-sm">Quantity</th>
-                                                <th class="bg-main px-2 py-2 text-sm">Unit Price</th>
-                                                <th class="bg-main px-2 py-2 text-sm">Total</th>
+                                                <th class="bg-main px-2 py-2 text-sm truncate" title="Product">Product</th>
+                                                <th class="bg-main px-2 py-2 text-sm truncate" title="Batch">Batch</th>
+                                                <th class="bg-main px-2 py-2 text-sm truncate" title="Exp Date">Exp Date</th>
+                                                <th class="bg-main px-2 py-2 text-sm truncate" title="Quantity">Quantity</th>
+                                                <th class="bg-main px-2 py-2 text-sm truncate" title="Price">Price</th>
+                                                <th class="bg-main px-2 py-2 text-sm truncate" title="Total">Total</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach($sale->items as $saleItem)
                                             <tr class="border-b">
-                                                <td class="px-2 py-2 text-xs text-center">
+                                                <td class="px-2 py-2 text-xs text-center truncate" title="{{ $saleItem->product->productName ?? $saleItem->product_name }}">
                                                     {{ $saleItem->product->productName ?? $saleItem->product_name }}
                                                 </td>
-                                                <td class="px-2 py-2 text-xs text-center">
+                                                <td class="px-2 py-2 text-xs text-center truncate" title="{{ $saleItem->productBatch->batch_number ?? 'N/A' }}">
+                                                    {{ $saleItem->productBatch->batch_number ?? 'N/A' }}
+                                                </td>
+                                                <td class="px-2 py-2 text-xs text-center truncate" title="{{ $saleItem->productBatch ? \Carbon\Carbon::parse($saleItem->productBatch->expiration_date)->format('M d, Y') : 'N/A' }}">
+                                                    {{ $saleItem->productBatch ? \Carbon\Carbon::parse($saleItem->productBatch->expiration_date)->format('M d, Y') : 'N/A' }}
+                                                </td>
+                                                <td class="px-2 py-2 text-xs text-center truncate" title="">
                                                     {{ $saleItem->quantity }} 
                                                     {{ $saleItem->product->productItemMeasurement ?? '' }}
                                                 </td>
-                                                <td class="px-2 py-2 text-xs text-center">₱{{ number_format($saleItem->unit_price, 2) }}</td>
-                                                <td class="px-2 py-2 text-xs text-center">₱{{ number_format($saleItem->total_price, 2) }}</td>
+                                                <td class="px-2 py-2 text-xs text-center truncate" title="{{ number_format($saleItem->unit_price, 2) }} pesos">₱{{ number_format($saleItem->unit_price, 2) }}</td>
+                                                <td class="px-2 py-2 text-xs text-center truncate" title="{{ number_format($saleItem->total_price, 2) }} pesos">₱{{ number_format($saleItem->total_price, 2) }}</td>
                                             </tr>
                                             @endforeach
                                         </tbody>
@@ -465,9 +447,9 @@
                                 </div>
                             </div>
                             
-                            <!-- Totals (1/4 width) -->
+                            <!-- Payment Summary (1/4 width) -->
                             <div class="w-auto">
-                                <div class="px-4">
+                                <div class="px-4 flex flex-col justify-between">
                                     <h3 class="font-bold text-lg mb-4">Payment Summary</h3>
                                     <div class="space-y-3 pt-2">
                                         <div class="flex justify-between">
@@ -529,7 +511,7 @@
         @endforeach
 
 
-        <!-- EDIT DIALOG -->
+        <!-- UPDATED EDIT DIALOG with unique IDs -->
         @foreach($sales as $sale)
         <x-modal.createModal x-ref="editDialog{{ $sale->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
             <x-slot:dialogTitle>Edit Sale: {{ $sale->invoice_number }}</x-slot:dialogTitle>
@@ -544,55 +526,68 @@
                         value="{{ \Carbon\Carbon::parse($sale->sale_date)->format('Y-m-d') }}" 
                         class="col-span-2" required />
 
-                    <!-- Total Amount -->
-                    <x-form.form-input label="Total Amount:" name="total_amount" id="editTotalAmount" type="text" 
+                    <!-- Total Amount with UNIQUE ID -->
+                    <x-form.form-input label="Total Amount:" name="total_amount" id="editTotalAmount{{ $sale->id }}" type="text" 
                         value="₱{{ number_format($sale->total_amount, 2) }}"
                         class="col-span-2" readonly />
 
-                    <!-- Items Table -->
+                    <!-- Items Table with Batch Information -->
                     <div class="col-span-4">
                         <h3 class="text-lg font-semibold mb-3">Items</h3>
-                        <table class="w-full text-sm text-left text-gray-500 border overflow-hidden">
+                        <table class="w-full text-sm text-left text-gray-500 border overflow-hidden table-fixed">
                             <thead class="text-xs uppercase bg-main text-white">
                                 <tr>
-                                    <th class="px-4 py-3">Product</th>
-                                    <th class="px-2 py-3">Quantity</th>
-                                    <th class="px-2 py-3">Unit Price (₱)</th>
-                                    <th class="px-2 py-3">Total (₱)</th>
-                                    <th class="px-2 py-3">Actions</th>
+                                    <th class="px-3 py-3 text-center">Product</th>
+                                    <th class="px-2 py-3 text-center">Batch</th>
+                                    <th class="px-2 py-3 text-center">Exp Date</th>
+                                    <th class="px-2 py-3 text-center">Quantity</th>
+                                    <th class="px-2 py-3 text-center">Unit Price (₱)</th>
+                                    <th class="px-2 py-3 text-center">Total (₱)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($sale->items as $index => $item)
                                     <tr class="bg-white border-b hover:bg-gray-50">
-                                        <td class="px-4 py-3">
-                                            <input type="text" value="{{ $item->product->productName ?? 'N/A' }}" 
-                                                class="border-0 bg-transparent px-2 py-1 w-full" readonly>
+                                        <td class="px-3 py-3 truncate" title="{{ $item->product->productName ?? $item->product_name }}">
+                                            <span class="block px-2 py-1 w-full">
+                                                {{ $item->product->productName ?? $item->product_name }}
+                                            </span>
+                                            <input type="hidden" name="items[{{ $item->id }}][product_name]" value="{{ $item->product_name }}">
+                                        </td>
+                                        <td class="px-2 py-3 text-center truncate" title="{{ $item->productBatch->batch_number ?? 'N/A' }}">
+                                            <span class="text-xs">{{ $item->productBatch->batch_number ?? 'N/A' }}</span>
+                                        </td>
+                                        <td class="px-2 py-3 text-center truncate" title="{{ $item->productBatch ? \Carbon\Carbon::parse($item->productBatch->expiration_date)->format('M d, Y') : 'N/A' }}">
+                                            <span class="text-xs">
+                                                {{ $item->productBatch ? \Carbon\Carbon::parse($item->productBatch->expiration_date)->format('M d, Y') : 'N/A' }}
+                                            </span>
                                         </td>
                                         <td class="px-2 py-3">
-                                            <input type="number" name="items[{{ $item->id }}][quantity]" 
-                                                value="{{ $item->quantity }}" min="1" 
-                                                class="border rounded px-2 py-1 w-20" onchange="updateItemTotal(this)">
+                                            <input type="number" 
+                                                name="items[{{ $item->id }}][quantity]" 
+                                                value="{{ $item->quantity }}" 
+                                                min="1" 
+                                                class="border rounded px-2 py-1 w-20" 
+                                                onchange="updateItemTotalForSale(this, {{ $sale->id }})"
+                                                oninput="updateItemTotalForSale(this, {{ $sale->id }})"
+                                                data-sale-id="{{ $sale->id }}"
+                                                data-item-id="{{ $item->id }}">
                                         </td>
                                         <td class="px-2 py-3">
-                                            <input type="number" step="0.01" name="items[{{ $item->id }}][unit_price]" 
-                                                value="{{ $item->unit_price }}" 
-                                                class="border rounded px-2 py-1 w-24" onchange="updateItemTotal(this)">
+                                            <span class="block px-2 py-1 w-24 bg-gray-100 cursor-not-allowed text-center truncate" title="₱{{ number_format($item->unit_price, 2) }}">
+                                                ₱{{ number_format($item->unit_price, 2) }}
+                                            </span>
+                                            <input type="hidden" name="items[{{ $item->id }}][unit_price]" value="{{ $item->unit_price }}">
                                         </td>
-                                        <td class="px-2 py-3">
-                                            <input type="text" value="₱{{ number_format($item->total_price, 2) }}" 
-                                                class="border rounded px-2 py-1 w-24 bg-gray-100 cursor-not-allowed" readonly>
-                                        </td>
-                                        <td class="px-2 py-3 flex justify-center">
-                                            <button type="button" onclick="removeSaleItem(this)" 
-                                                class="text-red-600 hover:text-red-800">
-                                                <x-form.deleteBtn/>
-                                            </button>
+                                        <td class="px-2 py-3 truncate" title="{{ number_format($item->total_price, 2) }}">
+                                            <span id="itemTotal{{ $item->id }}" class="block px-2 py-1 w-24 bg-gray-100 cursor-not-allowed text-center">
+                                                ₱{{ number_format($item->total_price, 2) }}
+                                            </span>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="px-4 py-4 text-center text-gray-500">
+                                        <td colspan="6" class="px-4 py-4 text-center text-gray-500">
                                             No items in this sale.
                                         </td>
                                     </tr>
@@ -607,7 +602,7 @@
                             class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out">
                             Cancel
                         </button>
-                        <x-form.saveBtn>Edit</x-form.saveBtn>
+                        <x-form.saveBtn type="submit">Edit</x-form.saveBtn>
                     </div>
                 </form>
             </div>
@@ -1175,6 +1170,139 @@
             }, 1000);
         }
     }
+
+// UPDATED: Function to update item total when quantity changes in edit form
+function updateItemTotalForSale(input, saleId) {
+    const row = input.closest('tr');
+    const quantity = parseFloat(input.value) || 0;
+    
+    // Get the unit price from the hidden input in the same row
+    const unitPriceInput = row.querySelector('input[name*="[unit_price]"]');
+    const unitPrice = parseFloat(unitPriceInput.value) || 0;
+    
+    // Calculate the new total
+    const total = quantity * unitPrice;
+    
+    // Get the item ID from the input name attribute
+    const itemId = input.getAttribute('data-item-id');
+    const totalSpan = document.getElementById('itemTotal' + itemId);
+    
+    if (totalSpan) {
+        totalSpan.textContent = '₱' + total.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+    
+    // Update the main total amount for this specific sale
+    updateEditTotalAmountForSale(saleId);
+}
+
+// UPDATED: Function to update the total amount in edit form for specific sale
+function updateEditTotalAmountForSale(saleId) {
+    let total = 0;
+    
+    // Find the specific modal for this sale
+    const modal = document.querySelector(`[x-ref="editDialog${saleId}"]`);
+    if (!modal) {
+        console.error(`Modal for sale ${saleId} not found`);
+        return;
+    }
+    
+    // Get quantity inputs and unit price inputs only from this modal
+    const quantityInputs = modal.querySelectorAll('input[name*="[quantity]"]');
+    const unitPriceInputs = modal.querySelectorAll('input[name*="[unit_price]"]');
+    
+    // Calculate total by multiplying each quantity with its unit price
+    for (let i = 0; i < quantityInputs.length && i < unitPriceInputs.length; i++) {
+        const quantity = parseFloat(quantityInputs[i].value) || 0;
+        const unitPrice = parseFloat(unitPriceInputs[i].value) || 0;
+        total += quantity * unitPrice;
+    }
+    
+    // Update the total amount input for this specific sale
+    const totalAmountInput = document.getElementById(`editTotalAmount${saleId}`);
+    if (totalAmountInput) {
+        totalAmountInput.value = '₱' + total.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    } else {
+        console.error(`Total amount input for sale ${saleId} not found`);
+    }
+}
+
+// UPDATED: Enhanced initialization for edit modals
+document.addEventListener('DOMContentLoaded', function() {
+    // Monitor when edit buttons are clicked
+    document.addEventListener('click', function(e) {
+        // Check if this is an edit button
+        if (e.target.textContent.trim() === 'Edit') {
+            // Extract sale ID from the button's @click attribute or find it in the DOM
+            const button = e.target;
+            const onclickAttr = button.getAttribute('@click');
+            
+            if (onclickAttr) {
+                const saleIdMatch = onclickAttr.match(/editDialog(\d+)/);
+                if (saleIdMatch) {
+                    const saleId = saleIdMatch[1];
+                    
+                    // Wait for modal to open, then calculate totals
+                    setTimeout(() => {
+                        updateEditTotalAmountForSale(saleId);
+                    }, 100);
+                }
+            }
+        }
+    });
+    
+    // Also handle direct input events with event delegation
+    document.addEventListener('input', function(e) {
+        if (e.target.matches('input[name*="[quantity]"]') && e.target.hasAttribute('data-sale-id')) {
+            const saleId = e.target.getAttribute('data-sale-id');
+            updateItemTotalForSale(e.target, saleId);
+        }
+    });
+    
+    // Handle change events too
+    document.addEventListener('change', function(e) {
+        if (e.target.matches('input[name*="[quantity]"]') && e.target.hasAttribute('data-sale-id')) {
+            const saleId = e.target.getAttribute('data-sale-id');
+            updateItemTotalForSale(e.target, saleId);
+        }
+    });
+});
+
+// BACKWARD COMPATIBILITY: Keep old function names for any existing calls
+function updateItemTotal(input) {
+    // Try to find sale ID from the input or its context
+    const saleId = input.getAttribute('data-sale-id');
+    if (saleId) {
+        updateItemTotalForSale(input, saleId);
+    } else {
+        // Fallback: try to find it from the modal structure
+        const modal = input.closest('[x-ref^="editDialog"]');
+        if (modal) {
+            const refAttr = modal.getAttribute('x-ref');
+            const saleIdMatch = refAttr.match(/editDialog(\d+)/);
+            if (saleIdMatch) {
+                updateItemTotalForSale(input, saleIdMatch[1]);
+            }
+        }
+    }
+}
+
+function updateEditTotalAmount() {
+    // Try to find which modal is currently open
+    const openModal = document.querySelector('[x-ref^="editDialog"]:not([style*="display: none"])');
+    if (openModal) {
+        const refAttr = openModal.getAttribute('x-ref');
+        const saleIdMatch = refAttr.match(/editDialog(\d+)/);
+        if (saleIdMatch) {
+            updateEditTotalAmountForSale(saleIdMatch[1]);
+        }
+    }
+}
 
     // Call this function when page loads
     document.addEventListener('DOMContentLoaded', function() {
