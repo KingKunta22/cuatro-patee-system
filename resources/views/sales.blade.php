@@ -499,7 +499,7 @@
                             <span>Download</span>
                         </button>
                         <button onclick="printSaleReceipt({{ $sale->id }})" 
-                                class="flex items-center space-x-1 cursor-pointer bg-green-500 text-white rounded hover:bg-green-400 ml-auto font-semibold px-6 py-2 w-auto transition-all duration-100 ease-in">
+                                class="flex items-center space-x-1 cursor-pointer rounded ml-auto px-6 py-2 w-auto transition-all duration-100 ease-in bg-blue-500 text-white hover:bg-blue-600">
                             <span>Print</span>
                         </button>
                     </div>

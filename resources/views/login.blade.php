@@ -102,7 +102,7 @@
                     <input type="password" name="new_password_confirmation" class="border border-black rounded px-3 py-2" required autocomplete="off">
                     <div class="flex justify-end gap-2 mt-2">
                         <button type="button" onclick="document.getElementById('forgotDialog').close()" class="px-3 py-2 bg-gray-300 rounded">Cancel</button>
-                        <button type="submit" class="px-3 py-2 bg-red-600 text-white rounded">Reset Password</button>
+                        <button type="submit" class="px-3 py-2 bg-green-600 text-white rounded">Reset Password</button>
                     </div>
                 </form>
             </div>
