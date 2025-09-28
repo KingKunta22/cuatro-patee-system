@@ -1018,43 +1018,52 @@
                         </div>
 
                         <!-- Right Side (Main Info) -->
-                        <div class="col-span-4 grid grid-cols-4 gap-6">
-                            
-                            <!-- Product Name (full width) -->
+                        <div class="col-span-4 grid grid-cols-2 gap-4">
+                            <!-- Product Name -->
                             <x-form.form-input label="Product Name" name="productName" type="text" 
-                                value="{{ $product->productName }}" class="col-span-4" required />
+                                value="{{ $product->productName }}" class="col-span-2" required />
 
-                            <!-- Product Brand (full width) - FIXED: Dynamic from database -->
-                            <div class="col-span-4 flex flex-col text-start">
+                            <!-- Product Brand -->
+                            <div class="flex flex-col text-start">
                                 <label for="productBrand" class="font-medium">Product Brand</label>
                                 <select name="productBrand" id="productBrand" 
                                     class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
                                     <option value="" disabled>Select Brand</option>
                                     @foreach($brands as $brand)
-                                        <option value="{{ $brand->productBrand }}" {{ $product->productBrand == $brand->productBrand ? 'selected' : '' }}>
+                                        <option value="{{ $brand->productBrand }}" {{ $product->brand->productBrand == $brand->productBrand ? 'selected' : '' }}>
                                             {{ $brand->productBrand }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            <!-- Category  -->
-                            <div class="col-span-2 flex flex-col text-start">
+                            <!-- Product Category -->
+                            <div class="flex flex-col text-start">
                                 <label for="productCategory" class="font-medium">Product Category</label>
                                 <select name="productCategory" id="productCategory" 
                                     class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
                                     <option value="" disabled>Select Category</option>
                                     @foreach($categories as $category)
-                                        <option value="{{ $category->productCategory }}" {{ $product->productCategory == $category->productCategory ? 'selected' : '' }}>
+                                        <option value="{{ $category->productCategory }}" {{ $product->category->productCategory == $category->productCategory ? 'selected' : '' }}>
                                             {{ $category->productCategory }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
 
-                            <!-- Stock (half) -->
-                            <x-form.form-input label="Stock" name="productStock" value="{{ $product->productStock }}" 
-                                class="col-span-2" type="number" step="1" min="0" required />
+                            <!-- Stock -->
+                            <x-form.form-input label="Stock" name="productStock" value="{{ $product->batches->sum('quantity') }}" 
+                                type="number" step="1" min="0" required />
+
+                            <!-- Selling Price -->
+                            <x-form.form-input label="Selling Price (₱)" name="productSellingPrice" 
+                                value="{{ $product->productSellingPrice }}" 
+                                type="number" step="0.01" min="0" required />
+
+                            <!-- Cost Price -->
+                            <x-form.form-input label="Cost Price (₱)" name="productCostPrice" 
+                                value="{{ $product->productCostPrice }}" 
+                                type="number" step="0.01" min="0" required />
                         </div>
 
                         <!-- Rest of fields below (full-width layout) -->

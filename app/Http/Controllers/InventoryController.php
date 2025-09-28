@@ -330,7 +330,7 @@ class InventoryController extends Controller
         return "{$base}-{$brand}-{$category}";
     }
 
-    public function update(Request $request, Inventory $inventory) 
+    public function update(Request $request, Product $product) 
     {
         // Validate Requests - Use string validation instead of hardcoded in: values
         $validated = $request->validate([
@@ -354,7 +354,7 @@ class InventoryController extends Controller
 
 
         // Update the fields
-        $inventory->update([
+        $product->update([
             'productName' => $validated['productName'],
             'productBrand' => $validated['productBrand'],
             'productCategory' => $validated['productCategory'],
@@ -368,24 +368,24 @@ class InventoryController extends Controller
 
         // Handle new file uploads
         if ($request->hasFile('productImage')) {
-            if ($inventory->productImage) {
-                Storage::disk('public')->delete($inventory->productImage);
+            if ($product->productImage) {
+                Storage::disk('public')->delete($product->productImage);
             }
 
             $newImagePath = $request->file('productImage')->store('inventory', 'public');
-            $inventory->update(['productImage' => $newImagePath]);
+            $product->update(['productImage' => $newImagePath]);
         }
 
         return redirect()->route('inventory.index')->with('success', 'Product updated successfully!');
     }
 
-    public function destroy(Inventory $inventory)
+    public function destroy(Product $product)
     {
-        if ($inventory->productImage) {
-            Storage::disk('public')->delete($inventory->productImage);
+        if ($product->productImage) {
+            Storage::disk('public')->delete($product->productImage);
         }
 
-        $inventory->delete();
+        $product->delete();
 
         return redirect()->route('inventory.index')->with('success', 'Inventory product successfully deleted!');
     }
