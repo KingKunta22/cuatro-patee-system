@@ -121,183 +121,182 @@
             <table class="w-full table-fixed">
                 <thead class="rounded-lg bg-main text-white px-4 py-3">
                     <tr class="rounded-lg">
-                        <th class=" bg-main px-4 py-3">Product Name</th>
-                        <th class=" bg-main px-4 py-3">Category</th>
-                        <th class=" bg-main px-4 py-3">SKU</th>
-                        <th class=" bg-main px-4 py-3">Batch</th>
-                        <th class=" bg-main px-4 py-3">Brand</th>
-                        <th class=" bg-main px-4 py-3">Price</th>
-                        <th class=" bg-main px-4 py-3">Stock</th>
-                        <th class=" bg-main px-4 py-3">Status</th>
-                        <th class=" bg-main px-4 py-3">Action</th>
+                        <th class="bg-main px-4 py-3">Product Name</th>
+                        <th class="bg-main px-4 py-3">Category</th>
+                        <th class="bg-main px-4 py-3">SKU</th>
+                        <th class="bg-main px-4 py-3">Brand</th>
+                        <th class="bg-main px-4 py-3">Price</th>
+                        <th class="bg-main px-4 py-3">Stock</th>
+                        <th class="bg-main px-4 py-3">Status</th>
+                        <th class="bg-main px-4 py-3">Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {{--  Loops through each product which was assigned from the eager loaded relationship from InventoryController --}}
+                    {{-- Loops through each product which was assigned from the eager loaded relationship from InventoryController --}}
                     @foreach($products as $product)
-                    <tr class="border-b">
-                        <td class="truncate px-2 py-2 text-center" title="{{ $product->productName }}">
+                    <tr>
+                        <td class="truncate px-4 py-3 text-left" title="{{ $product->productName }}">
                             {{ $product->productName }}
                         </td>
                         <!-- For category -->
-                        <td class="truncate px-2 py-2 text-center" title="{{ $product->category->productCategory ?? $product->productCategory ?? 'N/A' }}">
+                        <td class="truncate px-4 py-3 text-center" title="{{ $product->category->productCategory ?? $product->productCategory ?? 'N/A' }}">
                             {{ $product->category->productCategory ?? $product->productCategory ?? 'N/A' }}
                         </td>
-                        <td class="truncate px-2 py-2 text-center" title="{{ $product->productSKU }}">
+                        <td class="truncate px-4 py-3 text-center" title="{{ $product->productSKU }}">
                             {{ $product->productSKU }}
                         </td>
-                        <td class="truncate px-2 py-2 text-center">
-                            {{ $product->batches->count() }}
-                        </td>
                         <!-- For brand -->
-                        <td class="truncate px-2 py-2 text-center" title="{{ $product->brand->productBrand ?? $product->productBrand ?? 'N/A' }}">
+                        <td class="truncate px-4 py-3 text-center" title="{{ $product->brand->productBrand ?? $product->productBrand ?? 'N/A' }}">
                             {{ $product->brand->productBrand ?? $product->productBrand ?? 'N/A' }}
                         </td>
-                        <td class="truncate px-2 py-2 text-center">
+                        <td class="truncate px-4 py-3 text-center">
                             ₱{{ number_format($product->productSellingPrice, 2) }}
                         </td>
-                        <td class="truncate px-2 py-2 text-center">
-                            {{ $product->batches->sum('quantity') }} <!-- TOTAL STOCK -->
+                        <td class="truncate px-4 py-3 text-center">
+                            {{ $product->batches->sum('quantity') }}
                         </td>
-                        <td class="truncate px-2 py-2 text-center text-sm font-semibold">
+                        <td class="truncate px-4 py-3 text-center">
                             @php
                                 $totalStock = $product->batches->sum('quantity');
                             @endphp
                             @if ($totalStock == 0)
-                                <span class="text-red-600 bg-red-100 px-2 py-1 rounded-xl">Out of Stock</span>
+                                <span class="text-red-600 bg-red-100 px-3 py-1 rounded-full text-sm font-medium">Out of Stock</span>
                             @elseif ($totalStock <= 10)
-                                <span class="text-yellow-600 bg-yellow-100 px-2 py-1 rounded-xl">Low Stock</span>
+                                <span class="text-yellow-600 bg-yellow-100 px-3 py-1 rounded-full text-sm font-medium">Low Stock</span>
                             @else
-                                <span class="text-green-600 bg-green-100 px-2 py-1 rounded-xl">Active Stock</span>
+                                <span class="text-green-600 bg-green-100 px-3 py-1 rounded-full text-sm font-medium">Active Stock</span>
                             @endif
                         </td>
-                        <td class="truncate px-2 py-2 text-center">
-                            <button @click="$refs['viewInventoryDetails{{ $product->id }}'].showModal()" 
-                                    class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">
+                        <td class="truncate px-4 py-3 text-center">
+                            <button @click="$refs.viewInventoryDetails{{ $product->id }}.showModal()" 
+                                    class="flex rounded-md mx-auto bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">
                                 View Details
                             </button>
                         </td>
                     </tr>
-                    
+                    @endforeach
                 </tbody>
-
-                <!-- VIEW INVENTORY DETAILS MODAL PER PRODUCT-->
-                <x-modal.createModal x-ref="viewInventoryDetails{{ $product->id }}">
-                    <x-slot:dialogTitle>Product Details: {{ $product->productName }}</x-slot:dialogTitle>
-                    
-                    <div class="grid grid-cols-2 gap-6 p-6">
-                        <!-- LEFT: IMAGE -->
-                        <div class="flex flex-col items-center justify-center">
-                            <!-- Product name bigger -->
-                            <h2 class="text-3xl tracking-wide font-bold text-start mr-auto uppercase pb-4 text-gray-800">
-                                {{ $product->productName }}
-                            </h2>
-                            @if($product->productImage)
-                                <img src="{{ asset('storage/' . $product->productImage) }}" 
-                                    alt="{{ $product->productName }}" 
-                                    class="w-full max-h-80 object-contain rounded-xl shadow-lg border">
-                            @endif
-                        </div>
-
-                        <!-- RIGHT: DETAILS -->
-                        <div class="flex flex-col space-y-4">
-
-                            <!-- Info grid -->
-                            <div class="grid grid-cols-4 gap-3">
-                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                    <p class="font-semibold text-md">SKU</p>
-                                    <p class="text-sm">{{ $product->productSKU }}</p>
-                                </div>
-                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                    <p class="font-semibold text-md">Total Stock</p>
-                                    <p class="text-sm">{{ $product->batches->sum('quantity') }}</p>
-                                </div>
-                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                    <p class="font-semibold text-md">Brand</p>
-                                    <p class="text-sm">{{ $product->brand->productBrand ?? 'N/A' }}</p>
-                                </div>
-                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                    <p class="font-semibold text-md">Measurement</p>
-                                    <p class="text-sm">{{ $product->productItemMeasurement }}</p>
-                                </div>
-                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                    <p class="font-semibold text-md">Category</p>
-                                    <p class="text-sm">{{ $product->category->productCategory ?? 'N/A' }}</p>
-                                </div>
-                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                    <p class="font-semibold text-md">Selling Price</p>
-                                    <p class="text-sm">₱{{ number_format($product->productSellingPrice, 2) }}</p>
-                                </div>
-                                <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                                    <p class="font-semibold text-md">Cost Price</p>
-                                    <p class="text-sm">₱{{ number_format($product->productCostPrice, 2) }}</p>
-                                </div>
-                                <!-- BATCH DETAILS SECTION - UPDATED WITH TABLE -->
-                                <div class="bg-gray-50 col-span-4 p-3 rounded-md">
-                                    <p class="font-semibold text-md mb-3">Batch Details</p>
-                                    <div class="border rounded-md border-solid border-black">
-                                        <table class="w-full table-fixed">
-                                            <thead class="rounded-lg bg-main text-white">
-                                                <tr class="rounded-lg">
-                                                    <th class="bg-main px-2 py-2 text-sm truncate" title="Batch Number">Batch Number</th>
-                                                    <th class="bg-main px-2 py-2 text-sm truncate" title="Quantity">Quantity</th>
-                                                    <th class="bg-main px-2 py-2 text-sm truncate" title="Exp Date">Exp Date</th>
-                                                    <th class="bg-main px-2 py-2 text-sm truncate" title="Cost Price">Cost Price</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach($product->batches as $batch)
-                                                <tr class="border-b">
-                                                    <td class="px-2 py-2 text-xs text-center truncate" title="{{ $batch->batch_number }}">
-                                                        {{ $batch->batch_number }}
-                                                    </td>
-                                                    <td class="px-2 py-2 text-xs text-center truncate" title="">
-                                                        {{ $batch->quantity }} 
-                                                    </td>
-                                                    <td class="px-2 py-2 text-xs text-center truncate" title="{{ $batch->expiration_date ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'Non-perishable' }}">
-                                                        {{ $batch->expiration_date ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'Non-perishable' }}
-                                                    </td>
-                                                    <td class="px-2 py-2 text-xs text-center truncate" title="{{ number_format($batch->cost_price, 2) }} pesos">₱{{ number_format($batch->cost_price, 2) }}</td>
-                                                </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ACTION BUTTONS -->
-                    <div class="flex justify-between items-center gap-x-4 px-6 pb-4 mt-4 border-t pt-4">
-                        <!-- EDIT BUTTON: Opens edit dialog -->
-                        <button 
-                            @click="$refs['editProductDetails{{ $product->id }}'].showModal()" 
-                            class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/60 transition-all duration-100 ease-in">
-                            Edit
-                        </button>
-
-                        <!-- DELETE BUTTON: Opens delete dialog -->
-                        <x-form.closeBtn @click="$refs['confirmDeleteModal{{ $product->id }}'].showModal()">Delete</x-form.closeBtn>
-
-                        <!-- CLOSE BUTTON: Closes view details dialog -->
-                        <button 
-                            @click="$refs['viewInventoryDetails{{ $product->id }}'].close()" 
-                            class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
-                            Close
-                        </button>
-                    </div>
-                </x-modal.createModal>
-
-                @endforeach
             </table>
 
             <!-- PAGINATION -->
-            <div class="mt-4 px-4 py-2 bg-gray-50">
+            <div class="mt-4 px-4 py-3 bg-gray-50 border-t">
                 {{ $products->appends(request()->except('page'))->links() }}
             </div>
         </section>
 
+        <!-- ============================================ -->
+        <!----------------- MODALS SECTION ----------------->
+        <!-- ============================================ -->
+
+        <!-- PUT ALL MODALS OUTSIDE THE TABLE SECTION -->
+        @foreach($products as $product)
+        <!-- VIEW INVENTORY DETAILS MODAL PER PRODUCT-->
+        <x-modal.createModal x-ref="viewInventoryDetails{{ $product->id }}">
+            <x-slot:dialogTitle>Product Details: {{ $product->productName }}</x-slot:dialogTitle>
+            
+            <div class="grid grid-cols-2 gap-6 p-6">
+                <!-- LEFT: IMAGE -->
+                <div class="flex flex-col items-center justify-center">
+                    <!-- Product name bigger -->
+                    <h2 class="text-3xl tracking-wide font-bold text-start mr-auto uppercase pb-4 text-gray-800">
+                        {{ $product->productName }}
+                    </h2>
+                    @if($product->productImage)
+                        <img src="{{ asset('storage/' . $product->productImage) }}" 
+                            alt="{{ $product->productName }}" 
+                            class="w-full max-h-80 object-contain rounded-xl shadow-lg border">
+                    @endif
+                </div>
+
+                <!-- RIGHT: DETAILS -->
+                <div class="flex flex-col space-y-4">
+                    <!-- Info grid -->
+                    <div class="grid grid-cols-4 gap-3">
+                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                            <p class="font-semibold text-md">SKU</p>
+                            <p class="text-sm">{{ $product->productSKU }}</p>
+                        </div>
+                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                            <p class="font-semibold text-md">Total Stock</p>
+                            <p class="text-sm">{{ $product->batches->sum('quantity') }}</p>
+                        </div>
+                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                            <p class="font-semibold text-md">Brand</p>
+                            <p class="text-sm">{{ $product->brand->productBrand ?? 'N/A' }}</p>
+                        </div>
+                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                            <p class="font-semibold text-md">Measurement</p>
+                            <p class="text-sm">{{ $product->productItemMeasurement }}</p>
+                        </div>
+                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                            <p class="font-semibold text-md">Category</p>
+                            <p class="text-sm">{{ $product->category->productCategory ?? 'N/A' }}</p>
+                        </div>
+                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                            <p class="font-semibold text-md">Selling Price</p>
+                            <p class="text-sm">₱{{ number_format($product->productSellingPrice, 2) }}</p>
+                        </div>
+                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                            <p class="font-semibold text-md">Cost Price</p>
+                            <p class="text-sm">₱{{ number_format($product->productCostPrice, 2) }}</p>
+                        </div>
+                        <!-- BATCH DETAILS SECTION -->
+                        <div class="bg-gray-50 col-span-4 p-3 rounded-md">
+                            <p class="font-semibold text-md mb-3">Batch Details</p>
+                            <div class="border rounded-md border-solid border-black">
+                                <table class="w-full table-fixed">
+                                    <thead class="rounded-lg bg-main text-white">
+                                        <tr class="rounded-lg">
+                                            <th class="bg-main px-2 py-2 text-sm truncate" title="Batch Number">Batch Number</th>
+                                            <th class="bg-main px-2 py-2 text-sm truncate" title="Quantity">Quantity</th>
+                                            <th class="bg-main px-2 py-2 text-sm truncate" title="Exp Date">Exp Date</th>
+                                            <th class="bg-main px-2 py-2 text-sm truncate" title="Cost Price">Cost Price</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($product->batches as $batch)
+                                        <tr class="border-b">
+                                            <td class="px-2 py-2 text-xs text-center truncate" title="{{ $batch->batch_number }}">
+                                                {{ $batch->batch_number }}
+                                            </td>
+                                            <td class="px-2 py-2 text-xs text-center truncate" title="">
+                                                {{ $batch->quantity }} 
+                                            </td>
+                                            <td class="px-2 py-2 text-xs text-center truncate" title="{{ $batch->expiration_date ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'Non-perishable' }}">
+                                                {{ $batch->expiration_date ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'Non-perishable' }}
+                                            </td>
+                                            <td class="px-2 py-2 text-xs text-center truncate" title="{{ number_format($batch->cost_price, 2) }} pesos">₱{{ number_format($batch->cost_price, 2) }}</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="flex justify-between items-center gap-x-4 px-6 pb-4 mt-4 border-t pt-4">
+                <!-- EDIT BUTTON: Opens edit dialog -->
+                <button 
+                    @click="$refs.editProductDetails{{ $product->id }}.showModal()" 
+                    class="flex w-24 place-content-center rounded-md bg-button-create/70 px-3 py-2 text-blue-50 font-semibold items-center content-center hover:bg-button-create/60 transition-all duration-100 ease-in">
+                    Edit
+                </button>
+
+                <!-- DELETE BUTTON: Opens delete dialog -->
+                <x-form.closeBtn @click="$refs['confirmDeleteModal{{ $product->id }}'].showModal()">Delete</x-form.closeBtn>
+
+                <!-- CLOSE BUTTON: Closes view details dialog -->
+                <button 
+                    @click="$refs.viewInventoryDetails{{ $product->id }}.close()" 
+                    class="flex rounded-md ml-auto font-semibold bg-gray-400 px-6 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition-all duration-100 ease-in">
+                    Close
+                </button>
+            </div>
+        </x-modal.createModal>
+        @endforeach
 
         <!-- ============================================ -->
         <!----------------- MODALS SECTION ----------------->
