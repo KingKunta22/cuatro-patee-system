@@ -153,10 +153,10 @@
                             ₱{{ number_format($product->productSellingPrice, 2) }}
                         </td>
                         <td class="truncate px-4 py-3 text-center flex flex-col">
-                            {{ $product->batches->sum('quantity') }} units
+                            {{ $product->activeBatches->sum('quantity') }} units
                             <span class='text-xs text-gray-500'> 
-                                ({{ $product->batches->count() }} 
-                                @if ($product->batches->count() == 1)
+                                ({{ $product->activeBatches->count() }} 
+                                @if ($product->activeBatches->count() == 1)
                                     batch
                                 @else 
                                     batches
@@ -166,7 +166,7 @@
                         </td>
                         <td class="truncate px-4 py-3 text-center">
                             @php
-                                $totalStock = $product->batches->sum('quantity');
+                                $totalStock = $product->activeBatches->sum('quantity');
                             @endphp
                             @if ($totalStock == 0)
                                 <span class="text-red-600 bg-red-100 px-3 py-1 rounded-full text-sm font-medium">Out of Stock</span>
@@ -1019,7 +1019,7 @@
         <!-- ======================================================= -->
 
         <!-- EDIT MODAL -->
-<!-- EDIT MODAL -->
+<!-- EDIT MODAL - FIXED VERSION -->
 @foreach($products as $product)
 <x-modal.createModal x-ref="editProductDetails{{ $product->id }}">
     <x-slot:dialogTitle>Edit {{ $product->productName }}</x-slot:dialogTitle>
@@ -1081,15 +1081,10 @@
                     value="{{ $product->productSellingPrice }}" 
                     step="0.01" min="0" required />
 
-                <!-- Cost Price (Read-only) -->
-                <div class="flex flex-col text-start">
-                    <label for="productCostPrice" class="font-medium">Cost Price</label>
-                    <input type="number" name="productCostPrice" id="productCostPrice" 
-                        value="{{ $product->productCostPrice }}" 
-                        step="0.01" min="0" 
-                        class="px-3 py-2 border rounded border-gray-300 bg-gray-100" 
-                        readonly required>
-                </div>
+                <!-- Cost Price -->
+                <x-form.form-input label="Cost Price" name="productCostPrice" type="number" 
+                    value="{{ $product->productCostPrice }}" 
+                    step="0.01" min="0" required />
 
                 <!-- Measurement -->
                 <div class="flex flex-col text-start">
@@ -1110,7 +1105,7 @@
 
                 <!-- Product Stock (Read-only, calculated from batches) -->
                 <div class="flex flex-col text-start">
-                    <label for="productStock" class="font-medium">Total Stock</label>
+                    <label class="font-medium">Total Stock</label>
                     <input type="number" 
                         value="{{ $product->batches->sum('quantity') }}" 
                         class="px-3 py-2 border rounded border-gray-300 bg-gray-100" 
@@ -1118,26 +1113,25 @@
                         disabled>
                     <p class="text-xs text-gray-500 mt-1">Auto-calculated from batches</p>
                 </div>
-
             </div>
 
-            <!-- EDITABLE BATCHES TABLE -->
+            <!-- EDITABLE BATCHES TABLE - FIXED STRUCTURE -->
             <div class="col-span-6">
                 <h2 class="text-xl font-bold mb-4">Edit Product Batches</h2>
                 <div class="border rounded-md border-solid border-black">
                     <table class="w-full table-fixed">
                         <thead class="rounded-lg bg-main text-white">
                             <tr class="rounded-lg">
-                                <th class="bg-main px-2 py-2 text-sm truncate" title="Batch Number">Batch Number</th>
-                                <th class="bg-main px-2 py-2 text-sm truncate" title="Quantity">Quantity</th>
-                                <th class="bg-main px-2 py-2 text-sm truncate" title="Exp Date">Exp Date</th>
-                                <th class="bg-main px-2 py-2 text-sm truncate" title="Cost Price">Cost Price</th>
+                                <th class="bg-main px-2 py-2 text-sm truncate">Batch Number</th>
+                                <th class="bg-main px-2 py-2 text-sm truncate">Quantity</th>
+                                <th class="bg-main px-2 py-2 text-sm truncate">Exp Date</th>
+                                <th class="bg-main px-2 py-2 text-sm truncate">Cost Price</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($product->batches as $batch)
                             <tr class="border-b">
-                                <td class="px-2 py-2 text-xs text-center truncate" title="{{ $batch->batch_number }}">
+                                <td class="px-2 py-2 text-xs text-center truncate">
                                     {{ $batch->batch_number }}
                                     <input type="hidden" name="batches[{{ $batch->id }}][id]" value="{{ $batch->id }}">
                                 </td>
@@ -1155,13 +1149,14 @@
                                                name="batches[{{ $batch->id }}][expiration_date]" 
                                                value="{{ $batch->expiration_date ? $batch->expiration_date->format('Y-m-d') : '' }}"
                                                class="px-1 py-1 border rounded text-center"
-                                               min="{{ date('Y-m-d') }}">
+                                               min="{{ date('Y-m-d') }}"
+                                               {{ $product->is_perishable ? '' : 'readonly' }}>
                                     @else
-                                        {{ $batch->expiration_date ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'Non-perishable' }}
-                                        <input type="hidden" name="batches[{{ $batch->id }}][expiration_date]" value="{{ $batch->expiration_date ? $batch->expiration_date->format('Y-m-d') : '' }}">
+                                        Non-perishable
+                                        <input type="hidden" name="batches[{{ $batch->id }}][expiration_date]" value="">
                                     @endif
                                 </td>
-                                <td class="px-2 py-2 text-xs text-center truncate" title="{{ number_format($batch->cost_price, 2) }} pesos">
+                                <td class="px-2 py-2 text-xs text-center truncate">
                                     ₱{{ number_format($batch->cost_price, 2) }}
                                 </td>
                             </tr>

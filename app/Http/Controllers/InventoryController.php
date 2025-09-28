@@ -36,9 +36,9 @@ class InventoryController extends Controller
             ->select('id', 'orderNumber')
             ->get();
 
-        // Start query - ADD ORDER BY HERE
-        $query = Product::with(['batches', 'brand', 'category'])
-            ->orderBy('created_at', 'desc'); // Newest first
+        // Start query - use activeBatches for display calculations
+        $query = Product::with(['batches', 'brand', 'category']) // Keep batches for editing
+            ->orderBy('created_at', 'desc');
 
         // Apply category filter
         if ($request->category && $request->category != 'all') {
@@ -330,9 +330,16 @@ class InventoryController extends Controller
         return "{$base}-{$brand}-{$category}";
     }
 
-public function update(Request $request, Product $product) 
+public function update(Request $request, $id)
 {
-    // Remove productStock from validation since it's auto-calculated
+    // Find the product
+    $product = Product::find($id);
+    
+    if (!$product) {
+        return back()->withErrors(['error' => 'Product not found']);
+    }
+
+    // Validate the request
     $validated = $request->validate([
         'productName' => 'required|string|max:255',
         'productBrand' => 'required|string|max:255', 
@@ -342,8 +349,8 @@ public function update(Request $request, Product $product)
         'productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
         'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         'batches' => 'nullable|array',
-        'batches.*.id' => 'required|exists:product_batches,id',
-        'batches.*.quantity' => 'required|numeric|min:0',
+        'batches.*.id' => 'required_with:batches|exists:product_batches,id',
+        'batches.*.quantity' => 'required_with:batches|numeric|min:0',
         'batches.*.expiration_date' => 'nullable|date|after_or_equal:today',
     ]);
 
@@ -355,36 +362,56 @@ public function update(Request $request, Product $product)
         $brand = Brand::firstOrCreate(['productBrand' => $validated['productBrand']]);
         $category = Category::firstOrCreate(['productCategory' => $validated['productCategory']]);
 
-        // Update the product - NO productStock field
-        $product->update([
+        // Prepare update data
+        $updateData = [
             'productName' => $validated['productName'],
             'brand_id' => $brand->id,
             'category_id' => $category->id,
             'productSellingPrice' => $validated['productSellingPrice'],
             'productCostPrice' => $validated['productCostPrice'],
             'productItemMeasurement' => $validated['productItemMeasurement'],
-        ]);
+        ];
 
-        // Handle new file uploads
+        // Handle image upload if provided
         if ($request->hasFile('productImage')) {
+            // Delete old image if exists
             if ($product->productImage) {
                 Storage::disk('public')->delete($product->productImage);
             }
-
-            $newImagePath = $request->file('productImage')->store('products', 'public');
-            $product->update(['productImage' => $newImagePath]);
+            
+            // Store new image
+            $updateData['productImage'] = $request->file('productImage')->store('products', 'public');
         }
 
-        // Update batches if provided
-        if (isset($validated['batches'])) {
+        // Update the product
+        $product->update($updateData);
+
+        // Handle batch updates
+        if (isset($validated['batches']) && !empty($validated['batches'])) {
             foreach ($validated['batches'] as $batchData) {
-                $batch = ProductBatch::find($batchData['id']);
-                if ($batch && $batch->product_id === $product->id) {
-                    $batch->update([
-                        'quantity' => $batchData['quantity'],
-                        'expiration_date' => $batchData['expiration_date'] ?? null,
-                    ]);
+                if (!isset($batchData['id']) || !isset($batchData['quantity'])) {
+                    continue;
                 }
+
+                $batch = ProductBatch::find($batchData['id']);
+                
+                if (!$batch || $batch->product_id !== $product->id) {
+                    continue;
+                }
+
+                // Update batch data
+                $batchUpdateData = [
+                    'quantity' => $batchData['quantity'],
+                ];
+
+                // Only update expiration date for perishable products
+                if ($product->is_perishable) {
+                    $batchUpdateData['expiration_date'] = $batchData['expiration_date'] ?? null;
+                } else {
+                    $batchUpdateData['expiration_date'] = null;
+                }
+
+                $batch->update($batchUpdateData);
             }
         }
 
@@ -394,6 +421,7 @@ public function update(Request $request, Product $product)
         
     } catch (\Exception $e) {
         DB::rollBack();
+        
         return back()->withInput()->withErrors([
             'error' => 'Failed to update product: ' . $e->getMessage()
         ]);

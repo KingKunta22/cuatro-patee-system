@@ -38,8 +38,15 @@ class Product extends Model
      */
     public function batches()
     {
-        return $this->hasMany(ProductBatch::class)
-            ->where('quantity', '>', 0); // filter out zero qty
+        return $this->hasMany(ProductBatch::class);
+    }
+
+    /**
+     * Get only batches with stock > 0
+     */
+    public function activeBatches()
+    {
+        return $this->hasMany(ProductBatch::class)->where('quantity', '>', 0);
     }
 
     /**
