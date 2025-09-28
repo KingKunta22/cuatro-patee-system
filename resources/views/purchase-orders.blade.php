@@ -380,7 +380,7 @@
                                 <button @click="$refs['viewDetailsDialog{{ $purchaseOrder->id }}'].showModal()" class="flex rounded-md mx-auto bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">View Details</button>
                                 
                                 <!-- VIEW PURCHASE ORDER DETAILS FORM -->
-                                <dialog x-ref="viewDetailsDialog{{ $purchaseOrder->id }}">
+                                <dialog x-ref="viewDetailsDialog{{ $purchaseOrder->id }}" class='w-1/2'>
                                     <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Purchase Order Details</h1>
 
                                     <!-- CONTAINER FOR EVERYTHING INSIDE THE VIEW DETAILS MODAL -->
@@ -408,25 +408,25 @@
                                         </div>
 
                                         {{-- Items Table --}}
-                                        <div class="border w-auto rounded-md border-solid border-black p-3 my-4 mx-6">
+                                        <div class="border w-auto rounded-md border-solid border-black my-4 mx-6">
                                             <table class="w-full">
                                                 <thead class="bg-main text-white">
                                                     <tr>
-                                                        <th class="px-2 py-2 text-sm">Items</th>
-                                                        <th class="px-2 py-2 text-sm">Quantity</th>
-                                                        <th class="px-2 py-2 text-sm">Unit Price</th>
-                                                        <th class="px-2 py-2 text-sm">Measurement</th>
-                                                        <th class="px-2 py-2 text-sm">Total</th>
+                                                        <th class="px-2 py-2 text-md">Items</th>
+                                                        <th class="px-2 py-2 text-md">Quantity</th>
+                                                        <th class="px-2 py-2 text-md">Unit Price</th>
+                                                        <th class="px-2 py-2 text-md">Measurement</th>
+                                                        <th class="px-2 py-2 text-md">Total</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     @foreach($purchaseOrder->items as $item)
                                                         <tr class="border-b text-center">
-                                                            <td class="px-2 py-2">{{ $item->productName }}</td>
-                                                            <td class="px-2 py-2">{{ $item->quantity }}</td>
-                                                            <td class="px-2 py-2">₱{{ number_format($item->unitPrice, 2) }}</td>
-                                                            <td class="px-2 py-2">{{ $item->itemMeasurement }}</td>
-                                                            <td class="px-2 py-2">₱{{ number_format($item->totalAmount, 2) }}</td>
+                                                            <td class="px-2 py-2 text-sm">{{ $item->productName }}</td>
+                                                            <td class="px-2 py-2 text-sm">{{ $item->quantity }}</td>
+                                                            <td class="px-2 py-2 text-sm">₱{{ number_format($item->unitPrice, 2) }}</td>
+                                                            <td class="px-2 py-2 text-sm">{{ $item->itemMeasurement }}</td>
+                                                            <td class="px-2 py-2 text-sm">₱{{ number_format($item->totalAmount, 2) }}</td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>
