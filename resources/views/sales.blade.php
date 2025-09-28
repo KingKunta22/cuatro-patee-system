@@ -117,7 +117,13 @@
                         <td class="px-2 py-2 text-center">{{ $sale->invoice_number }}</td>
                         <td class="px-2 py-2 text-center">{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</td>
                         <td class="px-2 py-2 text-center">₱{{ number_format($sale->total_amount, 2) }}</td>
-                        <td class="px-2 py-2 text-center">{{ $sale->items->count() }} items</td>
+                        <td class="px-2 py-2 text-center">{{ $sale->items->count() }} 
+                            @if ($sale->items->count() == 1)
+                                item
+                            @else
+                                items
+                            @endif
+                        </td>
                         <td class="truncate px-2 py-2 text-center flex justify-center items-center">
                             <button @click="$refs['viewSaleDetails{{ $sale->id }}'].showModal()" class="flex rounded-md bg-gray-400 px-3 py-2 w-auto text-white items-center content-center hover:bg-gray-400/70 transition:all duration-100 ease-in font-semibold">
                                 View Details
@@ -624,7 +630,7 @@
                         <p class="text-xs text-gray-600 mt-2">This action cannot be undone. All items associated with this sale will also be deleted.</p>
                     </div>
                     <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
-                        <button type="button" @click="$refs['deleteDialog{{ $sale->id }}'].close()" class="mr-2 px-4 py-2 rounded text-white bg-gray-300 hover:bg-gray-400">
+                        <button type="button" @click="$refs['deleteDialog{{ $sale->id }}'].close()" class="mr-2 px-4 py-2 rounded text-white hover:bg-gray-300 bg-gray-400">
                             Cancel
                         </button>
                         <button type="submit" name="" value="" class="flex place-content-center rounded-md bg-button-delete px-3 py-2 w-24 text-white items-center content-center hover:bg-button-delete/80 transition:all duration-100 ease-in">

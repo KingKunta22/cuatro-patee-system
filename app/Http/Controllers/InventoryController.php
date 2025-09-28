@@ -371,17 +371,20 @@ class InventoryController extends Controller
         return redirect()->route('inventory.index')->with('success', 'Product updated successfully!');
     }
 
-    public function destroy(Product $product)
+    public function destroy($id)
     {
+        $product = Product::findOrFail($id);
+        
         DB::beginTransaction();
         try {
-            // Force delete all related records
-            $product->batches()->forceDelete();
+            // Delete batches first
+            $product->batches()->delete();
             
-            // Force delete the product
-            $product->forceDelete();
+            // Delete the product
+            $product->delete();
             
             DB::commit();
+            
             return redirect()->route('inventory.index')->with('success', 'Product permanently deleted!');
             
         } catch (\Exception $e) {
