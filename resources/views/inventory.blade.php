@@ -152,8 +152,17 @@
                         <td class="truncate px-4 py-3 text-center">
                             ₱{{ number_format($product->productSellingPrice, 2) }}
                         </td>
-                        <td class="truncate px-4 py-3 text-center">
-                            {{ $product->batches->sum('quantity') }}
+                        <td class="truncate px-4 py-3 text-center flex flex-col">
+                            {{ $product->batches->sum('quantity') }} units
+                            <span class='text-xs text-gray-500'> 
+                                ({{ $product->batches->count() }} 
+                                @if ($product->batches->count() == 1)
+                                    batch
+                                @else 
+                                    batches
+                                @endif
+                                )
+                            </span>
                         </td>
                         <td class="truncate px-4 py-3 text-center">
                             @php
@@ -198,9 +207,12 @@
                 <!-- LEFT: IMAGE -->
                 <div class="flex flex-col items-center justify-center">
                     <!-- Product name bigger -->
-                    <h2 class="text-3xl tracking-wide font-bold text-start mr-auto uppercase pb-4 text-gray-800">
-                        {{ $product->productName }}
-                    </h2>
+                    <div class="container text-start mr-auto uppercase pb-4">
+                        <h2 class="text-xl tracking-wide text-gray-800 font-bold">
+                            {{ $product->productName }}
+                        </h2>
+                        <p class='text-md text-gray-400'>{{ $product->productSKU }}</p>
+                    </div>
                     @if($product->productImage)
                         <img src="{{ asset('storage/' . $product->productImage) }}" 
                             alt="{{ $product->productName }}" 
@@ -213,20 +225,8 @@
                     <!-- Info grid -->
                     <div class="grid grid-cols-4 gap-3">
                         <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                            <p class="font-semibold text-md">SKU</p>
-                            <p class="text-sm">{{ $product->productSKU }}</p>
-                        </div>
-                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                            <p class="font-semibold text-md">Total Stock</p>
-                            <p class="text-sm">{{ $product->batches->sum('quantity') }}</p>
-                        </div>
-                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
                             <p class="font-semibold text-md">Brand</p>
                             <p class="text-sm">{{ $product->brand->productBrand ?? 'N/A' }}</p>
-                        </div>
-                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
-                            <p class="font-semibold text-md">Measurement</p>
-                            <p class="text-sm">{{ $product->productItemMeasurement }}</p>
                         </div>
                         <div class="bg-gray-50 col-span-2 p-3 rounded-md">
                             <p class="font-semibold text-md">Category</p>
@@ -240,6 +240,14 @@
                             <p class="font-semibold text-md">Cost Price</p>
                             <p class="text-sm">₱{{ number_format($product->productCostPrice, 2) }}</p>
                         </div>
+                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                            <p class="font-semibold text-md">Measurement</p>
+                            <p class="text-sm">{{ $product->productItemMeasurement }}</p>
+                        </div>
+                        <div class="bg-gray-50 col-span-2 p-3 rounded-md">
+                            <p class="font-semibold text-md">Total Stock</p>
+                            <p class="text-sm">{{ $product->batches->sum('quantity') }}</p>
+                        </div>
                         <!-- BATCH DETAILS SECTION -->
                         <div class="bg-gray-50 col-span-4 p-3 rounded-md">
                             <p class="font-semibold text-md mb-3">Batch Details</p>
@@ -247,10 +255,9 @@
                                 <table class="w-full table-fixed">
                                     <thead class="rounded-lg bg-main text-white">
                                         <tr class="rounded-lg">
-                                            <th class="bg-main px-2 py-2 text-sm truncate" title="Batch Number">Batch Number</th>
-                                            <th class="bg-main px-2 py-2 text-sm truncate" title="Quantity">Quantity</th>
-                                            <th class="bg-main px-2 py-2 text-sm truncate" title="Exp Date">Exp Date</th>
-                                            <th class="bg-main px-2 py-2 text-sm truncate" title="Cost Price">Cost Price</th>
+                                            <th class="bg-main px-2 py-2 text-xs truncate" title="Batch Number">Batch Number</th>
+                                            <th class="bg-main px-2 py-2 text-xs truncate" title="Quantity">Quantity</th>
+                                            <th class="bg-main px-2 py-2 text-xs truncate" title="Exp Date">Exp Date</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -265,7 +272,6 @@
                                             <td class="px-2 py-2 text-xs text-center truncate" title="{{ $batch->expiration_date ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'Non-perishable' }}">
                                                 {{ $batch->expiration_date ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'Non-perishable' }}
                                             </td>
-                                            <td class="px-2 py-2 text-xs text-center truncate" title="{{ number_format($batch->cost_price, 2) }} pesos">₱{{ number_format($batch->cost_price, 2) }}</td>
                                         </tr>
                                         @endforeach
                                     </tbody>
