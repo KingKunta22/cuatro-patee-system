@@ -332,7 +332,7 @@ class InventoryController extends Controller
 
     public function update(Request $request, Product $product) 
     {
-        // Validate Requests - Use string validation instead of hardcoded in: values
+        // Remove productExpirationDate from validation
         $validated = $request->validate([
             'productName' => 'required|string|max:255',
             'productBrand' => 'required|string|max:255', 
@@ -341,29 +341,21 @@ class InventoryController extends Controller
             'productSellingPrice' => 'required|numeric|min:0',
             'productCostPrice' => 'required|numeric|min:0',
             'productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
-            'productExpirationDate' => 'required|date|after_or_equal:today',
             'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
-        // Recalculate Profit Margin
-        $updatedProfitMargin = 0;
-        $updatedCostPrice = $validated['productCostPrice'];
-        $updatedSellingPrice = $validated['productSellingPrice'];
+        // Find or create brand and category
+        $brand = Brand::firstOrCreate(['productBrand' => $validated['productBrand']]);
+        $category = Category::firstOrCreate(['productCategory' => $validated['productCategory']]);
 
-        $updatedProfitMargin = round($updatedSellingPrice - $updatedCostPrice, 2);
-
-
-        // Update the fields
+        // Update the product
         $product->update([
             'productName' => $validated['productName'],
-            'productBrand' => $validated['productBrand'],
-            'productCategory' => $validated['productCategory'],
-            'productStock' => $validated['productStock'],
+            'brand_id' => $brand->id,
+            'category_id' => $category->id,
             'productSellingPrice' => $validated['productSellingPrice'],
             'productCostPrice' => $validated['productCostPrice'],
             'productItemMeasurement' => $validated['productItemMeasurement'],
-            'productExpirationDate' => $validated['productExpirationDate'],
-            'productProfitMargin' => $updatedProfitMargin,
         ]);
 
         // Handle new file uploads
@@ -372,7 +364,7 @@ class InventoryController extends Controller
                 Storage::disk('public')->delete($product->productImage);
             }
 
-            $newImagePath = $request->file('productImage')->store('inventory', 'public');
+            $newImagePath = $request->file('productImage')->store('products', 'public');
             $product->update(['productImage' => $newImagePath]);
         }
 
@@ -381,13 +373,21 @@ class InventoryController extends Controller
 
     public function destroy(Product $product)
     {
-        if ($product->productImage) {
-            Storage::disk('public')->delete($product->productImage);
+        DB::beginTransaction();
+        try {
+            // Delete related batches first
+            $product->batches()->delete();
+            
+            // Delete the product
+            $product->delete();
+
+            DB::commit();
+            
+            return redirect()->route('inventory.index')->with('success', 'Product successfully deleted!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('inventory.index')->with('error', 'Failed to delete product: ' . $e->getMessage());
         }
-
-        $product->delete();
-
-        return redirect()->route('inventory.index')->with('success', 'Inventory product successfully deleted!');
     }
 
     // Add this method to your InventoryController
