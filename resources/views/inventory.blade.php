@@ -203,9 +203,9 @@
         <x-modal.createModal x-ref="viewInventoryDetails{{ $product->id }}">
             <x-slot:dialogTitle>Product Details: {{ $product->productName }}</x-slot:dialogTitle>
             
-            <div class="grid grid-cols-2 gap-6 p-6">
+            <div class="grid grid-cols-2 gap-6 px-6 pt-3 pb-0">
                 <!-- LEFT: IMAGE -->
-                <div class="flex flex-col items-center justify-center">
+                <div class="flex flex-col items-center justify-evenly">
                     <!-- Product name bigger -->
                     <div class="container text-start mr-auto uppercase pb-4">
                         <h2 class="text-xl tracking-wide text-gray-800 font-bold">
@@ -216,7 +216,7 @@
                     @if($product->productImage)
                         <img src="{{ asset('storage/' . $product->productImage) }}" 
                             alt="{{ $product->productName }}" 
-                            class="w-full max-h-80 object-contain rounded-xl shadow-lg border">
+                            class="w-full max-h-96 object-contain rounded-xl shadow-lg border">
                     @endif
                 </div>
 
@@ -251,8 +251,8 @@
                         <!-- BATCH DETAILS SECTION -->
                         <div class="bg-gray-50 col-span-4 p-3 rounded-md">
                             <p class="font-semibold text-md mb-3">Batch Details</p>
-                            <div class="border rounded-md border-solid border-black">
-                                <table class="w-full table-fixed">
+                            <div class="border rounded-md border-solid border-black h-36 overflow-y-auto">
+                                <table class="w-full h-auto max-h-full table-fixed">
                                     <thead class="rounded-lg bg-main text-white">
                                         <tr class="rounded-lg">
                                             <th class="bg-main px-2 py-2 text-xs truncate" title="Batch Number">Batch Number</th>
@@ -1024,9 +1024,9 @@
 <x-modal.createModal x-ref="editProductDetails{{ $product->id }}">
     <x-slot:dialogTitle>Edit {{ $product->productName }}</x-slot:dialogTitle>
 
-    <div class="container px-3 py-4">
+    <div>
         <form id="updateInventoryForm{{ $product->id }}" action="{{ route('inventory.update', $product->id) }}" method="POST" enctype="multipart/form-data"
-            class="px-6 py-4 container grid grid-cols-6 gap-x-8 gap-y-6">
+            class="px-6 py-4 container grid grid-cols-6 gap-x-8 gap-y-2">
             @csrf
             @method('PUT')
 
@@ -1035,7 +1035,7 @@
                 @if($product->productImage)
                     <img src="{{ asset('storage/' . $product->productImage) }}" 
                         alt="{{ $product->productName }}" 
-                        class="size-44 object-contain border rounded shadow-sm">
+                        class="w-44 h-56 object-contain border rounded shadow-sm">
                 @endif
                 <div class="w-full">
                     <x-form.form-input label="Update image (optional)" name="productImage" type="file" :required="false" />
@@ -1111,15 +1111,15 @@
                         class="px-3 py-2 border rounded border-gray-300 bg-gray-100" 
                         readonly
                         disabled>
-                    <p class="text-xs text-gray-500 mt-1">Auto-calculated from batches</p>
+                    {{-- <p class="text-xs text-gray-500 mt-1">Auto-calculated from batches</p> --}}
                 </div>
             </div>
 
             <!-- EDITABLE BATCHES TABLE - FIXED STRUCTURE -->
             <div class="col-span-6">
                 <h2 class="text-xl font-bold mb-4">Edit Product Batches</h2>
-                <div class="border rounded-md border-solid border-black">
-                    <table class="w-full table-fixed">
+                <div class="border rounded-md border-solid border-black h-32 overflow-y-auto">
+                    <table class="w-full table-fixed h-auto max-h-full overflow-y-auto">
                         <thead class="rounded-lg bg-main text-white">
                             <tr class="rounded-lg">
                                 <th class="bg-main px-2 py-2 text-sm truncate">Batch Number</th>
@@ -1131,11 +1131,11 @@
                         <tbody>
                             @foreach($product->batches as $batch)
                             <tr class="border-b">
-                                <td class="px-2 py-2 text-xs text-center truncate">
+                                <td class="px-1 py-1 text-xs text-center truncate">
                                     {{ $batch->batch_number }}
                                     <input type="hidden" name="batches[{{ $batch->id }}][id]" value="{{ $batch->id }}">
                                 </td>
-                                <td class="px-2 py-2 text-xs text-center truncate">
+                                <td class="px-1 py-1 text-xs text-center truncate">
                                     <input type="number" 
                                            name="batches[{{ $batch->id }}][quantity]" 
                                            value="{{ $batch->quantity }}" 
@@ -1143,7 +1143,7 @@
                                            class="w-20 px-1 py-1 border rounded text-center"
                                            required>
                                 </td>
-                                <td class="px-2 py-2 text-xs text-center truncate">
+                                <td class="px-1 py-1 text-xs text-center truncate">
                                     @if($product->is_perishable)
                                         <input type="date" 
                                                name="batches[{{ $batch->id }}][expiration_date]" 
@@ -1156,7 +1156,7 @@
                                         <input type="hidden" name="batches[{{ $batch->id }}][expiration_date]" value="">
                                     @endif
                                 </td>
-                                <td class="px-2 py-2 text-xs text-center truncate">
+                                <td class="px-1 py-1 text-xs text-center truncate">
                                     ₱{{ number_format($batch->cost_price, 2) }}
                                 </td>
                             </tr>
@@ -1167,14 +1167,14 @@
             </div>
 
             <!-- Footer Buttons -->
-            <div class="container col-span-6 gap-x-4 place-content-end w-full flex items-end content-center px-6 mt-4">
+            <div class="container col-span-6 gap-x-4 place-content-end w-full flex items-end content-center mt-2">
                 <button type="button" 
                         @click="$refs.editProductDetails{{ $product->id }}.close()" 
                         class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out">
                     Cancel
                 </button>
-                <button type="submit" class="px-4 py-2 rounded bg-green-500 hover:bg-green-400 text-white duration-200 transition-all ease-in-out">
-                    Save Changes
+                <button type="submit" class="px-4 py-2 w-24 rounded bg-green-500 hover:bg-green-400 text-white duration-200 transition-all ease-in-out">
+                    Edit
                 </button>
             </div>
         </form>
