@@ -375,17 +375,41 @@ class InventoryController extends Controller
     {
         DB::beginTransaction();
         try {
-            // Delete related batches first
+            // Get the product ID before deletion for logging/cleanup
+            $productId = $product->id;
+            $productName = $product->productName;
+            $totalStock = $product->batches->sum('quantity');
+            $totalCost = $product->batches->sum(function($batch) {
+                return $batch->quantity * $batch->cost_price;
+            });
+
+            // 1. Delete related batches first
             $product->batches()->delete();
-            
-            // Delete the product
-            $product->delete();
+
+            // 2. Delete any sales records (if you have sales)
+            if (class_exists(\App\Models\SaleItem::class)) {
+                \App\Models\SaleItem::where('product_id', $productId)->delete();
+            }
+
+            // 6. Delete the product image if it exists
+            if ($product->productImage) {
+                Storage::disk('public')->delete($product->productImage);
+            }
+
+            // 7. Finally delete the product
+            $deleted = $product->delete();
+
+            if (!$deleted) {
+                throw new \Exception('Product deletion failed');
+            }
 
             DB::commit();
-            
-            return redirect()->route('inventory.index')->with('success', 'Product successfully deleted!');
+
+            return redirect()->route('inventory.index')->with('success', 'Product successfully deleted! All associated data has been removed.');
+
         } catch (\Exception $e) {
             DB::rollBack();
+            
             return redirect()->route('inventory.index')->with('error', 'Failed to delete product: ' . $e->getMessage());
         }
     }
