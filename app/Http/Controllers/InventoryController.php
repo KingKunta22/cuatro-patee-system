@@ -330,25 +330,32 @@ class InventoryController extends Controller
         return "{$base}-{$brand}-{$category}";
     }
 
-    public function update(Request $request, Product $product) 
-    {
-        // Remove productExpirationDate from validation
-        $validated = $request->validate([
-            'productName' => 'required|string|max:255',
-            'productBrand' => 'required|string|max:255', 
-            'productCategory' => 'required|string|max:255', 
-            'productStock' => 'required|numeric|min:0',
-            'productSellingPrice' => 'required|numeric|min:0',
-            'productCostPrice' => 'required|numeric|min:0',
-            'productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
-            'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
+public function update(Request $request, Product $product) 
+{
+    // Remove productStock from validation since it's auto-calculated
+    $validated = $request->validate([
+        'productName' => 'required|string|max:255',
+        'productBrand' => 'required|string|max:255', 
+        'productCategory' => 'required|string|max:255', 
+        'productSellingPrice' => 'required|numeric|min:0',
+        'productCostPrice' => 'required|numeric|min:0',
+        'productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
+        'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        'batches' => 'nullable|array',
+        'batches.*.id' => 'required|exists:product_batches,id',
+        'batches.*.quantity' => 'required|numeric|min:0',
+        'batches.*.expiration_date' => 'nullable|date|after_or_equal:today',
+    ]);
 
+    // Start transaction
+    DB::beginTransaction();
+
+    try {
         // Find or create brand and category
         $brand = Brand::firstOrCreate(['productBrand' => $validated['productBrand']]);
         $category = Category::firstOrCreate(['productCategory' => $validated['productCategory']]);
 
-        // Update the product
+        // Update the product - NO productStock field
         $product->update([
             'productName' => $validated['productName'],
             'brand_id' => $brand->id,
@@ -368,8 +375,30 @@ class InventoryController extends Controller
             $product->update(['productImage' => $newImagePath]);
         }
 
+        // Update batches if provided
+        if (isset($validated['batches'])) {
+            foreach ($validated['batches'] as $batchData) {
+                $batch = ProductBatch::find($batchData['id']);
+                if ($batch && $batch->product_id === $product->id) {
+                    $batch->update([
+                        'quantity' => $batchData['quantity'],
+                        'expiration_date' => $batchData['expiration_date'] ?? null,
+                    ]);
+                }
+            }
+        }
+
+        DB::commit();
+        
         return redirect()->route('inventory.index')->with('success', 'Product updated successfully!');
+        
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->withInput()->withErrors([
+            'error' => 'Failed to update product: ' . $e->getMessage()
+        ]);
     }
+}
 
     public function destroy($id)
     {

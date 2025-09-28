@@ -1019,129 +1019,173 @@
         <!-- ======================================================= -->
 
         <!-- EDIT MODAL -->
-        @foreach($products as $product)
-        <x-modal.createModal x-ref="editProductDetails{{ $product->id }}">
-            <x-slot:dialogTitle>Edit {{ $product->productName }}</x-slot:dialogTitle>
+<!-- EDIT MODAL -->
+@foreach($products as $product)
+<x-modal.createModal x-ref="editProductDetails{{ $product->id }}">
+    <x-slot:dialogTitle>Edit {{ $product->productName }}</x-slot:dialogTitle>
 
-            <div class="container px-3 py-4">
-                <form id="updateInventoryForm{{ $product->id }}" action="{{ route('inventory.update', $product->id) }}" method="POST" enctype="multipart/form-data"
-                    class="px-6 py-4 container grid grid-cols-6 gap-x-8 gap-y-6">
-                    @csrf
-                    @method('PUT')
+    <div class="container px-3 py-4">
+        <form id="updateInventoryForm{{ $product->id }}" action="{{ route('inventory.update', $product->id) }}" method="POST" enctype="multipart/form-data"
+            class="px-6 py-4 container grid grid-cols-6 gap-x-8 gap-y-6">
+            @csrf
+            @method('PUT')
 
-                    <!-- Left Side (Image + Upload) -->
-                    <div class="col-span-2 flex flex-col items-center gap-3">
-                        @if($product->productImage)
-                            <img src="{{ asset('storage/' . $product->productImage) }}" 
-                                alt="{{ $product->productName }}" 
-                                class="size-44 object-contain border rounded shadow-sm">
-                        @endif
-                        <div class="w-full">
-                            <x-form.form-input label="Update image (optional)" name="productImage" type="file" :required="false" />
-                        </div>
-                    </div>
-
-                    <!-- Right Side (Main Info) -->
-                    <div class="col-span-4 grid grid-cols-2 gap-4">
-                        <!-- Product Name -->
-                        <x-form.form-input label="Product Name" name="productName" type="text" 
-                            value="{{ $product->productName }}" class="col-span-2" required />
-
-                        <!-- Product Brand -->
-                        <div class="flex flex-col text-start">
-                            <label for="productBrand" class="font-medium">Product Brand</label>
-                            <select name="productBrand" id="productBrand" 
-                                class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
-                                <option value="" disabled>Select Brand</option>
-                                @foreach($brands as $brand)
-                                    <option value="{{ $brand->productBrand }}" {{ $product->brand->productBrand == $brand->productBrand ? 'selected' : '' }}>
-                                        {{ $brand->productBrand }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <!-- Product Category -->
-                        <div class="flex flex-col text-start">
-                            <label for="productCategory" class="font-medium">Product Category</label>
-                            <select name="productCategory" id="productCategory" 
-                                class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
-                                <option value="" disabled>Select Category</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->productCategory }}" {{ $product->category->productCategory == $category->productCategory ? 'selected' : '' }}>
-                                        {{ $category->productCategory }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- Measurement -->
-                    <div class="flex flex-col text-start col-span-3">
-                        <label for="itemMeasurement" class="font-medium">Measurement per item</label>
-                        <select name="productItemMeasurement" 
-                                class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
-                            <option value="" disabled>Select Measurement</option>
-                            <option value="kilogram" {{ $product->productItemMeasurement == 'kilogram' ? 'selected' : '' }}>kilogram (kg)</option>
-                            <option value="gram" {{ $product->productItemMeasurement == 'gram' ? 'selected' : '' }}>gram (g)</option>
-                            <option value="liter" {{ $product->productItemMeasurement == 'liter' ? 'selected' : '' }}>liter (L)</option>
-                            <option value="milliliter" {{ $product->productItemMeasurement == 'milliliter' ? 'selected' : '' }}>milliliter (mL)</option>
-                            <option value="pcs" {{ $product->productItemMeasurement == 'pcs' ? 'selected' : '' }}>pieces (pcs)</option>
-                            <option value="set" {{ $product->productItemMeasurement == 'set' ? 'selected' : '' }}>set</option>
-                            <option value="pair" {{ $product->productItemMeasurement == 'pair' ? 'selected' : '' }}>pair</option>
-                            <option value="pack" {{ $product->productItemMeasurement == 'pack' ? 'selected' : '' }}>pack</option>
-                        </select>
-                    </div>
-
-                    <!-- BATCHES TABLE -->
-                    <div class="col-span-6">
-                        <h2 class="text-xl font-bold mb-4">Product Batches</h2>
-                        <div class="border rounded-md border-solid border-black">
-                            <table class="w-full table-fixed">
-                                <thead class="rounded-lg bg-main text-white">
-                                    <tr class="rounded-lg">
-                                        <th class="bg-main px-2 py-2 text-sm truncate" title="Batch Number">Batch Number</th>
-                                        <th class="bg-main px-2 py-2 text-sm truncate" title="Quantity">Quantity</th>
-                                        <th class="bg-main px-2 py-2 text-sm truncate" title="Exp Date">Exp Date</th>
-                                        <th class="bg-main px-2 py-2 text-sm truncate" title="Cost Price">Cost Price</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($product->batches as $batch)
-                                    <tr class="border-b">
-                                        <td class="px-2 py-2 text-xs text-center truncate" title="{{ $batch->batch_number }}">
-                                            {{ $batch->batch_number }}
-                                        </td>
-                                        <td class="px-2 py-2 text-xs text-center truncate" title="">
-                                            {{ $batch->quantity }} 
-                                        </td>
-                                        <td class="px-2 py-2 text-xs text-center truncate" title="{{ $batch->expiration_date ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'Non-perishable' }}">
-                                            {{ $batch->expiration_date ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'Non-perishable' }}
-                                        </td>
-                                        <td class="px-2 py-2 text-xs text-center truncate" title="{{ number_format($batch->cost_price, 2) }} pesos">₱{{ number_format($batch->cost_price, 2) }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        <p class="text-sm text-gray-600 mt-2">Total Stock: <strong>{{ $product->batches->sum('quantity') }}</strong></p>
-                    </div>
-
-                    <!-- Footer Buttons -->
-                    <div class="container col-span-6 gap-x-4 place-content-end w-full flex items-end content-center px-6 mt-4">
-                        <button type="button" 
-                                @click="$refs.editProductDetails{{ $product->id }}.close()" 
-                                class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out">
-                            Cancel
-                        </button>
-                        <button type="submit" class="px-4 py-2 rounded bg-green-500 hover:bg-green-400 text-white duration-200 transition-all ease-in-out">
-                            Save Changes
-                        </button>
-                    </div>
-                </form>
+            <!-- Left Side (Image + Upload) -->
+            <div class="col-span-2 flex flex-col items-center gap-3">
+                @if($product->productImage)
+                    <img src="{{ asset('storage/' . $product->productImage) }}" 
+                        alt="{{ $product->productName }}" 
+                        class="size-44 object-contain border rounded shadow-sm">
+                @endif
+                <div class="w-full">
+                    <x-form.form-input label="Update image (optional)" name="productImage" type="file" :required="false" />
+                </div>
             </div>
-        </x-modal.createModal>
-        @endforeach
+
+            <!-- Right Side (Main Info) -->
+            <div class="col-span-4 grid grid-cols-2 gap-4">
+                <!-- Product Name -->
+                <x-form.form-input label="Product Name" name="productName" type="text" 
+                    value="{{ $product->productName }}" class="col-span-2" required />
+
+                <!-- Product Brand -->
+                <div class="flex flex-col text-start">
+                    <label for="productBrand" class="font-medium">Product Brand</label>
+                    <select name="productBrand" id="productBrand" 
+                        class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
+                        <option value="" disabled>Select Brand</option>
+                        @foreach($brands as $brand)
+                            <option value="{{ $brand->productBrand }}" {{ $product->brand->productBrand == $brand->productBrand ? 'selected' : '' }}>
+                                {{ $brand->productBrand }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Product Category -->
+                <div class="flex flex-col text-start">
+                    <label for="productCategory" class="font-medium">Product Category</label>
+                    <select name="productCategory" id="productCategory" 
+                        class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
+                        <option value="" disabled>Select Category</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->productCategory }}" {{ $product->category->productCategory == $category->productCategory ? 'selected' : '' }}>
+                                {{ $category->productCategory }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Selling Price -->
+                <x-form.form-input label="Selling Price" name="productSellingPrice" type="number" 
+                    value="{{ $product->productSellingPrice }}" 
+                    step="0.01" min="0" required />
+
+                <!-- Cost Price (Read-only) -->
+                <div class="flex flex-col text-start">
+                    <label for="productCostPrice" class="font-medium">Cost Price</label>
+                    <input type="number" name="productCostPrice" id="productCostPrice" 
+                        value="{{ $product->productCostPrice }}" 
+                        step="0.01" min="0" 
+                        class="px-3 py-2 border rounded border-gray-300 bg-gray-100" 
+                        readonly required>
+                </div>
+
+                <!-- Measurement -->
+                <div class="flex flex-col text-start">
+                    <label for="itemMeasurement" class="font-medium">Measurement per item</label>
+                    <select name="productItemMeasurement" 
+                            class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
+                        <option value="" disabled>Select Measurement</option>
+                        <option value="kilogram" {{ $product->productItemMeasurement == 'kilogram' ? 'selected' : '' }}>kilogram (kg)</option>
+                        <option value="gram" {{ $product->productItemMeasurement == 'gram' ? 'selected' : '' }}>gram (g)</option>
+                        <option value="liter" {{ $product->productItemMeasurement == 'liter' ? 'selected' : '' }}>liter (L)</option>
+                        <option value="milliliter" {{ $product->productItemMeasurement == 'milliliter' ? 'selected' : '' }}>milliliter (mL)</option>
+                        <option value="pcs" {{ $product->productItemMeasurement == 'pcs' ? 'selected' : '' }}>pieces (pcs)</option>
+                        <option value="set" {{ $product->productItemMeasurement == 'set' ? 'selected' : '' }}>set</option>
+                        <option value="pair" {{ $product->productItemMeasurement == 'pair' ? 'selected' : '' }}>pair</option>
+                        <option value="pack" {{ $product->productItemMeasurement == 'pack' ? 'selected' : '' }}>pack</option>
+                    </select>
+                </div>
+
+                <!-- Product Stock (Read-only, calculated from batches) -->
+                <div class="flex flex-col text-start">
+                    <label for="productStock" class="font-medium">Total Stock</label>
+                    <input type="number" 
+                        value="{{ $product->batches->sum('quantity') }}" 
+                        class="px-3 py-2 border rounded border-gray-300 bg-gray-100" 
+                        readonly
+                        disabled>
+                    <p class="text-xs text-gray-500 mt-1">Auto-calculated from batches</p>
+                </div>
+
+            </div>
+
+            <!-- EDITABLE BATCHES TABLE -->
+            <div class="col-span-6">
+                <h2 class="text-xl font-bold mb-4">Edit Product Batches</h2>
+                <div class="border rounded-md border-solid border-black">
+                    <table class="w-full table-fixed">
+                        <thead class="rounded-lg bg-main text-white">
+                            <tr class="rounded-lg">
+                                <th class="bg-main px-2 py-2 text-sm truncate" title="Batch Number">Batch Number</th>
+                                <th class="bg-main px-2 py-2 text-sm truncate" title="Quantity">Quantity</th>
+                                <th class="bg-main px-2 py-2 text-sm truncate" title="Exp Date">Exp Date</th>
+                                <th class="bg-main px-2 py-2 text-sm truncate" title="Cost Price">Cost Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($product->batches as $batch)
+                            <tr class="border-b">
+                                <td class="px-2 py-2 text-xs text-center truncate" title="{{ $batch->batch_number }}">
+                                    {{ $batch->batch_number }}
+                                    <input type="hidden" name="batches[{{ $batch->id }}][id]" value="{{ $batch->id }}">
+                                </td>
+                                <td class="px-2 py-2 text-xs text-center truncate">
+                                    <input type="number" 
+                                           name="batches[{{ $batch->id }}][quantity]" 
+                                           value="{{ $batch->quantity }}" 
+                                           min="0"
+                                           class="w-20 px-1 py-1 border rounded text-center"
+                                           required>
+                                </td>
+                                <td class="px-2 py-2 text-xs text-center truncate">
+                                    @if($product->is_perishable)
+                                        <input type="date" 
+                                               name="batches[{{ $batch->id }}][expiration_date]" 
+                                               value="{{ $batch->expiration_date ? $batch->expiration_date->format('Y-m-d') : '' }}"
+                                               class="px-1 py-1 border rounded text-center"
+                                               min="{{ date('Y-m-d') }}">
+                                    @else
+                                        {{ $batch->expiration_date ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'Non-perishable' }}
+                                        <input type="hidden" name="batches[{{ $batch->id }}][expiration_date]" value="{{ $batch->expiration_date ? $batch->expiration_date->format('Y-m-d') : '' }}">
+                                    @endif
+                                </td>
+                                <td class="px-2 py-2 text-xs text-center truncate" title="{{ number_format($batch->cost_price, 2) }} pesos">
+                                    ₱{{ number_format($batch->cost_price, 2) }}
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="container col-span-6 gap-x-4 place-content-end w-full flex items-end content-center px-6 mt-4">
+                <button type="button" 
+                        @click="$refs.editProductDetails{{ $product->id }}.close()" 
+                        class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 rounded bg-green-500 hover:bg-green-400 text-white duration-200 transition-all ease-in-out">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</x-modal.createModal>
+@endforeach
 
 
 
