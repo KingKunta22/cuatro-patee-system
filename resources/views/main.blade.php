@@ -313,6 +313,7 @@
             </div>
         </div>
 
+        @if(Auth::user()->role === 'admin')
         <!-- Sales Trends Section -->
         <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
             <div class="flex justify-between items-center mb-6">
@@ -334,6 +335,7 @@
                 <canvas id="salesTrendChart"></canvas>
             </div>
         </div>
+        @endif
     </main>
 
     <!-- Include Chart.js -->
