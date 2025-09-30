@@ -18,9 +18,17 @@ class DeliveryController extends Controller
 
         // Apply status filter
         if ($status !== 'all') {
-            $query->whereHas('deliveries', function($q) use ($status) {
-                $q->where('orderStatus', $status);
-            });
+            if ($status === 'Delayed') {
+                // Filter for delayed orders (Confirmed status + past delivery date)
+                $query->whereHas('deliveries', function($q) {
+                    $q->where('orderStatus', 'Confirmed')
+                    ->whereDate('deliveryDate', '<', now()->toDateString());
+                });
+            } else {
+                $query->whereHas('deliveries', function($q) use ($status) {
+                    $q->where('orderStatus', $status);
+                });
+            }
         }
 
         // Apply search filter - UPDATED to search deliveryId properly

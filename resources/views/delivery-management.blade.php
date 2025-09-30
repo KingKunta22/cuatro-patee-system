@@ -76,7 +76,8 @@
                         <option value="Confirmed" {{ request('status') === 'Confirmed' ? 'selected' : '' }}>Confirmed</option>
                         <option value="Delivered" {{ request('status') === 'Delivered' ? 'selected' : '' }}>Delivered</option>
                         <option value="Cancelled" {{ request('status') === 'Cancelled' ? 'selected' : '' }}>Cancelled</option>
-                    </select> 
+                        <option value="Delayed" {{ request('status') === 'Delayed' ? 'selected' : '' }}>Delayed</option>
+                    </select>
 
                     <!-- Search Button -->
                     <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
@@ -84,7 +85,7 @@
                     </button>
 
                     <!-- Clear Button -->
-                    @if(request('search') || (request('status') && request('status') !== 'all'))                        
+                     @if(request('search') || (request('status') && request('status') !== 'all'))                      
                         <a href="{{ route('delivery-management.index') }}" class="text-white px-4 py-2 hover:bg-gray-300 rounded-md bg-gray-400 transition-all duration-100 ease-in-out">
                             Clear
                         </a>
@@ -133,13 +134,22 @@
                             title="{{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}">
                             {{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}
                         </td>
-
+                        
                         {{-- Lead Time Column --}}
                         <td class="truncate px-2 py-3 text-center">
                             @php
                                 $leadTime = $orderDate->diffInDays($deliveryDate);
+                                $daysOverdue = now()->startOfDay()->diffInDays($deliveryDate, false);
+                                $isOverdue = $daysOverdue < 0 && $deliveryStatus === 'Confirmed';
                             @endphp
-                            {{ $leadTime }} {{ \Illuminate\Support\Str::plural('day', $leadTime) }}
+                            
+                            @if($isOverdue)
+                                <span class="text-red-600 font-semibold" title="This order is {{ abs($daysOverdue) }} {{ \Illuminate\Support\Str::plural('day', abs($daysOverdue)) }} overdue">
+                                    OVERDUE
+                                </span>
+                            @else
+                                {{ $leadTime }} {{ \Illuminate\Support\Str::Str::plural('day', $leadTime) }}
+                            @endif
                         </td>
 
                         {{-- Estimated Time of Arrival Column --}}

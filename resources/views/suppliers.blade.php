@@ -48,8 +48,8 @@
                         @csrf
                         <x-form.form-input label="Supplier Name" name="supplierName" type="text" value="" />
                         <x-form.form-input label="Address" name="supplierAddress" type="text" value="" />
-                        <x-form.form-input label="Contact Number" name="supplierContactNumber" type="number" value="" maxlength="11" type="tel" pattern="[0-9]{11}"/>
-                        <x-form.form-input label="Email Address" name="supplierEmailAddress" type="email" value="" />
+                        <x-form.form-input label="Contact Number" name="supplierContactNumber" type="text" value="" maxlength="11" pattern="[0-9]{11}" inputmode="numeric"/>
+                        <x-form.form-input label="Email Address" name="supplierEmailAddress" type="email" value="" pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$"/>
                         <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
                             <x-form.closeBtn @click="close()">Cancel</x-form.closeBtn>
                             <x-form.saveBtn>Save</x-form.saveBtn>
@@ -102,8 +102,8 @@
                                                 @method('PUT')
                                                 <x-form.form-input label="Supplier Name" name="supplierName" type="text" value="{{ old('supplierName',  $supplier->supplierName) }}"/>
                                                 <x-form.form-input label="Address" name="supplierAddress" type="text" value="{{ old('supplierAddress', $supplier->supplierAddress) }}"/>
-                                                <x-form.form-input label="Contact Number" name="supplierContactNumber" type="number" value="{{ old('supplierContactNumber', $supplier->supplierContactNumber) }}" maxlength="11" type="tel" pattern="[0-9]{11}"/>
-                                                <x-form.form-input label="Email Address" name="supplierEmailAddress" type="email" value="{{ old('supplierEmailAddress', $supplier->supplierEmailAddress) }}"/>
+                                                <x-form.form-input label="Contact Number" name="supplierContactNumber" type="text" value="{{ old('supplierContactNumber', $supplier->supplierContactNumber) }}" maxlength="11" pattern="[0-9]{11}" inputmode="numeric"/>
+                                                <x-form.form-input label="Email Address" name="supplierEmailAddress" type="email" value="{{ old('supplierEmailAddress', $supplier->supplierEmailAddress) }}" pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$"/>
                                                 <div class="container text-start flex col-span-2 flex-col">
                                                     <label for="supplierStatus">Choose status:</label>
                                                     <select name="supplierStatus" id="supplierStatus" class="px-3 py-2 border rounded-sm border-black">
