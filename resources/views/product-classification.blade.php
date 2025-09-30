@@ -17,7 +17,7 @@
             <div id="error-message" class="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 p-4 bg-red-100 border border-red-400 text-red-700 rounded shadow-lg">
                 <ul class="list-disc list-inside">
                     @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                        {{ $error }}
                     @endforeach
                 </ul>
             </div>

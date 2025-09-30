@@ -31,12 +31,14 @@ public function store(Request $request)
     }
 
     $validated = $request->validate([
-        'name' => 'required|string|max:255',
+        'name' => 'required|string|max:255|unique:users',
         'email' => 'required|string|email|max:255|unique:users',
         'password' => ['required', 'confirmed', Rules\Password::defaults()],
         'role' => 'required|in:admin,staff',
     ], [
         'password.confirmed' => 'The password confirmation does not match.',
+        'name.unique' => 'The username has already been taken.',
+        'email.unique' => 'The email has already been taken.',
     ]);
 
     // Enforce max 2 admins
@@ -65,13 +67,15 @@ public function update(Request $request, User $user)
     }
 
     $validated = $request->validate([
-        'name' => 'required|string|max:255',
+        'name' => 'required|string|max:255|unique:users,name,' . $user->id,
         'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
         'role' => 'required|in:admin,staff',
         'status' => 'required|in:active,inactive',
         'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
     ], [
         'password.confirmed' => 'The password confirmation does not match.',
+        'name.unique' => 'The username has already been taken.',
+        'email.unique' => 'The email has already been taken.',
     ]);
 
     // Enforce max 2 admins when changing role to admin
