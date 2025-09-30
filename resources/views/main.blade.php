@@ -221,7 +221,7 @@
                             </div>
                             <div>
                                 <h3 class="text-sm font-medium text-gray-800">{{ $product['productName'] }}</h3>
-                                <p class="text-xs text-gray-500">{{ $product['productSKU'] ?? 'N/A' }}</p>
+                                <p class="text-xs text-gray-500">{{ $product['batch_number'] ?? 'N/A' }}</p>
                             </div>
                         </div>
                         <span class="text-xs text-blue-600" title="Expires on {{ \Carbon\Carbon::parse($product['productExpirationDate'])->format('M d, Y') }}">
