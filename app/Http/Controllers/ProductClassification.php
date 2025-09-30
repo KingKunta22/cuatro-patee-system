@@ -15,15 +15,15 @@ class ProductClassification extends Controller
         
         $brands = Brand::when($search, function($query, $search) {
             $query->where('productBrand', 'like', "%{$search}%");
-        })->orderBy('id', 'desc')->get();
+        })->orderBy('productBrand', 'asc')->get();
 
         $categories = Category::when($search, function($query, $search) {
             $query->where('productCategory', 'like', "%{$search}%");
-        })->orderBy('id', 'desc')->get();
+        })->orderBy('productCategory', 'desc')->get();
 
         $subcategories = Subcategory::when($search, function($query, $search) {
             $query->where('productSubcategory', 'like', "%{$search}%");
-        })->orderBy('id', 'desc')->get();
+        })->orderBy('productSubcategory', 'desc')->get();
 
         return view('product-classification', compact('brands', 'categories', 'subcategories'));
     }
