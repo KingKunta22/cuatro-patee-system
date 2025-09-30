@@ -91,22 +91,29 @@ class ForgotPasswordController extends Controller
     {
         // Check if code was validated
         if (!session('code_validated') || !session('reset_user_id')) {
-            return redirect('/')->withErrors(['reset' => 'Please validate your code first.']);
+            return redirect('/')->withErrors(['forgot' => 'Please validate your code first.']);
         }
 
-        $validated = $request->validate([
-            'new_password' => 'required|string|min:8|confirmed',
+        // Manual validation
+        $request->validate([
+            'new_password' => 'required|string|min:8',
+            'new_password_confirmation' => 'required|string',
         ]);
+
+        // Check if passwords match
+        if ($request->new_password !== $request->new_password_confirmation) {
+            return redirect('/')->withErrors(['forgot' => 'Passwords do not match. Please try again.'])->withInput();
+        }
 
         $user = User::find(session('reset_user_id'));
         
         if (!$user) {
-            return redirect('/')->withErrors(['reset' => 'User not found.']);
+            return redirect('/')->withErrors(['forgot' => 'User not found.']);
         }
 
         // Update password
         $user->update([
-            'password' => bcrypt($validated['new_password'])
+            'password' => bcrypt($request->new_password)
         ]);
 
         // Clear the password reset token

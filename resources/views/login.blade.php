@@ -94,12 +94,19 @@
 
             <!-- Step 3: Reset Password -->
             <div id="step3" class="grid grid-cols-1 gap-3 hidden">
-                <form method="POST" action="{{ route('forgot.reset') }}" class="grid grid-cols-1 gap-3">
+                <form method="POST" action="{{ route('forgot.reset') }}" class="grid grid-cols-1 gap-3" id="resetPasswordForm">
                     @csrf
                     <label class="text-sm">New Password</label>
-                    <input type="password" name="new_password" class="border border-black rounded px-3 py-2" required autocomplete="off">
+                    <input type="password" name="new_password" id="new_password" class="border border-black rounded px-3 py-2 @error('new_password') border-red-500 @enderror" required autocomplete="off">
+                    <span class="text-red-500 text-sm hidden" id="error-new-password"></span>
+                    @error('new_password')
+                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                    @enderror
+                    
                     <label class="text-sm">Confirm New Password</label>
-                    <input type="password" name="new_password_confirmation" class="border border-black rounded px-3 py-2" required autocomplete="off">
+                    <input type="password" name="new_password_confirmation" id="new_password_confirmation" class="border border-black rounded px-3 py-2 @error('new_password') border-red-500 @enderror" required autocomplete="off">
+                    <span class="text-red-500 text-sm hidden" id="error-confirm-password"></span>
+                    
                     <div class="flex justify-end gap-2 mt-2">
                         <button type="button" onclick="document.getElementById('forgotDialog').close()" class="px-3 py-2 bg-gray-300 rounded">Cancel</button>
                         <button type="submit" class="px-3 py-2 bg-green-600 text-white rounded">Reset Password</button>
@@ -138,6 +145,16 @@
                 document.getElementById('step2').classList.add('hidden');
                 document.getElementById('step3').classList.add('hidden');
             });
+            
+            // Keep modal open if reset password validation fails (server-side fallback)
+            @if($errors->has('forgot') && session('code_validated'))
+                document.getElementById('step1').classList.add('hidden');
+                document.getElementById('step2').classList.add('hidden');
+                document.getElementById('step3').classList.remove('hidden');
+                document.getElementById('forgotDialog').showModal();
+            @endif
         });
+
+        
     </script>
 </x-layout>
