@@ -134,13 +134,13 @@
                             title="{{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}">
                             {{ \Carbon\Carbon::parse($order->deliveryDate)->format('M d, Y') }}
                         </td>
-                        
+
                         {{-- Lead Time Column --}}
                         <td class="truncate px-2 py-3 text-center">
                             @php
                                 $leadTime = $orderDate->diffInDays($deliveryDate);
                                 $daysOverdue = now()->startOfDay()->diffInDays($deliveryDate, false);
-                                $isOverdue = $daysOverdue < 0 && $deliveryStatus === 'Confirmed';
+                                $isOverdue = $daysOverdue < 0 && !in_array($deliveryStatus, ['Delivered', 'Cancelled']);
                             @endphp
                             
                             @if($isOverdue)
@@ -148,7 +148,7 @@
                                     OVERDUE
                                 </span>
                             @else
-                                {{ $leadTime }} {{ \Illuminate\Support\Str::Str::plural('day', $leadTime) }}
+                                {{ $leadTime }} {{ \Illuminate\Support\Str::plural('day', $leadTime) }}
                             @endif
                         </td>
 
