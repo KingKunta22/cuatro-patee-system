@@ -23,82 +23,80 @@ class UserController extends Controller
         return view('manage-account', compact('users'));
     }
 
-    // Store new user
-    public function store(Request $request)
-    {
-
-        // ADD THIS SECURITY CHECK:
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'Unauthorized. Admin access required.');
-        }
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => 'required|in:admin,staff',
-        ]);
-
-        // Enforce max 2 admins
-        if ($validated['role'] === 'admin') {
-            $adminCount = User::where('role', 'admin')->count();
-            if ($adminCount >= 2) {
-                return back()->with('error', 'Maximum of 2 admins allowed.')->withInput();
-            }
-        }
-
-        User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
-            'status' => 'active',
-        ]);
-
-        return redirect()->route('manage.account')->with('success', 'User created successfully!');
+public function store(Request $request)
+{
+    // SECURITY CHECK:
+    if (Auth::user()->role !== 'admin') {
+        abort(403, 'Unauthorized. Admin access required.');
     }
 
-    // Update user
-    public function update(Request $request, User $user)
-    {
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users',
+        'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        'role' => 'required|in:admin,staff',
+    ], [
+        'password.confirmed' => 'The password confirmation does not match.',
+    ]);
 
-        // SECURITY CHECK:
-        if (Auth::user()->role !== 'admin') {
-            abort(403, 'Unauthorized. Admin access required.');
+    // Enforce max 2 admins
+    if ($validated['role'] === 'admin') {
+        $adminCount = User::where('role', 'admin')->count();
+        if ($adminCount >= 2) {
+            return back()->with('error', 'Maximum of 2 admins allowed.')->withInput();
         }
-
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role' => 'required|in:admin,staff',
-            'status' => 'required|in:active,inactive',
-            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
-        ]);
-
-        // Enforce max 2 admins when changing role to admin
-        if ($validated['role'] === 'admin' && $user->role !== 'admin') {
-            $adminCount = User::where('role', 'admin')->count();
-            if ($adminCount >= 2) {
-                return back()->with('error', 'Maximum of 2 admins allowed.')->withInput();
-            }
-        }
-
-        $updateData = [
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'role' => $validated['role'],
-            'status' => $validated['status'],
-        ];
-
-        if ($request->filled('password')) {
-            $updateData['password'] = Hash::make($validated['password']);
-        }
-
-        $user->update($updateData);
-
-        return redirect()->route('manage.account')->with('success', 'User updated successfully!');
     }
+
+    User::create([
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+        'password' => Hash::make($validated['password']),
+        'role' => $validated['role'],
+        'status' => 'active',
+    ]);
+
+    return redirect()->route('manage.account')->with('success', 'User created successfully!');
+}
+public function update(Request $request, User $user)
+{
+    // SECURITY CHECK:
+    if (Auth::user()->role !== 'admin') {
+        abort(403, 'Unauthorized. Admin access required.');
+    }
+
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+        'role' => 'required|in:admin,staff',
+        'status' => 'required|in:active,inactive',
+        'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+    ], [
+        'password.confirmed' => 'The password confirmation does not match.',
+    ]);
+
+    // Enforce max 2 admins when changing role to admin
+    if ($validated['role'] === 'admin' && $user->role !== 'admin') {
+        $adminCount = User::where('role', 'admin')->count();
+        if ($adminCount >= 2) {
+            return back()->with('error', 'Maximum of 2 admins allowed.')->withInput();
+        }
+    }
+
+    $updateData = [
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+        'role' => $validated['role'],
+        'status' => $validated['status'],
+    ];
+
+    if ($request->filled('password')) {
+        $updateData['password'] = Hash::make($validated['password']);
+    }
+
+    $user->update($updateData);
+
+    return redirect()->route('manage.account')->with('success', 'User updated successfully!');
+}
 
     // Delete user
     public function destroy(User $user)

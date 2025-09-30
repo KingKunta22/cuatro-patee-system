@@ -50,41 +50,71 @@
                         </td>
                         <td class="truncate py-3 max-w-32 px-2 flex place-content-center gap-2">
                             <!-- UPDATE BUTTON -->
-                            <x-form.editBtn @click="document.getElementById('editDialog{{ $user->id }}').showModal()" />
-                            <dialog id="editDialog{{ $user->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
-                                <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Update Account</h1>
-                                <div class="container px-3 py-4">
-                                    <form action="{{ route('users.update', $user) }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6">
-                                        @csrf
-                                        @method('PUT')
-                                        <x-form.form-input label="Username" name="name" type="text" value="{{ $user->name }}"/>
-                                        <x-form.form-input label="Email Address" name="email" type="email" value="{{ $user->email }}"/>
-                                        <x-form.form-input label="New Password (leave blank to keep current)" name="password" type="password"/>
-                                        <x-form.form-input label="Confirm Password" name="password_confirmation" type="password"/>
-                                        <div class="container text-start flex flex-col">
-                                            <label for="role">Role:</label>
-                                            <select name="role" class="px-3 py-2 border rounded-sm border-black">
-                                                <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
-                                                <option value="staff" {{ $user->role === 'staff' ? 'selected' : '' }}>Staff</option>
-                                            </select>
-                                        </div>
-                                        <div class="container text-start flex flex-col">
-                                            <label for="status">Status:</label>
-                                            <select name="status" class="px-3 py-2 border rounded-sm border-black">
-                                                <option value="active" {{ $user->status === 'active' ? 'selected' : '' }}>Active</option>
-                                                <option value="inactive" {{ $user->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                            </select>
-                                        </div>
-                                        <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
-                                            <x-form.closeBtn type="button" @click="document.getElementById('editDialog{{ $user->id }}').close()"
-                                                class="mr-2 px-4 py-2 rounded text-white hover:bg-gray-300 bg-gray-400">
-                                                Cancel
-                                            </x-form.closeBtn>
-                                            <x-form.saveBtn>Update</x-form.saveBtn>
-                                        </div>
-                                    </form>
-                                </div>
-                            </dialog>
+<!-- UPDATE BUTTON -->
+<x-form.editBtn @click="document.getElementById('editDialog{{ $user->id }}').showModal()" />
+<dialog id="editDialog{{ $user->id }}" class="w-1/2 my-auto shadow-2xl rounded-md">
+    <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Update Account</h1>
+    <div class="container px-3 py-4">
+        <form action="{{ route('users.update', $user) }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6">
+            @csrf
+            @method('PUT')
+            <x-form.form-input label="Username" name="name" type="text" value="{{ old('name', $user->name) }}"/>
+            @error('name')
+                <span class="text-red-500 text-sm col-span-2">{{ $message }}</span>
+            @enderror
+            
+            <x-form.form-input label="Email Address" name="email" type="email" value="{{ old('email', $user->email) }}"/>
+            @error('email')
+                <span class="text-red-500 text-sm col-span-2">{{ $message }}</span>
+            @enderror
+            
+            <!-- Password Field -->
+            <div class="container text-start flex flex-col">
+                <label for="password" class="mb-1">New Password (leave blank to keep current)</label>
+                <input type="password" name="password" class="px-3 py-2 border rounded-sm border-black @error('password') border-red-500 @enderror" value="{{ old('password') }}">
+                @error('password')
+                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                @enderror
+            </div>
+            
+            <!-- Password Confirmation Field -->
+            <div class="container text-start flex flex-col">
+                <label for="password_confirmation" class="mb-1">Confirm Password</label>
+                <input type="password" name="password_confirmation" class="px-3 py-2 border rounded-sm border-black @error('password') border-red-500 @enderror">
+            </div>
+            
+            <div class="container text-start flex flex-col">
+                <label for="role">Role:</label>
+                <select name="role" class="px-3 py-2 border rounded-sm border-black">
+                    <option value="admin" {{ old('role', $user->role) === 'admin' ? 'selected' : '' }}>Admin</option>
+                    <option value="staff" {{ old('role', $user->role) === 'staff' ? 'selected' : '' }}>Staff</option>
+                </select>
+                @error('role')
+                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                @enderror
+            </div>
+            
+            <div class="container text-start flex flex-col">
+                <label for="status">Status:</label>
+                <select name="status" class="px-3 py-2 border rounded-sm border-black">
+                    <option value="active" {{ old('status', $user->status) === 'active' ? 'selected' : '' }}>Active</option>
+                    <option value="inactive" {{ old('status', $user->status) === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                </select>
+                @error('status')
+                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                @enderror
+            </div>
+            
+            <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
+                <x-form.closeBtn type="button" @click="document.getElementById('editDialog{{ $user->id }}').close()"
+                    class="mr-2 px-4 py-2 rounded text-white hover:bg-gray-300 bg-gray-400">
+                    Cancel
+                </x-form.closeBtn>
+                <x-form.saveBtn>Update</x-form.saveBtn>
+            </div>
+        </form>
+    </div>
+</dialog>
 
                             <!-- DELETE BUTTON -->
                             <x-form.deleteBtn @click="document.getElementById('deleteDialog{{ $user->id }}').showModal()" />
@@ -114,30 +144,83 @@
             </table>
         </div>
 
-        <!-- ADD USER MODAL -->
-        <dialog x-ref="dialogRef" class="w-1/2 my-auto shadow-2xl rounded-md">
-            <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Add User</h1>
-            <div class="container px-3 py-4">
-                <form action="{{ route('users.store') }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6">
-                    @csrf
-                    <x-form.form-input label="Username" name="name" type="text" required />
-                    <x-form.form-input label="Email" name="email" type="email" required />
-                    <x-form.form-input label="Password" name="password" type="password" required />
-                    <x-form.form-input label="Confirm Password" name="password_confirmation" type="password" required />
-                    <div class="container text-start flex flex-col">
-                        <label for="role">Role:</label>
-                        <select name="role" class="px-3 py-2 border rounded-sm border-black" required>
-                            <option value="" disabled selected>Choose Role</option>
-                            <option value="admin">Admin</option>
-                            <option value="staff">Staff</option>
-                        </select>
-                    </div>
-                    <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
-                        <x-form.closeBtn type="button" @click="$refs.dialogRef.close()" class="mr-2 px-4 py-2 rounded text-white hover:bg-gray-300 bg-gray-400">Cancel</x-form.closeBtn>
-                        <x-form.saveBtn>Save</x-form.saveBtn>
-                    </div>
-                </form>
+<!-- ADD USER MODAL -->
+<dialog x-ref="dialogRef" class="w-1/2 my-auto shadow-2xl rounded-md">
+    <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Add User</h1>
+    <div class="container px-3 py-4">
+        <form action="{{ route('users.store') }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6">
+            @csrf
+            <x-form.form-input label="Username" name="name" type="text" value="{{ old('name') }}" required />
+            @error('name')
+                <span class="text-red-500 text-sm col-span-2">{{ $message }}</span>
+            @enderror
+            
+            <x-form.form-input label="Email" name="email" type="email" value="{{ old('email') }}" required />
+            @error('email')
+                <span class="text-red-500 text-sm col-span-2">{{ $message }}</span>
+            @enderror
+            
+            <!-- Password Field -->
+            <div class="container text-start flex flex-col">
+                <label for="password" class="mb-1">Password</label>
+                <input type="password" name="password" class="px-3 py-2 border rounded-sm border-black @error('password') border-red-500 @enderror" required value="{{ old('password') }}">
+                @error('password')
+                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                @enderror
             </div>
-        </dialog>
+            
+            <!-- Password Confirmation Field -->
+            <div class="container text-start flex flex-col">
+                <label for="password_confirmation" class="mb-1">Confirm Password</label>
+                <input type="password" name="password_confirmation" class="px-3 py-2 border rounded-sm border-black @error('password') border-red-500 @enderror" required>
+            </div>
+            
+            <div class="container text-start flex flex-col">
+                <label for="role">Role:</label>
+                <select name="role" class="px-3 py-2 border rounded-sm border-black" required>
+                    <option value="" disabled selected>Choose Role</option>
+                    <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+                    <option value="staff" {{ old('role') === 'staff' ? 'selected' : '' }}>Staff</option>
+                </select>
+                @error('role')
+                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                @enderror
+            </div>
+            
+            <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
+                <x-form.closeBtn type="button" @click="$refs.dialogRef.close()" class="mr-2 px-4 py-2 rounded text-white hover:bg-gray-300 bg-gray-400">Cancel</x-form.closeBtn>
+                <x-form.saveBtn>Save</x-form.saveBtn>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there are validation errors
+    @if($errors->any())
+        @if(Request::isMethod('post') || Request::isMethod('put'))
+            // For create form errors
+            @if(old('name') || old('email'))
+                setTimeout(() => {
+                    const dialog = document.querySelector('[x-ref="dialogRef"]');
+                    if (dialog) dialog.showModal();
+                }, 100);
+            @else
+                // For edit form errors - try to find which user was being edited
+                @foreach($users as $user)
+                    @if(old('name') === $user->name || old('email') === $user->email)
+                        setTimeout(() => {
+                            const dialog = document.getElementById('editDialog{{ $user->id }}');
+                            if (dialog) dialog.showModal();
+                        }, 100);
+                        @break
+                    @endif
+                @endforeach
+            @endif
+        @endif
+    @endif
+});
+</script>
     </main>
 </x-layout>

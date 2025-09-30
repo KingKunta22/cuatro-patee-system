@@ -63,6 +63,9 @@ class DashboardController extends Controller
 
         // Sales Trends Data (use the selected period)
         $salesTrends = $this->getSalesTrendsData($salesPeriod);
+        
+        // Stock Level breakdown - Count PRODUCTS by their TOTAL stock
+        $productsWithStock = Product::with(['batches'])->get();
 
         $inStock = $productsWithStock->filter(function($product) {
             $totalStock = $product->batches->sum('quantity');
@@ -71,20 +74,23 @@ class DashboardController extends Controller
 
         $lowStock = $productsWithStock->filter(function($product) {
             $totalStock = $product->batches->sum('quantity');
-            return $totalStock >= 1 && $totalStock <= 10;
+            return $totalStock >= 1 && $totalStock <= 10; // Low stock: 1-10
         })->count();
 
         $outOfStock = $productsWithStock->filter(function($product) {
             $totalStock = $product->batches->sum('quantity');
-            return $totalStock == 0;
+            return $totalStock == 0; // Out of stock: exactly 0
         })->count();
         
-        // Low Stock Products (FIXED) - Only products with 1-10 total stock
+        // Low Stock Products - Include products with 0-10 stock (both low stock and out of stock)
         $lowStockProducts = Product::with(['batches'])
             ->get()
             ->filter(function($product) {
                 $totalStock = $product->batches->sum('quantity');
-                return $totalStock >= 1 && $totalStock <= 10;
+                return $totalStock <= 10; // Changed from 1-10 to 0-10
+            })
+            ->sortBy(function($product) {
+                return $product->batches->sum('quantity'); // Sort by stock level (lowest first)
             })
             ->take(5)
             ->map(function($product) {

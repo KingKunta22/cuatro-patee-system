@@ -21,19 +21,6 @@
         {{ $slot }}
     </div>
 
-
-    @if(session('success'))
-        <script>
-            Toast.success('{{ session('success') }}');
-        </script>
-    @endif
-
-    @if(session('error'))
-        <script>
-            Toast.error('{{ session('error') }}');
-        </script>
-    @endif
-
     
 </body>
 </html>
