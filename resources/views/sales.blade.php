@@ -627,7 +627,7 @@
                     @method('DELETE')
                     <div class="mb-4 py-6">
                         <p class="text-lg">Are you sure you want to delete sale <strong>{{ $sale->invoice_number }}</strong>?</p>
-                        <p class="text-xs text-gray-600 mt-2">This action cannot be undone. All items associated with this sale will also be deleted.</p>
+                        <p class="text-xs text-gray-600 mt-2">This action cannot be undone. Items on this sale will be returned to the inventory.</p>
                     </div>
                     <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
                         <button type="button" @click="$refs['deleteDialog{{ $sale->id }}'].close()" class="mr-2 px-4 py-2 rounded text-white hover:bg-gray-300 bg-gray-400">

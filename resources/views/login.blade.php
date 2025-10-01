@@ -145,7 +145,7 @@
                 document.getElementById('step2').classList.add('hidden');
                 document.getElementById('step3').classList.add('hidden');
             });
-            
+
             // Keep modal open if reset password validation fails (server-side fallback)
             @if($errors->has('forgot') && session('code_validated'))
                 document.getElementById('step1').classList.add('hidden');
@@ -156,5 +156,47 @@
         });
 
         
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Password validation for forgot password reset form
+        const resetPasswordForm = document.getElementById('resetPasswordForm');
+        if (resetPasswordForm) {
+            resetPasswordForm.addEventListener('submit', function(e) {
+                const newPassword = document.getElementById('new_password').value;
+                const confirmPassword = document.getElementById('new_password_confirmation').value;
+                
+                // Clear previous errors
+                document.getElementById('error-new-password').classList.add('hidden');
+                document.getElementById('error-confirm-password').classList.add('hidden');
+                document.getElementById('new_password').classList.remove('border-red-500');
+                document.getElementById('new_password_confirmation').classList.remove('border-red-500');
+                
+                let isValid = true;
+                
+                // Validate password length
+                if (newPassword.length < 8) {
+                    document.getElementById('error-new-password').textContent = 'Password must be at least 8 characters.';
+                    document.getElementById('error-new-password').classList.remove('hidden');
+                    document.getElementById('new_password').classList.add('border-red-500');
+                    isValid = false;
+                }
+                
+                // Validate password match
+                if (newPassword !== confirmPassword) {
+                    document.getElementById('error-confirm-password').textContent = 'The password confirmation does not match.';
+                    document.getElementById('error-confirm-password').classList.remove('hidden');
+                    document.getElementById('new_password_confirmation').classList.add('border-red-500');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        }
+    });
     </script>
 </x-layout>

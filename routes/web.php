@@ -57,6 +57,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('subcategories/{id}', [ProductClassification::class, 'destroySubcategory'])->name('subcategories.destroy');
     Route::resource('po-notes', PONotesController::class);
     Route::get('/dashboard/sales-trends', [DashboardController::class, 'getSalesTrends'])->name('dashboard.sales-trends');
+    // Print routes for reports
+    Route::prefix('reports/print')->group(function () {
+        Route::get('/product-movements', [ProductMovementReportsController::class, 'print'])->name('reports.print.product-movements');
+        Route::get('/sales', [SalesReportsController::class, 'print'])->name('reports.print.sales');
+        Route::get('/inventory', [InventoryReportsController::class, 'print'])->name('reports.print.inventory');
+        Route::get('/purchase-orders', [PurchaseOrderReportsController::class, 'print'])->name('reports.print.purchase-orders');
+    });
 
     // === SEMI STAFF ROUTES (features are hidden from staff access)
     Route::get('/reports', [ReportsController::class, 'index'])->name('reports.index');

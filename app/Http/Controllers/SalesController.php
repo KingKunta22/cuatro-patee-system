@@ -38,7 +38,8 @@ class SalesController extends Controller
             ->when(request('search'), function ($query, $search) {
                 $query->where('invoice_number', 'like', "%{$search}%");
             })
-            ->latest()
+            ->orderBy('sale_date', 'desc') // Order by sale_date in descending order (newest first)
+            ->orderBy('created_at', 'desc') // Secondary ordering
             ->paginate(7);
         
         // Get products for the product dropdown

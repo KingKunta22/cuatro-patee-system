@@ -52,6 +52,64 @@ class ProductMovementReportsController extends Controller
             'timePeriod' => $timePeriod
         ]));
     }
+
+        public function print(Request $request)
+    {
+        $timePeriod = $request->timePeriod ?? 'all';
+        
+        // Get sales data for outflow
+        $sales = Sale::with(['items', 'items.productBatch.product'])
+                    ->orderBy('sale_date', 'DESC')
+                    ->get();
+        
+        // Get products with their batches for inflow
+        $products = Product::with(['brand', 'category', 'batches', 'batches.purchaseOrder'])
+                            ->orderBy('created_at', 'DESC')
+                            ->get();
+
+        // Prefetch total sold quantities per batch to reconstruct original inflow quantities
+        $soldByBatch = SaleItem::select('product_batch_id', DB::raw('SUM(quantity) as qty_sold'))
+            ->groupBy('product_batch_id')
+            ->pluck('qty_sold', 'product_batch_id');
+        
+        // Combine data into movements array
+        $movements = $this->combineMovements($sales, $products, $soldByBatch);
+        
+        // Strict date-time sorting (newest first)
+        usort($movements, function($a, $b) {
+            $cmp = strtotime($b['date']) <=> strtotime($a['date']);
+            if ($cmp !== 0) return $cmp;
+            return strcmp($a['type'], $b['type']);
+        });
+        
+        // Calculate stats
+        $stats = $this->calculateStats($timePeriod);
+        
+        // For print, we want all data without pagination
+        $perPage = 1000; // Large number to show most data
+        $currentPage = 1;
+        $offset = ($currentPage - 1) * $perPage;
+        $printMovements = array_slice($movements, $offset, $perPage);
+        
+        $movementsPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $printMovements,
+            count($movements),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(), 
+                'query' => $request->query(),
+            ]
+        );
+
+        return view('reports.print.product-movement-print', array_merge($stats, [
+            'movementsPaginator' => $movementsPaginator,
+            'timePeriod' => $timePeriod,
+            'movements' => $printMovements // Also pass raw movements for easier looping
+        ]));
+    }
+
+
     
     private function combineMovements($sales, $products, $soldByBatch)
     {
