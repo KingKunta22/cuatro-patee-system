@@ -180,7 +180,7 @@
 
             <div class="container text-start flex flex-col">
                 <label for="add_username" class="mb-1">Username</label>
-                <input id="add_username" name="name" type="text" class="px-3 py-2 border rounded-sm border-black @error('name') border-red-500 @enderror" required value="{{ old('name') }}">
+                <input id="add_username" autocomplete='off' name="name" type="text" class="px-3 py-2 border rounded-sm border-black @error('name') border-red-500 @enderror" required value="{{ old('name') }}">
                 <span class="text-red-500 text-sm mt-1 hidden error-username"></span>
                 @error('name')
                     <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
@@ -189,7 +189,7 @@
 
             <div class="container text-start flex flex-col">
                 <label for="add_email" class="mb-1">Email</label>
-                <input id="add_email" name="email" type="email" class="px-3 py-2 border rounded-sm border-black @error('email') border-red-500 @enderror" required value="{{ old('email') }}">
+                <input id="add_email" autocomplete='off' name="email" type="email" class="px-3 py-2 border rounded-sm border-black @error('email') border-red-500 @enderror" required value="{{ old('email') }}">
                 <span class="text-red-500 text-sm mt-1 hidden error-email"></span>
                 @error('email')
                     <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
@@ -213,7 +213,7 @@
                 <span class="text-red-500 text-sm mt-1 hidden error-password-confirm"></span>
             </div>
             
-            <div class="container text-start flex flex-col">
+            <div class="container text-start flex flex-col col-span-2">
                 <label for="add_role">Role:</label>
                 <select name="role" class="px-3 py-2 border rounded-sm border-black" required>
                     <option value="" disabled selected>Choose Role</option>

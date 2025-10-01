@@ -274,6 +274,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                    @if($product->activeBatches->count() > 0)
                                         @foreach($product->activeBatches as $batch)
                                         <tr class="border-b">
                                             <td class="px-2 py-2 text-xs text-center truncate" title="{{ $batch->batch_number }}">
@@ -287,6 +288,17 @@
                                             </td>
                                         </tr>
                                         @endforeach
+                                    @else
+                                        <!-- EMPTY STATE - USING TABLE ROW -->
+                                        <tr>
+                                            <td colspan="3" class="px-2 py-8 text-center text-gray-500">
+                                                <div class="flex flex-col items-center justify-center">
+                                                    <p>No batches available</p>
+                                                    <p class="text-xs mt-1">All batches may be expired or out of stock</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endif
                                     </tbody>
                                 </table>
                             </div>
@@ -1131,7 +1143,6 @@
             <!-- EDITABLE BATCHES TABLE - FIXED STRUCTURE -->
             <div class="col-span-6">
                 <h2 class="text-xl font-bold mb-2">Edit Product Batches</h2>
-                <p class="text-sm text-gray-600 mb-4">Available Stock: <span class="font-semibold">{{ $product->activeBatches->sum('quantity') }} units</span></p>
                 <div class="border rounded-md border-solid border-black h-32 overflow-y-auto">
                     <table class="w-full table-fixed h-auto max-h-full overflow-y-auto">
                         <thead class="rounded-lg bg-main text-white">

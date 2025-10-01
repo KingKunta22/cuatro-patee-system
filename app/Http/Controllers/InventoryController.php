@@ -345,7 +345,7 @@ public function update(Request $request, $id)
         'productBrand' => 'required|string|max:255', 
         'productCategory' => 'required|string|max:255', 
         'productSellingPrice' => 'required|numeric|min:0',
-        'productCostPrice' => 'required|numeric|min:0',
+        // 'productCostPrice' => 'required|numeric|min:0',
         'productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
         'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         'batches' => 'nullable|array',
@@ -368,7 +368,7 @@ public function update(Request $request, $id)
             'brand_id' => $brand->id,
             'category_id' => $category->id,
             'productSellingPrice' => $validated['productSellingPrice'],
-            'productCostPrice' => $validated['productCostPrice'],
+            // 'productCostPrice' => $validated['productCostPrice'],
             'productItemMeasurement' => $validated['productItemMeasurement'],
         ];
 
