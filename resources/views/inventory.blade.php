@@ -211,7 +211,20 @@
                         <h2 class="text-xl tracking-wide text-gray-800 font-bold">
                             {{ $product->productName }}
                         </h2>
-                        <p class='text-md text-gray-400'>{{ $product->productSKU }}</p>
+                        <div class="container flex flex-row items-center content-between justify-between">
+                            <p class='text-sm text-gray-400 italic'>{{ $product->productSKU }}</p>
+                            <div class="text-xs text-gray-600 italic">
+                                @if($product->batches->first() && $product->batches->first()->purchase_order_id)
+                                    <span class="text-xs text-gray-400">
+                                        {{ $product->batches->first()->purchaseOrder->orderNumber }}
+                                    </span>
+                                @else
+                                    <span class="text-xs text-gray-400">
+                                        Manually Added
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
                     </div>
                     @if($product->productImage)
                         <img src="{{ asset('storage/' . $product->productImage) }}" 
@@ -261,7 +274,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($product->batches as $batch)
+                                        @foreach($product->activeBatches as $batch)
                                         <tr class="border-b">
                                             <td class="px-2 py-2 text-xs text-center truncate" title="{{ $batch->batch_number }}">
                                                 {{ $batch->batch_number }}
@@ -864,29 +877,30 @@
                                     <label>Quantity</label>
                                     <input type="number" x-model="newBatch.quantity" min="1" 
                                         :max="productStock ? productStock - getTotalStock() : 0"
-                                        :disabled="getTotalStock() === productStock || $root.isPerishable || !productStock || productStock <= 0"
+                                        :disabled="getTotalStock() === productStock || isPerishable || !productStock || productStock <= 0"
                                         class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
                                         :class="{'bg-gray-100': getTotalStock() === productStock || $root.isPerishable || !productStock || productStock <= 0}">
                                 </div>
 
                                 <!-- Expiry Date Input - PO SECTION ONLY -->
-                                <div class="container flex flex-col text-start col-span-2" x-show="!$root.isPerishable">
+                                <div class="container flex flex-col text-start col-span-2" x-show="!isPerishable">
                                     <label>Expiration Date</label>
                                     <input type="date" x-model="newBatch.expiration_date"
-                                        :required="!$root.isPerishable && !(getTotalStock() === productStock)"
+                                        :required="!isPerishable && !(getTotalStock() === productStock)"
                                         min="{{ date('Y-m-d') }}"
-                                        :disabled="$root.isPerishable || getTotalStock() === productStock || !productStock || productStock <= 0"
+                                        :disabled="isPerishable || getTotalStock() === productStock || !productStock || productStock <= 0"
                                         class="px-3 py-2 text-sm border rounded-sm border-black"
-                                        :class="{'bg-gray-100': $root.isPerishable || getTotalStock() === productStock || !productStock || productStock <= 0}">
+                                        :class="{'bg-gray-100': isPerishable || getTotalStock() === productStock || !productStock || productStock <= 0}">
                                 </div>
 
                                 <!-- Show message when non-perishable -->
-                                <div class="container flex flex-col text-start col-span-2" x-show="$root.isPerishable">
+                                <div class="container flex flex-col text-start col-span-2" x-show="isPerishable">
                                     <label>Expiration Date</label>
                                     <div class="px-3 py-2 text-sm border rounded-sm border-black bg-gray-100 text-gray-500">
                                         Not required
                                     </div>
                                 </div>
+
                                 <div class="container flex flex-col mb-1 col-span-2 place-items-end content-end items-center justify-end">
                                     <button type="button" @click="addBatch()" 
                                         :disabled="getTotalStock() === productStock || !productStock || !newBatch.quantity || (!isPerishable && !newBatch.expiration_date) || (parseInt(newBatch.quantity) + getTotalStock()) > parseInt(productStock)"
@@ -1052,7 +1066,7 @@
                 <div class="flex flex-col text-start">
                     <label for="productBrand" class="font-medium">Product Brand</label>
                     <select name="productBrand" id="productBrand" 
-                        class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
+                        class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0" required>
                         <option value="" disabled>Select Brand</option>
                         @foreach($brands as $brand)
                             <option value="{{ $brand->productBrand }}" {{ $product->brand->productBrand == $brand->productBrand ? 'selected' : '' }}>
@@ -1066,7 +1080,7 @@
                 <div class="flex flex-col text-start">
                     <label for="productCategory" class="font-medium">Product Category</label>
                     <select name="productCategory" id="productCategory" 
-                        class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
+                        class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0" required>
                         <option value="" disabled>Select Category</option>
                         @foreach($categories as $category)
                             <option value="{{ $category->productCategory }}" {{ $product->category->productCategory == $category->productCategory ? 'selected' : '' }}>
@@ -1084,13 +1098,13 @@
                 <!-- Cost Price -->
                 <x-form.form-input label="Cost Price" name="productCostPrice" type="number" 
                     value="{{ $product->productCostPrice }}" 
-                    step="0.01" min="0" required />
+                    step="0.01" min="0" readonly disabled/>
 
                 <!-- Measurement -->
                 <div class="flex flex-col text-start">
-                    <label for="itemMeasurement" class="font-medium">Measurement per item</label>
+                    <label for="itemMeasurement">Measurement per item</label>
                     <select name="productItemMeasurement" 
-                            class="px-3 py-2 border rounded border-gray-300 focus:ring focus:ring-blue-200" required>
+                        class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0" required>
                         <option value="" disabled>Select Measurement</option>
                         <option value="kilogram" {{ $product->productItemMeasurement == 'kilogram' ? 'selected' : '' }}>kilogram (kg)</option>
                         <option value="gram" {{ $product->productItemMeasurement == 'gram' ? 'selected' : '' }}>gram (g)</option>
@@ -1105,19 +1119,19 @@
 
                 <!-- Product Stock (Read-only, calculated from batches) -->
                 <div class="flex flex-col text-start">
-                    <label class="font-medium">Total Stock</label>
+                    <label>Total Stock</label>
                     <input type="number" 
                         value="{{ $product->batches->sum('quantity') }}" 
-                        class="px-3 py-2 border rounded border-gray-300 bg-gray-100" 
+                        class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
                         readonly
                         disabled>
-                    {{-- <p class="text-xs text-gray-500 mt-1">Auto-calculated from batches</p> --}}
                 </div>
             </div>
 
             <!-- EDITABLE BATCHES TABLE - FIXED STRUCTURE -->
             <div class="col-span-6">
-                <h2 class="text-xl font-bold mb-4">Edit Product Batches</h2>
+                <h2 class="text-xl font-bold mb-2">Edit Product Batches</h2>
+                <p class="text-sm text-gray-600 mb-4">Available Stock: <span class="font-semibold">{{ $product->activeBatches->sum('quantity') }} units</span></p>
                 <div class="border rounded-md border-solid border-black h-32 overflow-y-auto">
                     <table class="w-full table-fixed h-auto max-h-full overflow-y-auto">
                         <thead class="rounded-lg bg-main text-white">
@@ -1129,7 +1143,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($product->batches as $batch)
+                            @foreach($product->activeBatches as $batch)
                             <tr class="border-b">
                                 <td class="px-1 py-1 text-xs text-center truncate">
                                     {{ $batch->batch_number }}
@@ -1144,16 +1158,15 @@
                                            required>
                                 </td>
                                 <td class="px-1 py-1 text-xs text-center truncate">
-                                    @if($product->is_perishable)
-                                        <input type="date" 
-                                               name="batches[{{ $batch->id }}][expiration_date]" 
-                                               value="{{ $batch->expiration_date ? $batch->expiration_date->format('Y-m-d') : '' }}"
-                                               class="px-1 py-1 border rounded text-center"
-                                               min="{{ date('Y-m-d') }}"
-                                               {{ $product->is_perishable ? '' : 'readonly' }}>
-                                    @else
+                                    @if(!$product->is_perishable)
                                         Non-perishable
                                         <input type="hidden" name="batches[{{ $batch->id }}][expiration_date]" value="">
+                                    @else
+                                        <input type="date" 
+                                            name="batches[{{ $batch->id }}][expiration_date]" 
+                                            value="{{ $batch->expiration_date ? $batch->expiration_date->format('Y-m-d') : '' }}"
+                                            class="px-1 py-1 border rounded text-center"
+                                            min="{{ date('Y-m-d') }}">
                                     @endif
                                 </td>
                                 <td class="px-1 py-1 text-xs text-center truncate">
