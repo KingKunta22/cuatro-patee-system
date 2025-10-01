@@ -15,15 +15,15 @@ class ProductMovementReportsController extends Controller
     {
         $timePeriod = $request->timePeriod ?? 'all';
         
-        // Get sales data for outflow
-        $sales = Sale::with(['items', 'items.productBatch.product'])
-                    ->orderBy('sale_date', 'DESC')
-                    ->get();
+        // Get sales data for outflow WITH TIME FILTERING
+        $salesQuery = Sale::with(['items', 'items.productBatch.product']);
+        $this->applyTimeFilterToQuery($salesQuery, $timePeriod, 'sale_date');
+        $sales = $salesQuery->orderBy('sale_date', 'DESC')->get();
         
-        // Get products with their batches for inflow
-        $products = Product::with(['brand', 'category', 'batches', 'batches.purchaseOrder'])
-                            ->orderBy('created_at', 'DESC')
-                            ->get();
+        // Get products with their batches for inflow WITH TIME FILTERING
+        $productsQuery = Product::with(['brand', 'category', 'batches', 'batches.purchaseOrder']);
+        $this->applyTimeFilterToQuery($productsQuery, $timePeriod, 'created_at');
+        $products = $productsQuery->orderBy('created_at', 'DESC')->get();
 
         // Prefetch total sold quantities per batch to reconstruct original inflow quantities
         $soldByBatch = SaleItem::select('product_batch_id', DB::raw('SUM(quantity) as qty_sold'))
@@ -53,19 +53,19 @@ class ProductMovementReportsController extends Controller
         ]));
     }
 
-        public function print(Request $request)
+    public function print(Request $request)
     {
         $timePeriod = $request->timePeriod ?? 'all';
         
-        // Get sales data for outflow
-        $sales = Sale::with(['items', 'items.productBatch.product'])
-                    ->orderBy('sale_date', 'DESC')
-                    ->get();
+        // Get sales data for outflow WITH TIME FILTERING
+        $salesQuery = Sale::with(['items', 'items.productBatch.product']);
+        $this->applyTimeFilterToQuery($salesQuery, $timePeriod, 'sale_date');
+        $sales = $salesQuery->orderBy('sale_date', 'DESC')->get();
         
-        // Get products with their batches for inflow
-        $products = Product::with(['brand', 'category', 'batches', 'batches.purchaseOrder'])
-                            ->orderBy('created_at', 'DESC')
-                            ->get();
+        // Get products with their batches for inflow WITH TIME FILTERING  
+        $productsQuery = Product::with(['brand', 'category', 'batches', 'batches.purchaseOrder']);
+        $this->applyTimeFilterToQuery($productsQuery, $timePeriod, 'created_at');
+        $products = $productsQuery->orderBy('created_at', 'DESC')->get();
 
         // Prefetch total sold quantities per batch to reconstruct original inflow quantities
         $soldByBatch = SaleItem::select('product_batch_id', DB::raw('SUM(quantity) as qty_sold'))

@@ -17,7 +17,7 @@ class ReportsController extends Controller
 {
     public function index(Request $request)
     {
-        $timePeriod = $request->timePeriod ?? 'all';
+        $timePeriod = $request->timePeriod ?? 'today';
         
         // Data for inventory tab with time period filtering
         $inventories = $this->getInventoryData($timePeriod);
