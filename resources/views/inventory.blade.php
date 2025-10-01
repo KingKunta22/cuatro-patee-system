@@ -121,7 +121,7 @@
             <table class="w-full table-fixed">
                 <thead class="rounded-lg bg-main text-white px-4 py-3">
                     <tr class="rounded-lg">
-                        <th class="bg-main px-4 py-3">Product Name</th>
+                        <th class="bg-main px-4 py-3 w-52">Product Name</th>
                         <th class="bg-main px-4 py-3">Category</th>
                         <th class="bg-main px-4 py-3">SKU</th>
                         <th class="bg-main px-4 py-3">Brand</th>
@@ -503,7 +503,7 @@
                                 <!-- INFORMATION TEXT -->
                                 <div class="container text-xs col-span-6 flex items-center content-start justify-start">
                                     <p class='text-xs text-gray-400 w-auto'>
-                                        <strong>Batch Management:</strong> '
+                                        <strong>Batch Management:</strong>
                                         Add batches with quantities and expiry dates. Total batches must equal total stock. <br> You may check the No Expiry box (upper right corner) for non-perishable items.
                                     </p>
                                 </div>
@@ -854,7 +854,7 @@
                                 <!-- INFORMATION TEXT -->
                                 <div class="container text-xs col-span-6">
                                     <p class='text-xs text-gray-400 w-auto'>
-                                        <strong>Batch Management:</strong> '
+                                        <strong>Batch Management:</strong>
                                         Add batches with quantities and expiry dates. Total batches must equal total stock. <br> You may check the No Expiry box (upper right corner) for non-perishable items.
                                     </p>
                                 </div>

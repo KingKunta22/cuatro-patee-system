@@ -21,7 +21,6 @@
         <thead class="bg-main text-white">
             <tr>
                 <th class="px-4 py-3 text-center">Invoice No.</th>
-                <th class="px-4 py-3 text-center">Customer</th>
                 <th class="px-4 py-3 text-center">Date</th>
                 <th class="px-4 py-3 text-center">Items Count</th>
                 <th class="px-4 py-3 text-center">Total Amount</th>
@@ -35,9 +34,6 @@
                     <tr>
                         <td class="px-2 py-2 text-center truncate" title="Invoice number: {{ $sale->invoice_number }}">
                             {{ $sale->invoice_number }}
-                        </td>
-                        <td class="px-2 py-2 text-center truncate" title="{{ $sale->customer_name ?? 'Walk-in Customer' }}">
-                            {{ $sale->customer_name ?? 'Walk-in Customer' }}
                         </td>
                         <td class="px-2 py-2 text-center truncate" title="Processed on {{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}">
                             {{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}
@@ -94,7 +90,7 @@
                     <!-- Sale Information -->
                     <div class="col-span-3">
                         <h2 class="text-xl font-bold mb-4">Sale Information</h2>
-                        <div class="grid grid-cols-3 gap-3">
+                        <div class="grid grid-cols-2 gap-3">
                             <div class="bg-gray-50 p-3 rounded-md">
                                 <p class="font-semibold text-md">Invoice Number</p>
                                 <p class="text-sm">{{ $sale->invoice_number }}</p>
@@ -102,14 +98,6 @@
                             <div class="bg-gray-50 p-3 rounded-md">
                                 <p class="font-semibold text-md">Sale Date</p>
                                 <p class="text-sm">{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</p>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-md">Customer Name</p>
-                                <p class="text-sm">{{ $sale->customer_name ?? 'Walk-in Customer' }}</p>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-md">
-                                <p class="font-semibold text-md">Items Count</p>
-                                <p class="text-sm">{{ $sale->items->count() }} items</p>
                             </div>
                             <div class="bg-gray-50 p-3 rounded-md">
                                 <p class="font-semibold text-md">Total Amount</p>

@@ -34,7 +34,12 @@ class SalesController extends Controller
         $totalProfit = $totalRevenue - $totalCost;
         
         // Get sales data with user relationship
-        $sales = Sale::with(['items.productBatch.product', 'user'])->latest()->paginate(7);
+        $sales = Sale::with(['items.productBatch.product', 'user'])
+            ->when(request('search'), function ($query, $search) {
+                $query->where('invoice_number', 'like', "%{$search}%");
+            })
+            ->latest()
+            ->paginate(7);
         
         // Get products for the product dropdown
         $products = Product::with([
