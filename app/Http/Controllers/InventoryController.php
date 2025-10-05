@@ -21,6 +21,14 @@ class InventoryController extends Controller
     {
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
+        $highlightProduct = $request->input('highlight');
+        $addDelivery = $request->input('add_delivery');
+
+        // AUTO-SORT FOR LOW STOCK NOTIFICATIONS
+        if ($highlightProduct && !$request->has('sort_by')) {
+            $sortBy = 'stock';
+            $sortOrder = 'asc'; // Show lowest stock first
+        }
 
         // Get delivered POs that haven't been added to inventory yet
         $unaddedPOs = PurchaseOrder::whereHas('deliveries', function($query) {
@@ -103,7 +111,9 @@ class InventoryController extends Controller
             'categories', 
             'brands', 
             'sortBy',
-            'sortOrder'
+            'sortOrder',
+            'highlightProduct',
+            'addDelivery'
         ));
     }
 

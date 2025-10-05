@@ -145,8 +145,8 @@ class="relative">
                             <p class="text-sm text-gray-600 mt-1" x-text="notification.message"></p>
                             <div class="mt-2 flex gap-2">
                                 <a :href="notification.url" 
-                                   @click="markAsRead(notification.id)"
-                                   class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 inline-block transition-colors">
+                                @click="markAsRead(notification.id)"
+                                class="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 inline-block transition-colors">
                                     View
                                 </a>
                                 <button x-show="!isRead(notification.id)" 

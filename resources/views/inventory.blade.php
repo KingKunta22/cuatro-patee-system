@@ -1374,5 +1374,54 @@
             </x-modal.createModal>
         @endforeach
 
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we need to auto-open a product details modal
+            const urlParams = new URLSearchParams(window.location.search);
+            const highlightProduct = urlParams.get('highlight');
+            const addDelivery = urlParams.get('add_delivery');
+            
+            // Auto-open product details modal for low stock notifications
+            if (highlightProduct) {
+                setTimeout(() => {
+                    const modal = document.querySelector(`[x-ref="viewInventoryDetails${highlightProduct}"]`);
+                    if (modal) {
+                        modal.showModal();
+                        
+                        // Remove the highlight parameter from URL without reload
+                        const newUrl = window.location.pathname + window.location.search
+                            .replace(/&?highlight=[^&]*/, '')
+                            .replace(/&?sort_by=[^&]*/, '')
+                            .replace(/&?sort_order=[^&]*/, '');
+                        window.history.replaceState({}, '', newUrl);
+                    }
+                }, 800);
+            }
+            
+            // Auto-open add product modal for delivery notifications
+            if (addDelivery) {
+                setTimeout(() => {
+                    const modal = document.querySelector('[x-ref="addProductRef"]');
+                    if (modal) {
+                        modal.showModal();
+                        
+                        // Pre-select the PO if available
+                        const poSelect = document.querySelector('select[name="purchaseOrderNumber"]');
+                        if (poSelect) {
+                            poSelect.value = addDelivery;
+                            // Trigger the change event to load items
+                            const event = new Event('change');
+                            poSelect.dispatchEvent(event);
+                        }
+                        
+                        // Remove the add_delivery parameter from URL without reload
+                        const newUrl = window.location.pathname + window.location.search.replace(/&?add_delivery=[^&]*/, '');
+                        window.history.replaceState({}, '', newUrl);
+                    }
+                }, 800);
+            }
+        });
+        </script>
+
     </main>
 </x-layout>

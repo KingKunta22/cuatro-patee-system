@@ -24,7 +24,9 @@ class NotificationController extends Controller
                     'id' => 'low_stock_' . $product->id,
                     'title' => 'Low Stock Alert',
                     'message' => $product->productName . ' is running low! Stock: ' . $totalStock,
-                    'url' => '/inventory',
+                    'url' => '/inventory?sort_by=stock&sort_order=asc&highlight=' . $product->id,
+                    'type' => 'low_stock',
+                    'product_id' => $product->id,
                     'time' => 'Today',
                     'created_at' => now()->timestamp
                 ];
@@ -44,13 +46,15 @@ class NotificationController extends Controller
                 'id' => 'expiring_' . $batch->id,
                 'title' => 'Product Expiring Soon',
                 'message' => $batch->product->productName . " expires in {$days} days",
-                'url' => '/inventory',
+                'url' => '/inventory?highlight=' . $batch->product->id,
+                'type' => 'expiring',
+                'product_id' => $batch->product->id,
                 'time' => 'Today',
                 'created_at' => now()->timestamp
             ];
         }
         
-        // 3. Check for delivered orders that aren't in inventory
+        // 3. Check for delivered orders that aren't in inventory - IMPROVED
         $deliveredOrders = PurchaseOrder::whereHas('deliveries', function($query) {
             $query->where('orderStatus', 'Delivered');
         })->with(['items', 'deliveries'])->get();
@@ -75,6 +79,8 @@ class NotificationController extends Controller
                     'title' => 'Delivery Ready for Inventory',
                     'message' => "Order #{$order->id} has been delivered - add items to inventory",
                     'url' => '/inventory?add_delivery=' . $order->id,
+                    'type' => 'delivery_ready',
+                    'order_id' => $order->id,
                     'time' => 'Today',
                     'created_at' => $order->deliveries->first()->status_updated_at?->timestamp ?? now()->timestamp
                 ];
