@@ -121,7 +121,7 @@ class ProductMovementReportsController extends Controller
                 $productName = $this->getProductNameForSaleItem($item);
                 
                 $movements[] = [
-                    'date' => $sale->created_at, // precise timestamp for ordering
+                    'date' => $sale->created_at,
                     'reference_number' => $sale->invoice_number,
                     'product_name' => $productName,
                     'quantity' => -$item->quantity,
@@ -146,20 +146,26 @@ class ProductMovementReportsController extends Controller
                 $soldQty = (int) ($soldByBatch[$batch->id] ?? 0);
                 $originalQty = (int) $batch->quantity + $soldQty;
 
-                // Exclude defective/bad items from inflow: subtract bad items tied to this PO item
+                // Include defective items in remarks but don't subtract from inflow
+                $badCount = 0;
                 if ($batch->purchase_order_item_id) {
                     $badCount = \App\Models\BadItem::where('purchase_order_item_id', $batch->purchase_order_item_id)
                         ->sum('item_count');
-                    $originalQty = max(0, $originalQty - (int) $badCount);
+                }
+
+                // Add defective info to remarks if there are any defective items
+                $remarks = $source;
+                if ($badCount > 0) {
+                    $remarks .= " ({$badCount} defective)";
                 }
 
                 $movements[] = [
-                    'date' => $batch->created_at, // precise timestamp when batch was added
+                    'date' => $batch->created_at,
                     'reference_number' => $referenceNumber,
                     'product_name' => $product->productName,
-                    'quantity' => $originalQty, // immutable original inflow for display
+                    'quantity' => $originalQty, // Full received quantity
                     'type' => 'inflow',
-                    'remarks' => $source
+                    'remarks' => $remarks
                 ];
             }
         }
