@@ -1,230 +1,345 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Purchase Order</title>
-	<style>
-		@page { 
-			size: portrait; 
-			margin: 0.2in; }
-
-		html, body { 
-			margin: 0.2in; 
-			padding: 0; 
-			width: 100%; 
-		}
-		* { 
-			box-sizing: border-box; 
-			font-family: 'Poppins', sans-serif; 
-		}
-		body { 
-			font-family: 'Poppins', sans-serif; 
-			padding: 0;
-			margin: 0;
-		}
-		table { 
-			width: 100%; 
-			border-collapse: collapse; 
-		}
-		.border { 
-			border: 1px solid #e5e7eb; 
-		}
-		.text-right { 
-			text-align: right; 
-		}
-		.text-left { 
-			text-align: left; 
-		}
-		.text-center { 
-			text-align: center; 
-		}
-		.text-xs { 
-			font-size: 0.60rem; 
-		}
-		.text-sm { 
-			font-size: 0.8rem; 
-		}
-		.font-semibold { 
-			font-weight: 600; 
-		}
-		.uppercase { 
-			text-transform: uppercase; 
-		}
-		.leading-tight { 
-			line-height: 1.15; 
-		}
-		.grid { 
-			display: grid; 
-		}
-		.grid-cols-2 { 
-			grid-template-columns: 1fr 1fr; 
-		}
-		.items-start { 
-			align-items: flex-start; 
-		}
-		.gap-2 { 
-			gap: 0.5rem; 
-		}
-		.p-2 { 
-			padding: 0.5rem; 
-		}
-		.px-2 { 
-			padding-left: 0.5rem; 
-			padding-right: 0.5rem; 
-		}
-		.py-1 { 
-			padding-top: 0.25rem; 
-			padding-bottom: 0.25rem; 
-		}
-		.mt-2 { 
-			margin-top: 0.5rem; 
-		}
-		.mb-1 { 
-			margin-bottom: 0.25rem; 
-		}
-		.mb-2 { 
-			margin-bottom: 0.5rem; 
-		}
-		.w-full {
-			width: 100%;
-		}
-		.flex {
-			display: flex;
-		}
-		.justify-between {
-			justify-content: space-between;
-		}
-	</style>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Order - {{ $po->orderNumber ?? 'PO' }}</title>
+    <style>
+        @page { 
+            size: A4 portrait; 
+            margin: 15mm; 
+        }
+        body { 
+            font-family: 'Arial', sans-serif; 
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.4;
+            font-size: 12px;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #2C3747;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin: 0 0 5px 0;
+            font-weight: bold;
+            color: #2C3747;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .header .subtitle {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+        .company-info {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 4px solid #2C3747;
+        }
+        .company-sidebyside {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .company-from, .company-to {
+            flex: 1;
+            line-height: 1.5;
+        }
+        .company-from strong, .company-to strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #2C3747;
+            font-size: 13px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .info-section {
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+        .info-section h3 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            font-weight: bold;
+            color: #2C3747;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 4px;
+        }
+        .info-item {
+            margin: 4px 0;
+            font-size: 11px;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+        }
+        .info-value {
+            color: #6b7280;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 10px;
+        }
+        th {
+            background: #2C3747 !important;
+            color: white;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 8px 6px;
+            border: 1px solid #ddd;
+        }
+        td {
+            padding: 8px 6px;
+            border: 1px solid #ddd;
+            vertical-align: top;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .text-left {
+            text-align: left;
+        }
+        .amount {
+            font-weight: bold;
+            color: #059669;
+        }
+        .total-row {
+            background: #e8f4fd !important;
+            font-weight: bold;
+            border-top: 2px solid #2C3747;
+        }
+        .total-row td {
+            font-size: 11px;
+        }
+        .footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 2px solid #e5e7eb;
+            font-size: 10px;
+            color: #6b7280;
+        }
+        .authorization-section {
+            text-align: right;
+            margin-top: 25px;
+            padding: 10px;
+        }
+        .authorization-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #374151;
+        }
+        .order-number {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #1f2937;
+            font-size: 13px;
+        }
+        .supplier-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+    </style>
 </head>
-<body class="text-sm leading-tight">
-@php
-	// Normalize incoming data so the view accepts both shapes
-	$po = $order ?? null;
-	if (!$po && (isset($orderNumber) || isset($items) || isset($supplier))) {
-		$po = (object) [
-			'orderNumber' => $orderNumber ?? 'PO-DEMO',
-			'created_at' => isset($date) ? $date : now(),
-			'paymentTerms' => $paymentTerms ?? null,
-			'deliveryDate' => $deliveryDate ?? null,
-			'totalAmount' => $totalAmount ?? (is_iterable($items ?? []) ? collect($items)->sum(function($i){return ($i['totalAmount'] ?? 0);}) : 0),
-			'orderStatus' => $orderStatus ?? null,
-			'items' => collect($items ?? []),
-			'supplier' => (object) ($supplier ?? []),
-		];
-	}
+<body>
+    @php
+        $po = $order ?? null;
+        if (!$po && (isset($orderNumber) || isset($items) || isset($supplier))) {
+            $po = (object) [
+                'orderNumber' => $orderNumber ?? 'PO-DEMO',
+                'created_at' => isset($date) ? $date : now(),
+                'paymentTerms' => $paymentTerms ?? null,
+                'deliveryDate' => $deliveryDate ?? null,
+                'totalAmount' => $totalAmount ?? (is_iterable($items ?? []) ? collect($items)->sum(function($i){return ($i['totalAmount'] ?? 0);}) : 0),
+                'orderStatus' => $orderStatus ?? null,
+                'items' => collect($items ?? []),
+                'supplier' => (object) ($supplier ?? []),
+            ];
+        }
 
-	$supplier = $po->supplier ?? null;
-	$supplierName = $supplier->supplierName ?? ($supplier['supplierName'] ?? '');
-	$supplierAddress = $supplier->supplierAddress ?? ($supplier['supplierAddress'] ?? '');
-	$supplierEmail = $supplier->supplierEmailAddress ?? ($supplier['supplierEmailAddress'] ?? '');
-	$supplierContact = $supplier->supplierContactNumber ?? ($supplier['supplierContactNumber'] ?? '');
+        $supplier = $po->supplier ?? null;
+        $supplierName = $supplier->supplierName ?? ($supplier['supplierName'] ?? '');
+        $supplierAddress = $supplier->supplierAddress ?? ($supplier['supplierAddress'] ?? '');
+        $supplierEmail = $supplier->supplierEmailAddress ?? ($supplier['supplierEmailAddress'] ?? '');
+        $supplierContact = $supplier->supplierContactNumber ?? ($supplier['supplierContactNumber'] ?? '');
 
-	$buyerName = "Cuatro Patee";
-	$buyerAddress = "Don Jose Avila St., Capitol Site, Cebu City";
-	$buyerEmail = "cuatropatee777@gmail.com";
-	$buyerContact = "09670939434";
+        $buyerName = "Cuatro Patee Pet Shop";
+        $buyerAddress = "Don Jose Avila St., Capitol Site, Cebu City";
+        $buyerEmail = "cuatropatee777@gmail.com";
+        $buyerContact = "09670939434";
 
-	$poNumber = $po->orderNumber ?? 'PO-XXXX';
-	if (isset($po->created_at)) {
-		$poDate = is_string($po->created_at)
-			? $po->created_at
-			: (method_exists($po->created_at, 'format') ? $po->created_at->format('m-d-Y') : (string) $po->created_at);
-	} else {
-		$poDate = isset($date) ? (is_string($date) ? $date : (method_exists($date, 'format') ? $date->format('m-d-Y') : (string) $date)) : now()->format('m-d-Y');
-	}
-	$paymentTerms = $po->paymentTerms ?? ($paymentTerms ?? '');
-	$deliveryDate = $po->deliveryDate ?? ($deliveryDate ?? '');
-	$items = collect($po->items ?? []);
-	$maxRows = 5;
-@endphp
-	<div class="w-full">
-		<div class="text-center mb-2">
-			<div class="uppercase font-semibold" style="font-size: 1.1rem;">Purchase Order</div>
-		</div>
+        $poNumber = $po->orderNumber ?? 'PO-XXXX';
+        if (isset($po->created_at)) {
+            $poDate = is_string($po->created_at)
+                ? \Carbon\Carbon::parse($po->created_at)->format('F d, Y')
+                : (method_exists($po->created_at, 'format') ? $po->created_at->format('F d, Y') : (string) $po->created_at);
+        } else {
+            $poDate = isset($date) ? (is_string($date) ? \Carbon\Carbon::parse($date)->format('F d, Y') : (method_exists($date, 'format') ? $date->format('F d, Y') : (string) $date)) : now()->format('F d, Y');
+        }
+        $paymentTerms = $po->paymentTerms ?? ($paymentTerms ?? '');
+        $deliveryDate = $po->deliveryDate ?? ($deliveryDate ?? '');
+        $items = collect($po->items ?? []);
+    @endphp
 
-		<!-- Top Section: Supplier (left) and Buyer (right) -->
-		<div class="grid grid-cols-2 gap-2">
-            <div>
-                <div class="font-semibold mb-1">Supplier</div>
-                <div class="text-xs">{{ $supplierName }}</div>
-                @if($supplierAddress)
-                    <div class="text-xs">{{ $supplierAddress }}</div>
-                @endif
-                @if($supplierEmail)
-                    <div class="text-xs">{{ $supplierEmail }}</div>
-                @endif
-                @if($supplierContact)
-                    <div class="text-xs">{{ $supplierContact }}</div>
-                @endif
-				<div class="mt-2 text-xs"><span class="font-semibold">PO Number</span>: {{ $poNumber }}</div>
-            </div>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Purchase Order</h1>
+            <div class="subtitle">Official Purchase Order Document</div>
+        </div>
 
-            <div class="text-right">
-                <div class="font-semibold mb-1">Buyer</div>
-                <div class="text-xs">{{ $buyerName }} Pet Shop</div>
-				<div class="text-xs">{{ $buyerAddress }}</div>
-				<div class="text-xs">{{ $buyerEmail }}</div>
-				<div class="text-xs">{{ $buyerContact }}</div>
-				<div class="text-xs"><span class="font-semibold">PO Date</span>: {{ $poDate }}</div>
+        <!-- Company Information - Side by Side -->
+        <div class="company-info">
+            <div class="company-sidebyside">
+                <div class="company-from">
+                    <strong>From:</strong>
+                    {{ $buyerName }}<br>
+                    {{ $buyerAddress }}<br>
+                    {{ $buyerEmail }}<br>
+                    {{ $buyerContact }}
+                </div>
+                <div class="company-to">
+                    <strong>To:</strong>
+                    {{ $supplierName }}<br>
+                    @if($supplierAddress){{ $supplierAddress }}<br>@endif
+                    @if($supplierEmail){{ $supplierEmail }}<br>@endif
+                    @if($supplierContact){{ $supplierContact }}@endif
+                </div>
             </div>
         </div>
 
-		<!-- Items Table -->
-		<div class="mt-2">
-			<table class="text-xs">
-				<thead>
-					<tr>
-						<th class="border p-2 text-left" style="width: 12%;">Quantity</th>
-						<th class="border p-2 text-left">Product Name</th>
-						<th class="border p-2 text-right" style="width: 18%;">Unit Price</th>
-						<th class="border p-2 text-right" style="width: 18%;">Amount</th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach($items->take($maxRows) as $it)
-						@php
-							$q = is_array($it) ? ($it['quantity'] ?? 0) : ($it->quantity ?? 0);
-							$name = is_array($it) ? ($it['productName'] ?? '') : ($it->productName ?? '');
-							$unit = is_array($it) ? ($it['unitPrice'] ?? 0) : ($it->unitPrice ?? 0);
-							$amt = is_array($it) ? (($it['totalAmount'] ?? ($q * $unit))) : ($it->totalAmount ?? ($q * $unit));
-						@endphp
-						@if(($q ?? 0) || ($name !== '') || ($unit ?? 0) || ($amt ?? 0))
-						<tr>
-							<td class="border px-2 py-1">{{ $q }}</td>
-							<td class="border px-2 py-1">{{ $name }}</td>
-							<td class="border px-2 py-1 text-right">PHP {{ number_format((float) $unit, 2) }}</td>
-							<td class="border px-2 py-1 text-right">PHP {{ number_format((float) $amt, 2) }}</td>
-						</tr>
-						@endif
-					@endforeach
-					<tr>
-						<td class="border px-2 py-1 font-semibold" colspan="3">Total</td>
-						<td class="border px-2 py-1 text-right font-semibold">
-							PHP {{ number_format((float) ($po->totalAmount ?? $items->sum(function($i){ return is_array($i) ? ($i['totalAmount'] ?? 0) : ($i->totalAmount ?? 0); })), 2) }}
-						</td>
-					</tr>
-				</tbody>
-			</table>
+        <!-- Order Information -->
+        <div class="info-grid">
+            <div class="info-section">
+                <h3>Order Details</h3>
+                <div class="info-item">
+                    <span class="info-label">PO Number:</span>
+                    <span class="info-value order-number">{{ $poNumber }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Order Date:</span>
+                    <span class="info-value">{{ $poDate }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Delivery Date:</span>
+                    <span class="info-value">{{ $deliveryDate ? \Carbon\Carbon::parse($deliveryDate)->format('F d, Y') : 'To be confirmed' }}</span>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>Payment & Delivery</h3>
+                <div class="info-item">
+                    <span class="info-label">Payment Terms:</span>
+                    <span class="info-value">{{ $paymentTerms ?: 'To be confirmed' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Delivery Address:</span>
+                    <span class="info-value">{{ $buyerAddress }}</span>
+                </div>
+            </div>
+        </div>
 
-			<!-- Bottom Section: Delivery info (left) and Payment info (right) -->
-			<div class="grid grid-cols-2 gap-2 mt-2">
-				<!-- Left Side: Delivery Address and Delivery Date -->
-				<div class="text-left">
-					<div class="text-xs font-semibold">Delivery Address</div>
-					<div class="text-xs">Don Jose Avila St., Capitol Site, Cebu City</div>
-					<div class="mt-2 text-xs"><span class="font-semibold">Delivery Date</span>: {{ $deliveryDate ?: '—' }}</div>
-				</div>
+        <!-- Items Table -->
+        <table>
+            <thead>
+                <tr>
+                    <th width="8%" class="text-center">#</th>
+                    <th width="52%" class="text-left">Product Description</th>
+                    <th width="10%" class="text-center">Quantity</th>
+                    <th width="15%" class="text-right">Unit Price</th>
+                    <th width="15%" class="text-right">Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($items as $index => $it)
+                    @php
+                        $q = is_array($it) ? ($it['quantity'] ?? 0) : ($it->quantity ?? 0);
+                        $name = is_array($it) ? ($it['productName'] ?? '') : ($it->productName ?? '');
+                        $unit = is_array($it) ? ($it['unitPrice'] ?? 0) : ($it->unitPrice ?? 0);
+                        $amt = is_array($it) ? (($it['totalAmount'] ?? ($q * $unit))) : ($it->totalAmount ?? ($q * $unit));
+                        $measurement = is_array($it) ? ($it['itemMeasurement'] ?? '') : ($it->itemMeasurement ?? '');
+                    @endphp
+                    @if(($q ?? 0) || ($name !== '') || ($unit ?? 0) || ($amt ?? 0))
+                    <tr>
+                        <td class="text-center">{{ $index + 1 }}</td>
+                        <td>
+                            <strong>{{ $name }}</strong>
+                            @if($measurement)
+                            <br><small style="color: #6b7280;">Unit: {{ $measurement }}</small>
+                            @endif
+                        </td>
+                        <td class="text-center">{{ number_format($q) }}</td>
+                        <td class="text-right amount">PHP {{ number_format((float) $unit, 2) }}</td>
+                        <td class="text-right amount">PHP {{ number_format((float) $amt, 2) }}</td>
+                    </tr>
+                    @endif
+                @endforeach
+                
+                <!-- Total Row -->
+                <tr class="total-row">
+                    <td colspan="4" class="text-right"><strong>GRAND TOTAL</strong></td>
+                    <td class="text-right amount">
+                        PHP {{ number_format((float) ($po->totalAmount ?? $items->sum(function($i){ return is_array($i) ? ($i['totalAmount'] ?? 0) : ($i->totalAmount ?? 0); })), 2) }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
 
-				<!-- Right Side: Payment Terms, Authorized by, and Date -->
-				<div class="text-right">
-					<div class="text-xs"><span class="font-semibold">Payment Terms</span>: {{ $paymentTerms ?: '—' }}</div>
-					<div class="mt-2 text-xs"><span class="font-semibold">Authorised by</span>: {{ auth()->user()->name ?? '—' }}</div>
-					<div class="text-xs"><span class="font-semibold">Date</span>: {{ now()->format('m-d-Y') }}</div>
-				</div>
-			</div>
-		</div>
-	</div>
+        <!-- Authorization Section -->
+        <div class="authorization-section">
+            <div class="authorization-label">
+                Authorised by: {{ auth()->user()->name ?? 'System' }}<br>
+                Date: {{ now()->format('m-d-Y') }}
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="text-center">
+                <strong>{{ $buyerName }}</strong> • {{ $buyerAddress }} • {{ $buyerEmail }} • {{ $buyerContact }}<br>
+                Generated on {{ now()->format('F d, Y \a\t h:i A') }} • This is an computer-generated document
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-print when loaded
+        window.onload = function() {
+            window.focus();
+            setTimeout(function() {
+                window.print();
+                setTimeout(function() {
+                    window.close();
+                }, 500);
+            }, 500);
+        };
+    </script>
 </body>
 </html>

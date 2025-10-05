@@ -100,7 +100,7 @@
                                             <form action="{{ route('suppliers.update', $supplier->id) }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6">
                                                 @csrf
                                                 @method('PUT')
-                                                <x-form.form-input label="Supplier Name" name="supplierName" type="text" value="{{ old('supplierName',  $supplier->supplierName) }}"/>
+                                                <x-form.form-input label="Supplier Name" readonly name="supplierName" type="text" value="{{ old('supplierName',  $supplier->supplierName) }}"/>
                                                 <x-form.form-input label="Address" name="supplierAddress" type="text" value="{{ old('supplierAddress', $supplier->supplierAddress) }}"/>
                                                 <x-form.form-input label="Contact Number" name="supplierContactNumber" type="text" value="{{ old('supplierContactNumber', $supplier->supplierContactNumber) }}" maxlength="11" pattern="[0-9]{11}" inputmode="numeric"/>
                                                 <x-form.form-input label="Email Address" name="supplierEmailAddress" type="email" value="{{ old('supplierEmailAddress', $supplier->supplierEmailAddress) }}" pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$"/>

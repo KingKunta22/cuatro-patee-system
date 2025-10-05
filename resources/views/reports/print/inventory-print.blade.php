@@ -185,7 +185,7 @@
                             <tr>
                                 <td>{{ $batch->batch_number ?? 'N/A' }}</td>
                                 <td>{{ $batch->quantity }}</td>
-                                <td class="cost-price">₱{{ number_format($batch->cost_price, 2) }}</td>
+                                <td class="cost-price">PHP {{ number_format($batch->cost_price, 2) }}</td>
                                 <td class="{{ $isExpiring ? 'expiring-soon' : '' }}">
                                     {{ $batch->expiration_date ? \Carbon\Carbon::parse($batch->expiration_date)->format('M d, Y') : 'N/A' }}
                                 </td>

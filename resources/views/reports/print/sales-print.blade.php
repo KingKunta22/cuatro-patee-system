@@ -149,9 +149,9 @@
         <p><strong>Report Period:</strong> {{ $timePeriod === 'all' ? 'All Time' : ucfirst(str_replace('last', 'Last ', $timePeriod)) }}</p>
         <p><strong>Generated On:</strong> {{ now()->format('F d, Y \a\t h:i A') }}</p>
         <p><strong>Total Sales:</strong> {{ $sales->count() }} transactions</p>
-        <p><strong>Total Revenue:</strong> ₱{{ number_format($totalRevenue, 2) }} | 
-           <strong>Total Cost:</strong> ₱{{ number_format($totalCost, 2) }} | 
-           <strong>Total Profit:</strong> ₱{{ number_format($totalProfit, 2) }}</p>
+        <p><strong>Total Revenue:</strong> PHP {{ number_format($totalRevenue, 2) }} | 
+           <strong>Total Cost:</strong> PHP {{ number_format($totalCost, 2) }} | 
+           <strong>Total Profit:</strong> PHP {{ number_format($totalProfit, 2) }}</p>
     </div>
 
     <!-- Sales Table -->
@@ -174,7 +174,7 @@
                 <td>{{ \Carbon\Carbon::parse($sale->sale_date)->format('M d, Y') }}</td>
                 <td class="cashier">{{ $sale->user->name ?? 'System' }}</td>
                 <td>{{ $sale->items->count() }} items</td>
-                <td class="amount">₱{{ number_format($sale->total_amount, 2) }}</td>
+                <td class="amount">PHP {{ number_format($sale->total_amount, 2) }}</td>
                 <td class="items-column">
                     <!-- Items will be shown in the same cell but structured -->
                     <table class="items-table">
@@ -190,7 +190,7 @@
                             <tr>
                                 <td>{{ $item->product_name }}</td>
                                 <td>{{ $item->quantity }}</td>
-                                <td>₱{{ number_format($item->unit_price, 2) }}</td>
+                                <td>PHP {{ number_format($item->unit_price, 2) }}</td>
                             </tr>
                             @endforeach
                         </tbody>

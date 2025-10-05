@@ -76,7 +76,7 @@
                                         
                                         <div class="container text-start flex flex-col">
                                             <label for="edit_username_{{ $user->id }}" class="mb-1">Username</label>
-                                            <input id="edit_username_{{ $user->id }}" name="name" type="text" class="px-3 py-2 border rounded-sm border-black @error('name') border-red-500 @enderror" value="{{ old('name', $user->name) }}" data-original-value="{{ $user->name }}">
+                                            <input id="edit_username_{{ $user->id }}" readonly name="name" type="text" class="px-3 py-2 border rounded-sm border-black @error('name') border-red-500 @enderror" value="{{ old('name', $user->name) }}" data-original-value="{{ $user->name }}">
                                             <span class="text-red-500 text-sm mt-1 hidden error-username"></span>
                                             @error('name')
                                                 <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
@@ -170,252 +170,252 @@
             </table>
         </div>
 
-<!-- ADD USER MODAL -->
-<dialog x-ref="dialogRef" class="w-1/2 my-auto shadow-2xl rounded-md">
-    <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Add User</h1>
-    <div class="container px-3 py-4">
-        <form action="{{ route('users.store') }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6" id="addUserForm">
-            @csrf
-            <input type="hidden" name="modal_id" value="addUserModal">
+        <!-- ADD USER MODAL -->
+        <dialog x-ref="dialogRef" class="w-1/2 my-auto shadow-2xl rounded-md">
+            <h1 class="italic text-2xl px-6 py-4 text-start font-bold bg-main text-white">Add User</h1>
+            <div class="container px-3 py-4">
+                <form action="{{ route('users.store') }}" method="POST" class="px-6 py-4 container grid grid-cols-2 gap-x-8 gap-y-6" id="addUserForm">
+                    @csrf
+                    <input type="hidden" name="modal_id" value="addUserModal">
 
-            <div class="container text-start flex flex-col">
-                <label for="add_username" class="mb-1">Username</label>
-                <input id="add_username" autocomplete='off' name="name" type="text" class="px-3 py-2 border rounded-sm border-black @error('name') border-red-500 @enderror" required value="{{ old('name') }}">
-                <span class="text-red-500 text-sm mt-1 hidden error-username"></span>
-                @error('name')
-                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                @enderror
-            </div>
+                    <div class="container text-start flex flex-col">
+                        <label for="add_username" class="mb-1">Username</label>
+                        <input id="add_username" autocomplete='off' name="name" type="text" class="px-3 py-2 border rounded-sm border-black @error('name') border-red-500 @enderror" required value="{{ old('name') }}">
+                        <span class="text-red-500 text-sm mt-1 hidden error-username"></span>
+                        @error('name')
+                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
 
-            <div class="container text-start flex flex-col">
-                <label for="add_email" class="mb-1">Email</label>
-                <input id="add_email" autocomplete='off' name="email" type="email" class="px-3 py-2 border rounded-sm border-black @error('email') border-red-500 @enderror" required value="{{ old('email') }}">
-                <span class="text-red-500 text-sm mt-1 hidden error-email"></span>
-                @error('email')
-                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                @enderror
+                    <div class="container text-start flex flex-col">
+                        <label for="add_email" class="mb-1">Email</label>
+                        <input id="add_email" autocomplete='off' name="email" type="email" class="px-3 py-2 border rounded-sm border-black @error('email') border-red-500 @enderror" required value="{{ old('email') }}">
+                        <span class="text-red-500 text-sm mt-1 hidden error-email"></span>
+                        @error('email')
+                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    
+                    <!-- Password Field -->
+                    <div class="container text-start flex flex-col">
+                        <label for="add_password" class="mb-1">Password</label>
+                        <input id="add_password" type="password" name="password" class="px-3 py-2 border rounded-sm border-black @error('password') border-red-500 @enderror" required value="{{ old('password') }}">
+                        <span class="text-red-500 text-sm mt-1 hidden error-password"></span>
+                        @error('password')
+                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    
+                    <!-- Password Confirmation Field -->
+                    <div class="container text-start flex flex-col">
+                        <label for="add_password_confirmation" class="mb-1">Confirm Password</label>
+                        <input id="add_password_confirmation" type="password" name="password_confirmation" class="px-3 py-2 border rounded-sm border-black @error('password') border-red-500 @enderror" required>
+                        <span class="text-red-500 text-sm mt-1 hidden error-password-confirm"></span>
+                    </div>
+                    
+                    <div class="container text-start flex flex-col col-span-2">
+                        <label for="add_role">Role:</label>
+                        <select name="role" class="px-3 py-2 border rounded-sm border-black" required>
+                            <option value="" disabled selected>Choose Role</option>
+                            <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="staff" {{ old('role') === 'staff' ? 'selected' : '' }}>Staff</option>
+                        </select>
+                        @error('role')
+                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    
+                    <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
+                        <x-form.closeBtn type="button" @click="$refs.dialogRef.close()" class="mr-2 px-4 py-2 rounded text-white hover:bg-gray-300 bg-gray-400">Cancel</x-form.closeBtn>
+                        <x-form.saveBtn>Save</x-form.saveBtn>
+                    </div>
+                </form>
             </div>
-            
-            <!-- Password Field -->
-            <div class="container text-start flex flex-col">
-                <label for="add_password" class="mb-1">Password</label>
-                <input id="add_password" type="password" name="password" class="px-3 py-2 border rounded-sm border-black @error('password') border-red-500 @enderror" required value="{{ old('password') }}">
-                <span class="text-red-500 text-sm mt-1 hidden error-password"></span>
-                @error('password')
-                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                @enderror
-            </div>
-            
-            <!-- Password Confirmation Field -->
-            <div class="container text-start flex flex-col">
-                <label for="add_password_confirmation" class="mb-1">Confirm Password</label>
-                <input id="add_password_confirmation" type="password" name="password_confirmation" class="px-3 py-2 border rounded-sm border-black @error('password') border-red-500 @enderror" required>
-                <span class="text-red-500 text-sm mt-1 hidden error-password-confirm"></span>
-            </div>
-            
-            <div class="container text-start flex flex-col col-span-2">
-                <label for="add_role">Role:</label>
-                <select name="role" class="px-3 py-2 border rounded-sm border-black" required>
-                    <option value="" disabled selected>Choose Role</option>
-                    <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>Admin</option>
-                    <option value="staff" {{ old('role') === 'staff' ? 'selected' : '' }}>Staff</option>
-                </select>
-                @error('role')
-                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                @enderror
-            </div>
-            
-            <div class="container col-span-2 gap-x-4 place-content-end w-full flex items-end content-center">
-                <x-form.closeBtn type="button" @click="$refs.dialogRef.close()" class="mr-2 px-4 py-2 rounded text-white hover:bg-gray-300 bg-gray-400">Cancel</x-form.closeBtn>
-                <x-form.saveBtn>Save</x-form.saveBtn>
-            </div>
-        </form>
-    </div>
-</dialog>
+        </dialog>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Store all existing users data for validation
-    const existingUsers = @json($users->map(function($user) {
-        return ['id' => $user->id, 'name' => $user->name, 'email' => $user->email];
-    }));
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Store all existing users data for validation
+            const existingUsers = @json($users->map(function($user) {
+                return ['id' => $user->id, 'name' => $user->name, 'email' => $user->email];
+            }));
 
-    // Helper function to clear all error messages in a form
-    function clearErrors(form) {
-        form.querySelectorAll('.error-username, .error-email, .error-password, .error-password-confirm').forEach(el => {
-            el.classList.add('hidden');
-            el.textContent = '';
-        });
-        form.querySelectorAll('input').forEach(input => {
-            input.classList.remove('border-red-500');
-        });
-    }
-
-    // Helper function to show error
-    function showError(form, errorClass, message) {
-        const errorEl = form.querySelector(`.${errorClass}`);
-        if (errorEl) {
-            errorEl.textContent = message;
-            errorEl.classList.remove('hidden');
-            const input = errorEl.previousElementSibling;
-            if (input && input.tagName === 'INPUT') {
-                input.classList.add('border-red-500');
+            // Helper function to clear all error messages in a form
+            function clearErrors(form) {
+                form.querySelectorAll('.error-username, .error-email, .error-password, .error-password-confirm').forEach(el => {
+                    el.classList.add('hidden');
+                    el.textContent = '';
+                });
+                form.querySelectorAll('input').forEach(input => {
+                    input.classList.remove('border-red-500');
+                });
             }
-        }
-    }
 
-    // Validate username uniqueness
-    function validateUsername(form, username, currentUserId = null) {
-        const trimmedUsername = username.trim();
-        if (!trimmedUsername) {
-            showError(form, 'error-username', 'Username is required.');
-            return false;
-        }
-        
-        const exists = existingUsers.some(user => 
-            user.name.toLowerCase() === trimmedUsername.toLowerCase() && user.id !== currentUserId
-        );
-        
-        if (exists) {
-            showError(form, 'error-username', 'The username has already been taken.');
-            return false;
-        }
-        return true;
-    }
-
-    // Validate email uniqueness
-    function validateEmail(form, email, currentUserId = null) {
-        const trimmedEmail = email.trim();
-        if (!trimmedEmail) {
-            showError(form, 'error-email', 'Email is required.');
-            return false;
-        }
-        
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(trimmedEmail)) {
-            showError(form, 'error-email', 'Please enter a valid email address.');
-            return false;
-        }
-        
-        const exists = existingUsers.some(user => 
-            user.email.toLowerCase() === trimmedEmail.toLowerCase() && user.id !== currentUserId
-        );
-        
-        if (exists) {
-            showError(form, 'error-email', 'The email has already been taken.');
-            return false;
-        }
-        return true;
-    }
-
-    // Validate password match
-    function validatePasswordMatch(form, password, passwordConfirm) {
-        if (password !== passwordConfirm) {
-            showError(form, 'error-password-confirm', 'The password confirmation does not match.');
-            return false;
-        }
-        return true;
-    }
-
-    // ADD USER FORM VALIDATION
-    const addForm = document.getElementById('addUserForm');
-    if (addForm) {
-        addForm.addEventListener('submit', function(e) {
-            clearErrors(this);
-            
-            const username = this.querySelector('input[name="name"]').value;
-            const email = this.querySelector('input[name="email"]').value;
-            const password = this.querySelector('input[name="password"]').value;
-            const passwordConfirmation = this.querySelector('input[name="password_confirmation"]').value;
-            
-            let isValid = true;
-            
-            // Validate username
-            if (!validateUsername(this, username)) {
-                isValid = false;
+            // Helper function to show error
+            function showError(form, errorClass, message) {
+                const errorEl = form.querySelector(`.${errorClass}`);
+                if (errorEl) {
+                    errorEl.textContent = message;
+                    errorEl.classList.remove('hidden');
+                    const input = errorEl.previousElementSibling;
+                    if (input && input.tagName === 'INPUT') {
+                        input.classList.add('border-red-500');
+                    }
+                }
             }
-            
-            // Validate email
-            if (!validateEmail(this, email)) {
-                isValid = false;
-            }
-            
-            // Validate password fields
-            if (!password || !passwordConfirmation) {
-                showError(this, 'error-password', 'Password is required.');
-                isValid = false;
-            } else if (password.length < 8) {
-                showError(this, 'error-password', 'Password must be at least 8 characters.');
-                isValid = false;
-            } else if (!validatePasswordMatch(this, password, passwordConfirmation)) {
-                isValid = false;
-            }
-            
-            if (!isValid) {
-                e.preventDefault();
-                return false;
-            }
-        });
-    }
 
-    // EDIT USER FORMS VALIDATION
-    @foreach($users as $user)
-        const editForm{{ $user->id }} = document.querySelector('#editDialog{{ $user->id }} form');
-        if (editForm{{ $user->id }}) {
-            editForm{{ $user->id }}.addEventListener('submit', function(e) {
-                clearErrors(this);
-                
-                const username = this.querySelector('input[name="name"]').value;
-                const email = this.querySelector('input[name="email"]').value;
-                const password = this.querySelector('input[name="password"]').value;
-                const passwordConfirmation = this.querySelector('input[name="password_confirmation"]').value;
-                const currentUserId = {{ $user->id }};
-                
-                let isValid = true;
-                
-                // Validate username
-                if (!validateUsername(this, username, currentUserId)) {
-                    isValid = false;
+            // Validate username uniqueness
+            function validateUsername(form, username, currentUserId = null) {
+                const trimmedUsername = username.trim();
+                if (!trimmedUsername) {
+                    showError(form, 'error-username', 'Username is required.');
+                    return false;
                 }
                 
-                // Validate email
-                if (!validateEmail(this, email, currentUserId)) {
-                    isValid = false;
+                const exists = existingUsers.some(user => 
+                    user.name.toLowerCase() === trimmedUsername.toLowerCase() && user.id !== currentUserId
+                );
+                
+                if (exists) {
+                    showError(form, 'error-username', 'The username has already been taken.');
+                    return false;
+                }
+                return true;
+            }
+
+            // Validate email uniqueness
+            function validateEmail(form, email, currentUserId = null) {
+                const trimmedEmail = email.trim();
+                if (!trimmedEmail) {
+                    showError(form, 'error-email', 'Email is required.');
+                    return false;
                 }
                 
-                // Validate passwords only if they're filled
-                if (password || passwordConfirmation) {
-                    if (password.length < 8) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(trimmedEmail)) {
+                    showError(form, 'error-email', 'Please enter a valid email address.');
+                    return false;
+                }
+                
+                const exists = existingUsers.some(user => 
+                    user.email.toLowerCase() === trimmedEmail.toLowerCase() && user.id !== currentUserId
+                );
+                
+                if (exists) {
+                    showError(form, 'error-email', 'The email has already been taken.');
+                    return false;
+                }
+                return true;
+            }
+
+            // Validate password match
+            function validatePasswordMatch(form, password, passwordConfirm) {
+                if (password !== passwordConfirm) {
+                    showError(form, 'error-password-confirm', 'The password confirmation does not match.');
+                    return false;
+                }
+                return true;
+            }
+
+            // ADD USER FORM VALIDATION
+            const addForm = document.getElementById('addUserForm');
+            if (addForm) {
+                addForm.addEventListener('submit', function(e) {
+                    clearErrors(this);
+                    
+                    const username = this.querySelector('input[name="name"]').value;
+                    const email = this.querySelector('input[name="email"]').value;
+                    const password = this.querySelector('input[name="password"]').value;
+                    const passwordConfirmation = this.querySelector('input[name="password_confirmation"]').value;
+                    
+                    let isValid = true;
+                    
+                    // Validate username
+                    if (!validateUsername(this, username)) {
+                        isValid = false;
+                    }
+                    
+                    // Validate email
+                    if (!validateEmail(this, email)) {
+                        isValid = false;
+                    }
+                    
+                    // Validate password fields
+                    if (!password || !passwordConfirmation) {
+                        showError(this, 'error-password', 'Password is required.');
+                        isValid = false;
+                    } else if (password.length < 8) {
                         showError(this, 'error-password', 'Password must be at least 8 characters.');
                         isValid = false;
                     } else if (!validatePasswordMatch(this, password, passwordConfirmation)) {
                         isValid = false;
                     }
-                }
-                
-                if (!isValid) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-        }
-    @endforeach
+                    
+                    if (!isValid) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            }
 
-    // Reopen modal if there are server-side validation errors (fallback)
-    @if($errors->any())
-        @if(old('modal_id'))
-            setTimeout(() => {
-                @if(old('modal_id') === 'addUserModal')
-                    const dialog = document.querySelector('[x-ref="dialogRef"]');
-                    if (dialog) dialog.showModal();
-                @else
-                    const dialog = document.getElementById('{{ old('modal_id') }}');
-                    if (dialog) dialog.showModal();
+            // EDIT USER FORMS VALIDATION
+            @foreach($users as $user)
+                const editForm{{ $user->id }} = document.querySelector('#editDialog{{ $user->id }} form');
+                if (editForm{{ $user->id }}) {
+                    editForm{{ $user->id }}.addEventListener('submit', function(e) {
+                        clearErrors(this);
+                        
+                        const username = this.querySelector('input[name="name"]').value;
+                        const email = this.querySelector('input[name="email"]').value;
+                        const password = this.querySelector('input[name="password"]').value;
+                        const passwordConfirmation = this.querySelector('input[name="password_confirmation"]').value;
+                        const currentUserId = {{ $user->id }};
+                        
+                        let isValid = true;
+                        
+                        // Validate username
+                        if (!validateUsername(this, username, currentUserId)) {
+                            isValid = false;
+                        }
+                        
+                        // Validate email
+                        if (!validateEmail(this, email, currentUserId)) {
+                            isValid = false;
+                        }
+                        
+                        // Validate passwords only if they're filled
+                        if (password || passwordConfirmation) {
+                            if (password.length < 8) {
+                                showError(this, 'error-password', 'Password must be at least 8 characters.');
+                                isValid = false;
+                            } else if (!validatePasswordMatch(this, password, passwordConfirmation)) {
+                                isValid = false;
+                            }
+                        }
+                        
+                        if (!isValid) {
+                            e.preventDefault();
+                            return false;
+                        }
+                    });
+                }
+            @endforeach
+
+            // Reopen modal if there are server-side validation errors (fallback)
+            @if($errors->any())
+                @if(old('modal_id'))
+                    setTimeout(() => {
+                        @if(old('modal_id') === 'addUserModal')
+                            const dialog = document.querySelector('[x-ref="dialogRef"]');
+                            if (dialog) dialog.showModal();
+                        @else
+                            const dialog = document.getElementById('{{ old('modal_id') }}');
+                            if (dialog) dialog.showModal();
+                        @endif
+                    }, 100);
                 @endif
-            }, 100);
-        @endif
-    @endif
-});
-</script>
+            @endif
+        });
+        </script>
     </main>
 </x-layout>
