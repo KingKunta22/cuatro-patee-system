@@ -16,6 +16,17 @@ class DeliveryController extends Controller
         // Start with base query
         $query = PurchaseOrder::with(['items', 'supplier', 'deliveries']);
 
+        // Ensure all purchase orders have delivery records
+        $ordersWithoutDelivery = PurchaseOrder::doesntHave('deliveries')->get();
+        foreach ($ordersWithoutDelivery as $order) {
+            Delivery::create([
+                'purchase_order_id' => $order->id,
+                'deliveryId' => Delivery::generateDeliveryId(),
+                'orderStatus' => 'Pending'
+            ]);
+        }
+
+        
         // Apply status filter
         if ($status !== 'all') {
             if ($status === 'Delayed') {
@@ -25,9 +36,20 @@ class DeliveryController extends Controller
                     ->whereDate('deliveryDate', '<', now()->toDateString());
                 });
             } else {
-                $query->whereHas('deliveries', function($q) use ($status) {
-                    $q->where('orderStatus', $status);
-                });
+                // FIXED: For Pending, Confirmed, Delivered, Cancelled - use proper filtering
+                if ($status === 'Pending') {
+                    // For Pending: include orders with Pending status OR no delivery records
+                    $query->where(function($q) {
+                        $q->whereHas('deliveries', function($q) {
+                            $q->where('orderStatus', 'Pending');
+                        })->orDoesntHave('deliveries');
+                    });
+                } else {
+                    // For Confirmed, Delivered, Cancelled: only show exact status matches
+                    $query->whereHas('deliveries', function($q) use ($status) {
+                        $q->where('orderStatus', $status);
+                    });
+                }
             }
         }
 
