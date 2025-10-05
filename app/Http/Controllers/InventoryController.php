@@ -17,63 +17,63 @@ use Illuminate\Support\Facades\Storage;
 class InventoryController extends Controller
 {
     // Shows the main logic for retrieving inventory data
-    public function index(Request $request)
-    {
-        $sortBy = $request->input('sort_by', 'created_at');
-        $sortOrder = $request->input('sort_order', 'desc');
-        $highlightProduct = $request->input('highlight');
-        $addDelivery = $request->input('add_delivery');
+public function index(Request $request)
+{
+    $sortBy = $request->input('sort_by', 'created_at');
+    $sortOrder = $request->input('sort_order', 'desc');
+    $highlightProduct = $request->input('highlight');
+    $addDelivery = $request->input('add_delivery');
 
-        // AUTO-SORT FOR LOW STOCK NOTIFICATIONS
-        if ($highlightProduct && !$request->has('sort_by')) {
-            $sortBy = 'stock';
-            $sortOrder = 'asc'; // Show lowest stock first
-        }
+    // AUTO-SORT FOR LOW STOCK NOTIFICATIONS - FIXED LOGIC
+    if ($highlightProduct && !$request->has('sort_by') && !$request->has('sort_order')) {
+        $sortBy = 'stock';
+        $sortOrder = 'asc'; // Show lowest stock first
+    }
 
-        // Get delivered POs that haven't been added to inventory yet
-        $unaddedPOs = PurchaseOrder::whereHas('deliveries', function($query) {
-                $query->where('orderStatus', 'Delivered');
-            })
-            ->whereHas('items', function($query) {
-                $query->whereDoesntHave('productBatches');
-            })
-            ->select('id', 'orderNumber')
-            ->get();
+    // Get delivered POs that haven't been added to inventory yet
+    $unaddedPOs = PurchaseOrder::whereHas('deliveries', function($query) {
+            $query->where('orderStatus', 'Delivered');
+        })
+        ->whereHas('items', function($query) {
+            $query->whereDoesntHave('productBatches');
+        })
+        ->select('id', 'orderNumber')
+        ->get();
 
-        // Start query - use activeBatches for display calculations
-        $query = Product::with(['batches', 'brand', 'category']);
+    // Start query - use activeBatches for display calculations
+    $query = Product::with(['batches', 'brand', 'category']);
 
-        // Apply sorting
-        switch ($sortBy) {
-            case 'product_name':
-                $query->orderBy('productName', $sortOrder);
-                break;
-            case 'category':
-                $query->join('categories', 'products.category_id', '=', 'categories.id')
-                    ->orderBy('categories.productCategory', $sortOrder)
-                    ->select('products.*');
-                break;
-            case 'sku':
-                $query->orderBy('productSKU', $sortOrder);
-                break;
-            case 'brand':
-                $query->join('brands', 'products.brand_id', '=', 'brands.id')
-                    ->orderBy('brands.productBrand', $sortOrder)
-                    ->select('products.*');
-                break;
-            case 'price':
-                $query->orderBy('productSellingPrice', $sortOrder);
-                break;
-            case 'stock':
-                // For stock, we'll sort by the sum of active batches
-                $query->withSum(['batches' => function($q) {
-                    $q->where('quantity', '>', 0);
-                }], 'quantity')
-                ->orderBy('batches_sum_quantity', $sortOrder);
-                break;
-            default:
-                $query->orderBy('created_at', $sortOrder);
-        }
+    // Apply sorting - FIXED: Use the potentially modified $sortBy and $sortOrder
+    switch ($sortBy) {
+        case 'product_name':
+            $query->orderBy('productName', $sortOrder);
+            break;
+        case 'category':
+            $query->join('categories', 'products.category_id', '=', 'categories.id')
+                ->orderBy('categories.productCategory', $sortOrder)
+                ->select('products.*');
+            break;
+        case 'sku':
+            $query->orderBy('productSKU', $sortOrder);
+            break;
+        case 'brand':
+            $query->join('brands', 'products.brand_id', '=', 'brands.id')
+                ->orderBy('brands.productBrand', $sortOrder)
+                ->select('products.*');
+            break;
+        case 'price':
+            $query->orderBy('productSellingPrice', $sortOrder);
+            break;
+        case 'stock':
+            // For stock, we'll sort by the sum of active batches
+            $query->withSum(['batches' => function($q) {
+                $q->where('quantity', '>', 0);
+            }], 'quantity')
+            ->orderBy('batches_sum_quantity', $sortOrder);
+            break;
+        default:
+            $query->orderBy('created_at', $sortOrder);
+    }
 
         // Apply category filter
         if ($request->category && $request->category != 'all') {
@@ -282,28 +282,24 @@ class InventoryController extends Controller
             }
 
             if (isset($validated[$batchesField]) && !empty($validated[$batchesField])) {
+                // Get the starting batch number
+                $startingBatchNumber = $this->generateBatchNumber($product->id);
+                $currentNumber = intval(str_replace('B-', '', $startingBatchNumber));
+                
                 // User provided batches
                 foreach ($validated[$batchesField] as $batchIndex => $batch) {
-                    // Use the new batch number format
-                    $batchNumber = $this->generateBatchNumber($product->id);
+                    // Generate sequential batch numbers in memory
+                    $batchNumber = 'B-' . str_pad((string)$currentNumber, 3, '0', STR_PAD_LEFT);
+                    $currentNumber++;
                     
                     $batchesToCreate[] = [
                         'batch_number' => $batchNumber,
                         'quantity' => $batch['quantity'],
-                        // FIX: Set expiration_date based on correct perishable logic
                         'expiration_date' => $isPerishable ? ($batch['expiration_date'] ?? null) : null,
                     ];
                 }
             } else {
-                // No batches provided
-                if ($isPerishable) {
-                    // Perishable items must have batches with expiration dates
-                    DB::rollBack();
-                    return back()->withInput()->withErrors([
-                        'error' => 'Perishable items require batch entries with expiration dates.'
-                    ]);
-                }
-                // Non-perishable: create a single batch with null expiration
+                // No batches provided - single batch
                 $batchNumber = $this->generateBatchNumber($product->id);
                 $batchesToCreate[] = [
                     'batch_number' => $batchNumber,
@@ -368,103 +364,103 @@ class InventoryController extends Controller
         return "{$base}-{$brand}-{$category}";
     }
 
-public function update(Request $request, $id)
-{
-    // Find the product
-    $product = Product::find($id);
-    
-    if (!$product) {
-        return back()->withErrors(['error' => 'Product not found']);
-    }
-
-    // Validate the request
-    $validated = $request->validate([
-        'productName' => 'required|string|max:255',
-        'productBrand' => 'required|string|max:255', 
-        'productCategory' => 'required|string|max:255', 
-        'productSellingPrice' => 'required|numeric|min:0',
-        // 'productCostPrice' => 'required|numeric|min:0',
-        'productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
-        'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        'batches' => 'nullable|array',
-        'batches.*.id' => 'required_with:batches|exists:product_batches,id',
-        'batches.*.quantity' => 'required_with:batches|numeric|min:0',
-        'batches.*.expiration_date' => 'nullable|date|after_or_equal:today',
-    ]);
-
-    // Start transaction
-    DB::beginTransaction();
-
-    try {
-        // Find or create brand and category
-        $brand = Brand::firstOrCreate(['productBrand' => $validated['productBrand']]);
-        $category = Category::firstOrCreate(['productCategory' => $validated['productCategory']]);
-
-        // Prepare update data
-        $updateData = [
-            'productName' => $validated['productName'],
-            'brand_id' => $brand->id,
-            'category_id' => $category->id,
-            'productSellingPrice' => $validated['productSellingPrice'],
-            // 'productCostPrice' => $validated['productCostPrice'],
-            'productItemMeasurement' => $validated['productItemMeasurement'],
-        ];
-
-        // Handle image upload if provided
-        if ($request->hasFile('productImage')) {
-            // Delete old image if exists
-            if ($product->productImage) {
-                Storage::disk('public')->delete($product->productImage);
-            }
-            
-            // Store new image
-            $updateData['productImage'] = $request->file('productImage')->store('products', 'public');
+    public function update(Request $request, $id)
+    {
+        // Find the product
+        $product = Product::find($id);
+        
+        if (!$product) {
+            return back()->withErrors(['error' => 'Product not found']);
         }
 
-        // Update the product
-        $product->update($updateData);
-
-        // Handle batch updates
-        if (isset($validated['batches']) && !empty($validated['batches'])) {
-            foreach ($validated['batches'] as $batchData) {
-                if (!isset($batchData['id']) || !isset($batchData['quantity'])) {
-                    continue;
-                }
-
-                $batch = ProductBatch::find($batchData['id']);
-                
-                if (!$batch || $batch->product_id !== $product->id) {
-                    continue;
-                }
-
-                // Update batch data
-                $batchUpdateData = [
-                    'quantity' => $batchData['quantity'],
-                ];
-
-                // Only update expiration date for perishable products
-                if ($product->is_perishable) {
-                    $batchUpdateData['expiration_date'] = $batchData['expiration_date'] ?? null;
-                } else {
-                    $batchUpdateData['expiration_date'] = null;
-                }
-
-                $batch->update($batchUpdateData);
-            }
-        }
-
-        DB::commit();
-        
-        return redirect()->route('inventory.index')->with('success', 'Product updated successfully!');
-        
-    } catch (\Exception $e) {
-        DB::rollBack();
-        
-        return back()->withInput()->withErrors([
-            'error' => 'Failed to update product: ' . $e->getMessage()
+        // Validate the request
+        $validated = $request->validate([
+            'productName' => 'required|string|max:255',
+            'productBrand' => 'required|string|max:255', 
+            'productCategory' => 'required|string|max:255', 
+            'productSellingPrice' => 'required|numeric|min:0',
+            // 'productCostPrice' => 'required|numeric|min:0',
+            'productItemMeasurement' => 'required|in:kilogram,gram,liter,milliliter,pcs,set,pair,pack',
+            'productImage' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'batches' => 'nullable|array',
+            'batches.*.id' => 'required_with:batches|exists:product_batches,id',
+            'batches.*.quantity' => 'required_with:batches|numeric|min:0',
+            'batches.*.expiration_date' => 'nullable|date|after_or_equal:today',
         ]);
+
+        // Start transaction
+        DB::beginTransaction();
+
+        try {
+            // Find or create brand and category
+            $brand = Brand::firstOrCreate(['productBrand' => $validated['productBrand']]);
+            $category = Category::firstOrCreate(['productCategory' => $validated['productCategory']]);
+
+            // Prepare update data
+            $updateData = [
+                'productName' => $validated['productName'],
+                'brand_id' => $brand->id,
+                'category_id' => $category->id,
+                'productSellingPrice' => $validated['productSellingPrice'],
+                // 'productCostPrice' => $validated['productCostPrice'],
+                'productItemMeasurement' => $validated['productItemMeasurement'],
+            ];
+
+            // Handle image upload if provided
+            if ($request->hasFile('productImage')) {
+                // Delete old image if exists
+                if ($product->productImage) {
+                    Storage::disk('public')->delete($product->productImage);
+                }
+                
+                // Store new image
+                $updateData['productImage'] = $request->file('productImage')->store('products', 'public');
+            }
+
+            // Update the product
+            $product->update($updateData);
+
+            // Handle batch updates
+            if (isset($validated['batches']) && !empty($validated['batches'])) {
+                foreach ($validated['batches'] as $batchData) {
+                    if (!isset($batchData['id']) || !isset($batchData['quantity'])) {
+                        continue;
+                    }
+
+                    $batch = ProductBatch::find($batchData['id']);
+                    
+                    if (!$batch || $batch->product_id !== $product->id) {
+                        continue;
+                    }
+
+                    // Update batch data
+                    $batchUpdateData = [
+                        'quantity' => $batchData['quantity'],
+                    ];
+
+                    // Only update expiration date for perishable products
+                    if ($product->is_perishable) {
+                        $batchUpdateData['expiration_date'] = $batchData['expiration_date'] ?? null;
+                    } else {
+                        $batchUpdateData['expiration_date'] = null;
+                    }
+
+                    $batch->update($batchUpdateData);
+                }
+            }
+
+            DB::commit();
+            
+            return redirect()->route('inventory.index')->with('success', 'Product updated successfully!');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return back()->withInput()->withErrors([
+                'error' => 'Failed to update product: ' . $e->getMessage()
+            ]);
+        }
     }
-}
 
     public function destroy($id)
     {
@@ -488,23 +484,20 @@ public function update(Request $request, $id)
         }
     }
 
-    // Add this method to your InventoryController
     private function generateBatchNumber($productId)
     {
-        // Simplified per-product incremental format: B-001, B-002, ...
+        // Get existing batches from database (excluding current transaction)
         $lastBatch = ProductBatch::where('product_id', $productId)
             ->where('batch_number', 'like', 'B-%')
             ->orderBy('created_at', 'desc')
             ->first();
 
-        if ($lastBatch && preg_match('/^B-(\d{3})$/', $lastBatch->batch_number, $matches)) {
-            $nextNumber = intval($matches[1]) + 1;
-        } else {
-            // Fallback: try to parse any B-<number> pattern
-            if ($lastBatch && preg_match('/^B-(\d+)/', $lastBatch->batch_number, $m2)) {
+        $nextNumber = 1;
+        if ($lastBatch) {
+            if (preg_match('/^B-(\d{3})$/', $lastBatch->batch_number, $matches)) {
+                $nextNumber = intval($matches[1]) + 1;
+            } elseif (preg_match('/^B-(\d+)/', $lastBatch->batch_number, $m2)) {
                 $nextNumber = intval($m2[1]) + 1;
-            } else {
-                $nextNumber = 1;
             }
         }
 

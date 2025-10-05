@@ -55,7 +55,19 @@ class ProductBatch extends Model
      */
     public function scopeNotExpired($query)
     {
-        return $query->where('expiration_date', '>', now());
+        return $query->where(function($q) {
+            $q->where('expiration_date', '>', now())
+            ->orWhereNull('expiration_date'); // Include non-perishable items
+        });
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('quantity', '>', 0)
+                    ->where(function($q) {
+                        $q->where('expiration_date', '>', now())
+                        ->orWhereNull('expiration_date');
+                    });
     }
 
     /**

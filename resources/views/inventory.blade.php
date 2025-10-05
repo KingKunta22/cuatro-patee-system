@@ -48,9 +48,6 @@
                 <!-- SEPARATE SEARCH/FILTER FORM - WON'T AFFECT OTHER FORMS -->
                 <form action="{{ route('inventory.index') }}" method="GET" class="flex items-center gap-4 mr-auto">
 
-                    <input type="hidden" name="sort_by" value="{{ request('sort_by') }}">
-                    <input type="hidden" name="sort_order" value="{{ request('sort_order') }}">
-
                     <!-- Simple Search Input -->
                     <div class="relative">
                         <input 
