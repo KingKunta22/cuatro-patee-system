@@ -5,108 +5,142 @@
     <style>
         @page { 
             size: A4 landscape; 
-            margin: 10mm; 
+            margin: 15mm; 
         }
         body { 
-            font-family: Arial, sans-serif; 
+            font-family: 'Arial', sans-serif; 
             font-size: 12px; 
-            color: #111827;
+            color: #333;
             margin: 0;
             padding: 0;
+            line-height: 1.4;
         }
         .header { 
             text-align: center; 
-            margin-bottom: 20px;
-            border-bottom: 2px solid #4C7B8F;
+            margin-bottom: 25px;
+            border-bottom: 3px solid #2C3747;
             padding-bottom: 15px;
         }
         .header h1 { 
-            font-size: 20px; 
-            margin: 0 0 8px 0;
+            font-size: 24px; 
+            margin: 0 0 5px 0;
             font-weight: bold;
-            color: #111827;
+            color: #2C3747;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         .header .meta { 
-            font-size: 11px; 
-            color: #6b7280;
+            font-size: 12px; 
+            color: #666;
+            margin-bottom: 3px;
         }
-        .stats-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .stat-box {
-            flex: 1;
+        .report-info {
+            background: #f8f9fa;
             padding: 12px;
             border-radius: 6px;
-            color: white;
-            text-align: left;
+            margin-bottom: 20px;
+            border-left: 4px solid #2C3747;
         }
-        .stat-value {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 0;
-        }
-        .stat-label {
+        .report-info p {
+            margin: 2px 0;
             font-size: 11px;
-            margin: 0;
-            opacity: 0.9;
         }
         table { 
             width: 100%; 
             border-collapse: collapse; 
             font-size: 10px;
             page-break-inside: auto;
+            margin-top: 10px;
         }
         th, td { 
-            border: 1px solid #d1d5db; 
-            padding: 6px 8px; 
+            border: 1px solid #ddd; 
+            padding: 8px 10px; 
             text-align: left;
+            vertical-align: top;
         }
         th { 
-            background: #4C7B8F !important; 
+            background: #2C3747 !important; 
             color: white; 
             font-weight: bold;
-            position: sticky;
-            top: 0;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
         tr { 
             page-break-inside: avoid;
             page-break-after: auto;
         }
         tbody tr:nth-child(even) {
-            background-color: #f9fafb;
+            background-color: #f8f9fa;
         }
-        .negative { 
+        tbody tr:hover {
+            background-color: #e9ecef;
+        }
+        .quantity-in {
+            color: #059669;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .quantity-out {
             color: #dc2626;
             font-weight: bold;
-        }
-        .positive { 
-            color: #16a34a;
-            font-weight: bold;
+            font-size: 11px;
         }
         .type-badge {
             font-size: 9px;
             font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 10px;
+            padding: 3px 8px;
+            border-radius: 12px;
             text-transform: uppercase;
+            display: inline-block;
+            min-width: 60px;
+            text-align: center;
         }
         .type-inflow {
-            background: #dcfce7;
-            color: #166534;
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
         }
         .type-outflow {
-            background: #fef2f2;
+            background: #fee2e2;
             color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        .product-name {
+            font-weight: 500;
+            color: #1f2937;
+        }
+        .reference-number {
+            font-family: 'Courier New', monospace;
+            font-size: 9px;
+            color: #6b7280;
+        }
+        .remarks {
+            font-style: italic;
+            color: #6b7280;
+            font-size: 9px;
         }
         .footer {
-            margin-top: 20px;
+            margin-top: 25px;
             text-align: center;
             font-size: 10px;
             color: #6b7280;
             border-top: 1px solid #e5e7eb;
-            padding-top: 10px;
+            padding-top: 12px;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+            font-style: italic;
+            background: #f9fafb;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .date-cell {
+            white-space: nowrap;
+            font-size: 9px;
+            color: #374151;
         }
     </style>
 </head>
@@ -114,68 +148,60 @@
     <div class="header">
         <h1>Product Movements Report</h1>
         <div class="meta">
-            Generated: {{ now()->format('M d, Y h:i A') }} | 
-            Period: {{ $timePeriod === 'all' ? 'All Time' : ucfirst(str_replace('last', 'Last ', $timePeriod)) }} |
-            Total Records: {{ count($movements) }}
+            Inventory Management System
         </div>
     </div>
     
-    <!-- Stats Summary -->
-    <div class="stats-container">
-        <div class="stat-box" style="background: #5C717B;">
-            <p class="stat-value">{{ number_format($totalStockIn) }}</p>
-            <p class="stat-label">Total Stock In</p>
-        </div>
-        <div class="stat-box" style="background: #2C3747;">
-            <p class="stat-value">{{ number_format($totalStockOut) }}</p>
-            <p class="stat-label">Total Stock Out</p>
-        </div>
-        <div class="stat-box" style="background: #059669;">
-            <p class="stat-value">₱{{ number_format($totalRevenue, 2) }}</p>
-            <p class="stat-label">Total Revenue</p>
-        </div>
-        <div class="stat-box" style="background: #dc2626;">
-            <p class="stat-value">₱{{ number_format($totalCost, 2) }}</p>
-            <p class="stat-label">Total Cost</p>
-        </div>
-        <div class="stat-box" style="background: {{ $totalProfit >= 0 ? '#059669' : '#dc2626' }};">
-            <p class="stat-value">₱{{ number_format($totalProfit, 2) }}</p>
-            <p class="stat-label">Total Profit</p>
-        </div>
+    <!-- Report Information -->
+    <div class="report-info">
+        <p><strong>Report Period:</strong> {{ $timePeriod === 'all' ? 'All Time' : ucfirst(str_replace('last', 'Last ', $timePeriod)) }}</p>
+        <p><strong>Generated On:</strong> {{ now()->format('F d, Y \a\t h:i A') }}</p>
+        <p><strong>Total Movements:</strong> {{ count($movements) }} records</p>
     </div>
 
     <!-- Movements Table -->
     <table>
         <thead>
             <tr>
-                <th>Date</th>
-                <th>Reference No.</th>
-                <th>Product Name</th>
-                <th>Quantity</th>
-                <th>Type</th>
-                <th>Remarks</th>
+                <th width="12%">Date</th>
+                <th width="15%">Reference Number</th>
+                <th width="28%">Product Name</th>
+                <th width="10%">Quantity</th>
+                <th width="10%">Type</th>
+                <th width="25%">Remarks</th>
             </tr>
         </thead>
         <tbody>
             @forelse($movements as $movement)
             <tr>
-                <td>{{ \Carbon\Carbon::parse($movement['date'])->format('M d, Y') }}</td>
-                <td>{{ $movement['reference_number'] }}</td>
-                <td>{{ $movement['product_name'] }}</td>
-                <td class="{{ $movement['quantity'] < 0 ? 'negative' : 'positive' }}">
-                    {{ $movement['quantity'] > 0 ? '+' : '' }}{{ $movement['quantity'] }}
+                <td class="date-cell">
+                    {{ \Carbon\Carbon::parse($movement['date'])->format('M d, Y') }}<br>
+                    <small>{{ \Carbon\Carbon::parse($movement['date'])->format('h:i A') }}</small>
+                </td>
+                <td class="reference-number">
+                    {{ $movement['reference_number'] }}
+                </td>
+                <td class="product-name">
+                    {{ $movement['product_name'] }}
+                </td>
+                <td class="{{ $movement['quantity'] < 0 ? 'quantity-out' : 'quantity-in' }}">
+                    {{ $movement['quantity'] > 0 ? '+' : '' }}{{ number_format($movement['quantity']) }}
                 </td>
                 <td>
                     <span class="type-badge {{ $movement['type'] === 'inflow' ? 'type-inflow' : 'type-outflow' }}">
                         {{ ucfirst($movement['type']) }}
                     </span>
                 </td>
-                <td>{{ $movement['remarks'] }}</td>
+                <td class="remarks">
+                    {{ $movement['remarks'] }}
+                </td>
             </tr>
             @empty
             <tr>
-                <td colspan="6" style="text-align: center; padding: 20px; color: #6b7280;">
-                    No product movements found for the selected period.
+                <td colspan="6">
+                    <div class="no-data">
+                        No product movements found for the selected period.
+                    </div>
                 </td>
             </tr>
             @endforelse
@@ -183,11 +209,11 @@
     </table>
 
     <div class="footer">
-        Generated by Inventory Management System | Page 1 of 1
+        Generated by Inventory Management System • Confidential Business Document • Page 1 of 1
     </div>
 
     <script>
-        // Auto-print and close when loaded
+        // Auto-print when loaded
         window.onload = function() {
             window.focus();
             setTimeout(function() {
