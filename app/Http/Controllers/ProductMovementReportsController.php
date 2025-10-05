@@ -182,29 +182,34 @@ class ProductMovementReportsController extends Controller
     
     private function calculateStats($timePeriod)
     {
-        // Keep your existing stats calculation (this is correct)
+        // Stock in calculation (keep this)
         $stockInQuery = ProductBatch::query();
         if ($timePeriod !== 'all') {
             $this->applyTimeFilterToQuery($stockInQuery, $timePeriod, 'created_at');
         }
         $totalStockIn = $stockInQuery->sum('quantity');
 
+        // Stock out calculation (keep this)  
         $stockOutQuery = SaleItem::query();
         if ($timePeriod !== 'all') {
             $this->applyTimeFilterToQuery($stockOutQuery, $timePeriod, 'created_at');
         }
         $totalStockOut = $stockOutQuery->sum('quantity');
         
+        // Revenue calculation (keep this)
         $revenueQuery = Sale::query();
-        $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id');
-        
         if ($timePeriod !== 'all') {
             $this->applyTimeFilterToQuery($revenueQuery, $timePeriod, 'sale_date');
-            $this->applyTimeFilterToQuery($costQuery, $timePeriod, 'sale_items.created_at');
         }
-        
         $totalRevenue = $revenueQuery->sum('total_amount');
-        $totalCost = $costQuery->sum(DB::raw('sale_items.quantity * product_batches.cost_price'));
+        
+        // FIXED: Cost calculation - use product batches instead of sale items
+        $costQuery = ProductBatch::query();
+        if ($timePeriod !== 'all') {
+            $this->applyTimeFilterToQuery($costQuery, $timePeriod, 'created_at');
+        }
+        $totalCost = $costQuery->sum(DB::raw('cost_price * quantity')); // FIXED LINE
+        
         $totalProfit = $totalRevenue - $totalCost;
 
         return compact('totalStockIn', 'totalStockOut', 'totalRevenue', 'totalCost', 'totalProfit');

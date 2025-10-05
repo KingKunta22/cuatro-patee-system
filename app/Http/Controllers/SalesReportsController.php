@@ -36,10 +36,25 @@ class SalesReportsController extends Controller
         
         // Calculate stats
         $revenueQuery = Sale::query();
-        $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
-            ->join('purchase_orders', 'product_batches.purchase_order_id', '=', 'purchase_orders.id')
-            ->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
-            ->where('deliveries.orderStatus', 'Delivered'); // ← CRITICAL FILTER
+        
+        // FIXED: Calculate costs based on inventory additions
+        $costQuery = ProductBatch::query();
+
+        if ($timePeriod !== 'all') {
+            switch ($timePeriod) {
+                case 'today':
+                    $costQuery->whereDate('created_at', today());
+                    break;
+                case 'lastWeek':
+                    $costQuery->whereBetween('created_at', [now()->subDays(7), now()]);
+                    break;
+                case 'lastMonth':
+                    $costQuery->whereBetween('created_at', [now()->subDays(30), now()]);
+                    break;
+            }
+        }
+
+        $totalCost = $costQuery->sum(DB::raw('cost_price * quantity')); // FIXED
 
         if ($timePeriod !== 'all') {
             switch ($timePeriod) {

@@ -137,16 +137,16 @@ class ReportsController extends Controller
     private function getRevenueStats($timePeriod)
     {
         $revenueQuery = Sale::query();
-        $costQuery = SaleItem::join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
-            ->join('purchase_orders', 'product_batches.purchase_order_id', '=', 'purchase_orders.id')
-            ->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
-            ->where('deliveries.orderStatus', 'Delivered'); // ← CRITICAL FILTER
         
+        // FIXED: Calculate costs based on inventory additions (batches), not sold items
+        $costQuery = ProductBatch::query();
+        
+        // Apply time filters to both queries
         $this->applyTimeFilter($revenueQuery, $timePeriod, 'sale_date');
-        $this->applyTimeFilter($costQuery, $timePeriod, 'sale_date', 'sale');
+        $this->applyTimeFilter($costQuery, $timePeriod, 'created_at');
         
         $totalRevenue = $revenueQuery->sum('total_amount');
-        $totalCost = $costQuery->sum(DB::raw('sale_items.quantity * product_batches.cost_price'));
+        $totalCost = $costQuery->sum(DB::raw('cost_price * quantity')); // FIXED LINE
         $totalProfit = $totalRevenue - $totalCost;
         
         return [$totalRevenue, $totalCost, $totalProfit];

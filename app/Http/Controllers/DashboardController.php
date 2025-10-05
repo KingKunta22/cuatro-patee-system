@@ -29,18 +29,11 @@ class DashboardController extends Controller
             })
             ->sum(DB::raw('quantity * unit_price'));
         
-        // In DashboardController::index() - FIXED
-        // Total Cost (ONLY from delivered POs)
-        $totalCost = SaleItem::when($dateRange, function($query) use ($dateRange) {
-                $query->whereHas('sale', function($q) use ($dateRange) {
-                    $q->whereBetween('sale_date', [$dateRange['start'], $dateRange['end']]);
-                });
+        // FIXED: Total Cost (based on inventory additions)
+        $totalCost = ProductBatch::when($dateRange, function($query) use ($dateRange) {
+                $query->whereBetween('created_at', [$dateRange['start'], $dateRange['end']]);
             })
-            ->join('product_batches', 'sale_items.product_batch_id', '=', 'product_batches.id')
-            ->join('purchase_orders', 'product_batches.purchase_order_id', '=', 'purchase_orders.id')
-            ->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
-            ->where('deliveries.orderStatus', 'Delivered') // ← CRITICAL FIX
-            ->sum(DB::raw('sale_items.quantity * product_batches.cost_price'));
+            ->sum(DB::raw('cost_price * quantity')); // FIXED LINE
         
         // Products Sold (count of items sold)
         $productsSold = SaleItem::when($dateRange, function($query) use ($dateRange) {
