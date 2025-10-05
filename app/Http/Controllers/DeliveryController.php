@@ -12,40 +12,27 @@ class DeliveryController extends Controller
     public function index(Request $request)
     {
         $status = $request->input('status', 'all');
+        $sortBy = $request->input('sort_by', 'id');
+        $sortOrder = $request->input('sort_order', 'desc');
 
         // Start with base query
         $query = PurchaseOrder::with(['items', 'supplier', 'deliveries']);
 
-        // Ensure all purchase orders have delivery records
-        $ordersWithoutDelivery = PurchaseOrder::doesntHave('deliveries')->get();
-        foreach ($ordersWithoutDelivery as $order) {
-            Delivery::create([
-                'purchase_order_id' => $order->id,
-                'deliveryId' => Delivery::generateDeliveryId(),
-                'orderStatus' => 'Pending'
-            ]);
-        }
-
-        
-        // Apply status filter
+        // Apply status filter (your existing code)
         if ($status !== 'all') {
             if ($status === 'Delayed') {
-                // Filter for delayed orders (Confirmed status + past delivery date)
                 $query->whereHas('deliveries', function($q) {
                     $q->where('orderStatus', 'Confirmed')
                     ->whereDate('deliveryDate', '<', now()->toDateString());
                 });
             } else {
-                // FIXED: For Pending, Confirmed, Delivered, Cancelled - use proper filtering
                 if ($status === 'Pending') {
-                    // For Pending: include orders with Pending status OR no delivery records
                     $query->where(function($q) {
                         $q->whereHas('deliveries', function($q) {
                             $q->where('orderStatus', 'Pending');
                         })->orDoesntHave('deliveries');
                     });
                 } else {
-                    // For Confirmed, Delivered, Cancelled: only show exact status matches
                     $query->whereHas('deliveries', function($q) use ($status) {
                         $q->where('orderStatus', $status);
                     });
@@ -53,7 +40,33 @@ class DeliveryController extends Controller
             }
         }
 
-        // Apply search filter - UPDATED to search deliveryId properly
+        // Apply sorting
+        switch ($sortBy) {
+            case 'delivery_id':
+                $query->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
+                    ->orderBy('deliveries.deliveryId', $sortOrder)
+                    ->select('purchase_orders.*');
+                break;
+            case 'order_date':
+                $query->orderBy('purchase_orders.created_at', $sortOrder);
+                break;
+            case 'expected_date':
+                $query->orderBy('purchase_orders.deliveryDate', $sortOrder);
+                break;
+            case 'lead_time':
+                // For lead time, we need to calculate it
+                $query->orderBy('purchase_orders.deliveryDate', $sortOrder === 'asc' ? 'desc' : 'asc');
+                break;
+            case 'status':
+                $query->join('deliveries', 'purchase_orders.id', '=', 'deliveries.purchase_order_id')
+                    ->orderBy('deliveries.orderStatus', $sortOrder)
+                    ->select('purchase_orders.*');
+                break;
+            default:
+                $query->orderBy('purchase_orders.id', $sortOrder);
+        }
+
+        // Apply search filter (your existing code)
         if ($request->search) {
             $searchTerm = $request->search;
             $query->where(function($q) use ($searchTerm) {
@@ -66,18 +79,18 @@ class DeliveryController extends Controller
                 ->orWhereHas('items', function($q) use ($searchTerm) {
                     $q->where('productName', 'LIKE', "%{$searchTerm}%");
                 })
-                ->orWhere('orderNumber', 'LIKE', "%{$searchTerm}%"); // Also search by order number
+                ->orWhere('orderNumber', 'LIKE', "%{$searchTerm}%");
             });
         }
 
         $suppliers = Supplier::where('supplierStatus', 'Active')->get();
 
         // Order and paginate
-        $purchaseOrder = $query->orderBy('id', 'DESC')
+        $purchaseOrder = $query->orderBy('purchase_orders.id', 'DESC')
             ->paginate(7)
             ->withQueryString();
         
-        return view('delivery-management', compact('purchaseOrder', 'suppliers'));
+        return view('delivery-management', compact('purchaseOrder', 'suppliers', 'sortBy', 'sortOrder'));
     }
 
     public function updateStatus(Request $request)
