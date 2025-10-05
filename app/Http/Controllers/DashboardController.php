@@ -95,9 +95,11 @@ class DashboardController extends Controller
             });
 
 
-        // Top Selling Products (last 30 days)
-        $topSellingProducts = SaleItem::whereHas('sale', function($query) {
-                $query->where('sale_date', '>=', now()->subDays(30));
+        // Top Selling Products (last 30 days) (respects time period filter)
+        $topSellingProducts = SaleItem::when($dateRange, function($query) use ($dateRange) {
+                $query->whereHas('sale', function($q) use ($dateRange) {
+                    $q->whereBetween('sale_date', [$dateRange['start'], $dateRange['end']]);
+                });
             })
             ->with(['product' => function($query) {
                 $query->select('id', 'productName', 'productImage', 'productSKU', 'productSellingPrice');
