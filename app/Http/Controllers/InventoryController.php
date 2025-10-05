@@ -19,6 +19,9 @@ class InventoryController extends Controller
     // Shows the main logic for retrieving inventory data
     public function index(Request $request)
     {
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
+
         // Get delivered POs that haven't been added to inventory yet
         $unaddedPOs = PurchaseOrder::whereHas('deliveries', function($query) {
                 $query->where('orderStatus', 'Delivered');
@@ -29,16 +32,40 @@ class InventoryController extends Controller
             ->select('id', 'orderNumber')
             ->get();
 
-        // Get all delivered POs (for reference if needed)
-        $deliveredPOs = PurchaseOrder::whereHas('deliveries', function($query) {
-                $query->where('orderStatus', 'Delivered');
-            })
-            ->select('id', 'orderNumber')
-            ->get();
-
         // Start query - use activeBatches for display calculations
-        $query = Product::with(['batches', 'brand', 'category']) // Keep batches for editing
-            ->orderBy('created_at', 'desc');
+        $query = Product::with(['batches', 'brand', 'category']);
+
+        // Apply sorting
+        switch ($sortBy) {
+            case 'product_name':
+                $query->orderBy('productName', $sortOrder);
+                break;
+            case 'category':
+                $query->join('categories', 'products.category_id', '=', 'categories.id')
+                    ->orderBy('categories.productCategory', $sortOrder)
+                    ->select('products.*');
+                break;
+            case 'sku':
+                $query->orderBy('productSKU', $sortOrder);
+                break;
+            case 'brand':
+                $query->join('brands', 'products.brand_id', '=', 'brands.id')
+                    ->orderBy('brands.productBrand', $sortOrder)
+                    ->select('products.*');
+                break;
+            case 'price':
+                $query->orderBy('productSellingPrice', $sortOrder);
+                break;
+            case 'stock':
+                // For stock, we'll sort by the sum of active batches
+                $query->withSum(['batches' => function($q) {
+                    $q->where('quantity', '>', 0);
+                }], 'quantity')
+                ->orderBy('batches_sum_quantity', $sortOrder);
+                break;
+            default:
+                $query->orderBy('created_at', $sortOrder);
+        }
 
         // Apply category filter
         if ($request->category && $request->category != 'all') {
@@ -73,9 +100,10 @@ class InventoryController extends Controller
         return view('inventory', compact(
             'unaddedPOs', 
             'products', 
-            'deliveredPOs', 
             'categories', 
             'brands', 
+            'sortBy',
+            'sortOrder'
         ));
     }
 

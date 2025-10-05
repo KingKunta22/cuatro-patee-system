@@ -97,105 +97,105 @@
         <!-- CONTAINER FOR TABLE DETAILS -->
         <section class="border w-full rounded-md border-solid border-black my-6">
             <table class="w-full table-fixed">
-<thead class="rounded-lg bg-main text-white px-4 py-3">
-    <tr class="rounded-lg">
-        <th class="bg-main px-4 py-3 relative group">
-            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'delivery_id', 'sort_order' => request('sort_by') == 'delivery_id' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
-               class="flex items-center cursor-pointer justify-end hover:opacity-90 transition-opacity">
-                <span>Delivery ID</span>
-                <div class="ml-2 w-4 h-4 relative">
-                    @if(request('sort_by') == 'delivery_id')
-                        @if(request('sort_order') == 'asc')
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        @endif
-                    @else
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                        </svg>
-                    @endif
-                </div>
-            </a>
-        </th>
-        <th class="bg-main px-4 py-3 relative group">
-            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'order_date', 'sort_order' => request('sort_by') == 'order_date' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
-               class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
-                <span>Order Date</span>
-                <div class="ml-2 w-4 h-4 relative">
-                    @if(request('sort_by') == 'order_date')
-                        @if(request('sort_order') == 'asc')
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        @endif
-                    @else
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                        </svg>
-                    @endif
-                </div>
-            </a>
-        </th>
-        <th class="bg-main px-4 py-3 relative group">
-            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'expected_date', 'sort_order' => request('sort_by') == 'expected_date' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
-               class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
-                <span>Expected Date</span>
-                <div class="ml-2 w-4 h-4 relative">
-                    @if(request('sort_by') == 'expected_date')
-                        @if(request('sort_order') == 'asc')
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        @endif
-                    @else
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                        </svg>
-                    @endif
-                </div>
-            </a>
-        </th>
-        <th class="bg-main px-4 py-3 relative group">
-            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'lead_time', 'sort_order' => request('sort_by') == 'lead_time' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
-               class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
-                <span>Lead Time</span>
-                <div class="ml-2 w-4 h-4 relative">
-                    @if(request('sort_by') == 'lead_time')
-                        @if(request('sort_order') == 'asc')
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        @endif
-                    @else
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                        </svg>
-                    @endif
-                </div>
-            </a>
-        </th>
-        <th class="bg-main px-4 py-3">ETA</th>
-        <th class="bg-main px-4 py-3 relative group">Status</th>
-        <th class="bg-main px-4 py-3">Action</th>
-    </tr>
-</thead>
+                <thead class="rounded-lg bg-main text-white px-4 py-3">
+                    <tr class="rounded-lg">
+                        <th class="bg-main px-4 py-3 relative group">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'delivery_id', 'sort_order' => request('sort_by') == 'delivery_id' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                            class="flex items-center cursor-pointer justify-end hover:opacity-90 transition-opacity">
+                                <span>Delivery ID</span>
+                                <div class="ml-2 w-4 h-4 relative">
+                                    @if(request('sort_by') == 'delivery_id')
+                                        @if(request('sort_order') == 'asc')
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </a>
+                        </th>
+                        <th class="bg-main px-4 py-3 relative group">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'order_date', 'sort_order' => request('sort_by') == 'order_date' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                            class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
+                                <span>Order Date</span>
+                                <div class="ml-2 w-4 h-4 relative">
+                                    @if(request('sort_by') == 'order_date')
+                                        @if(request('sort_order') == 'asc')
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </a>
+                        </th>
+                        <th class="bg-main px-4 py-3 relative group">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'expected_date', 'sort_order' => request('sort_by') == 'expected_date' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                            class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
+                                <span>Expected Date</span>
+                                <div class="ml-2 w-4 h-4 relative">
+                                    @if(request('sort_by') == 'expected_date')
+                                        @if(request('sort_order') == 'asc')
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </a>
+                        </th>
+                        <th class="bg-main px-4 py-3 relative group">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'lead_time', 'sort_order' => request('sort_by') == 'lead_time' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                            class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
+                                <span>Lead Time</span>
+                                <div class="ml-2 w-4 h-4 relative">
+                                    @if(request('sort_by') == 'lead_time')
+                                        @if(request('sort_order') == 'asc')
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </a>
+                        </th>
+                        <th class="bg-main px-4 py-3">ETA</th>
+                        <th class="bg-main px-4 py-3 relative group">Status</th>
+                        <th class="bg-main px-4 py-3">Action</th>
+                    </tr>
+                </thead>
                 <tbody>
                     @foreach( $purchaseOrder as $order)
 
