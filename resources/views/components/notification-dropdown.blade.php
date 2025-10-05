@@ -1,23 +1,35 @@
+{{-- In your notification-dropdown.blade.php --}}
 <div x-data="{ 
     open: false, 
     notifications: [], 
     unreadCount: 0,
     readNotifications: new Set(JSON.parse(localStorage.getItem('readNotifications') || '[]')),
     
+    init() {
+        this.loadNotifications();
+    },
+    
     loadNotifications() {
         fetch('/check-notifications')
             .then(response => response.json())
             .then(data => {
                 this.notifications = data.notifications;
-                // Calculate unread count excluding already read notifications
-                this.unreadCount = this.notifications.length - this.readNotifications.size;
+                this.unreadCount = this.notifications.filter(notification => 
+                    !this.readNotifications.has(notification.id)
+                ).length;
             })
             .catch(error => console.error('Error:', error));
     },
     
     markAsRead(notificationId) {
         this.readNotifications.add(notificationId);
-        this.unreadCount = Math.max(0, this.notifications.length - this.readNotifications.size);
+        this.unreadCount = Math.max(0, this.unreadCount - 1);
+        localStorage.setItem('readNotifications', JSON.stringify(Array.from(this.readNotifications)));
+    },
+    
+    markAsUnread(notificationId) {
+        this.readNotifications.delete(notificationId);
+        this.unreadCount = this.unreadCount + 1;
         localStorage.setItem('readNotifications', JSON.stringify(Array.from(this.readNotifications)));
     },
     
@@ -29,26 +41,43 @@
         localStorage.setItem('readNotifications', JSON.stringify(Array.from(this.readNotifications)));
     },
     
+    markAllAsUnread() {
+        this.readNotifications.clear();
+        this.unreadCount = this.notifications.length;
+        localStorage.setItem('readNotifications', JSON.stringify(Array.from(this.readNotifications)));
+    },
+    
     isRead(notificationId) {
         return this.readNotifications.has(notificationId);
     },
     
     getUrgentLevel(notification) {
         if (notification.title.includes('Low Stock') && notification.message.includes('Stock: 5')) {
-            return 'high'; // Very low stock (5 or less)
+            return 'high';
         } else if (notification.title.includes('Expiring') && parseInt(notification.message.match(/\d+/)[0]) <= 7) {
-            return 'high'; // Expiring in 7 days or less
+            return 'high';
         } else if (notification.title.includes('Low Stock')) {
-            return 'medium'; // Low stock (6-10)
+            return 'medium';
         } else if (notification.title.includes('Expiring')) {
-            return 'medium'; // Expiring in 8-30 days
+            return 'medium';
         } else {
-            return 'low'; // Delivery notifications
+            return 'low';
         }
     }
-}" class="relative">
-    <!-- Bell Button -->
-    <button @click="open = !open; if(open) loadNotifications()" 
+}" x-init="
+    // Initialize with store data
+    $store.notifications.notifications = notifications;
+    $store.notifications.unreadCount = unreadCount;
+    $store.notifications.readNotifications = readNotifications;
+    
+    // Watch for changes and update store
+    $watch('notifications', (value) => $store.notifications.notifications = value);
+    $watch('unreadCount', (value) => $store.notifications.unreadCount = value);
+    $watch('readNotifications', (value) => $store.notifications.readNotifications = value);
+"
+class="relative">
+    <!-- Bell Button (unchanged) -->
+    <button @click="open = !open" 
             class="relative p-2 text-gray-600 hover:text-gray-900 focus:outline-none">
         <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 810 810">
         <path d="M405 592.9c-14.9 0-28.3-8.8-34.3-22.5l-17.1 7.5c9 20.4 29.1 33.2 51.4 33.2s42.9-13.4 51.7-34l-17.2-7.3c-6 13.9-19.5 23.1-34.5 23.1z"/>
@@ -78,10 +107,17 @@
                     <span x-text="unreadCount"></span> unread
                 </span>
             </div>
-            <button x-show="unreadCount > 0" @click="markAllAsRead()" 
-                    class="text-xs text-blue-600 hover:text-blue-800 underline">
-                Mark all read
-            </button>
+            <div class="flex gap-2">
+                <button x-show="unreadCount > 0" @click="markAllAsRead()" 
+                        class="text-xs text-blue-600 hover:text-blue-800 underline">
+                    Mark all read
+                </button>
+                <button x-show="notifications.length > 0 && unreadCount < notifications.length" 
+                        @click="markAllAsUnread()"
+                        class="text-xs text-gray-600 hover:text-gray-800 underline">
+                    Mark all unread
+                </button>
+            </div>
         </div>
 
         <div class="divide-y divide-gray-100">
@@ -117,6 +153,11 @@
                                         @click="markAsRead(notification.id)"
                                         class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded hover:bg-gray-300 inline-block transition-colors">
                                     Mark as read
+                                </button>
+                                <button x-show="isRead(notification.id)" 
+                                        @click="markAsUnread(notification.id)"
+                                        class="text-xs bg-yellow-200 text-yellow-700 px-2 py-1 rounded hover:bg-yellow-300 inline-block transition-colors">
+                                    Mark as unread
                                 </button>
                             </div>
                         </div>
