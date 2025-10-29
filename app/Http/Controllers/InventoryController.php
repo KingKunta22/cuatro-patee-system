@@ -24,7 +24,7 @@ public function index(Request $request)
     $highlightProduct = $request->input('highlight');
     $addDelivery = $request->input('add_delivery');
 
-    // AUTO-SORT FOR LOW STOCK NOTIFICATIONS - FIXED LOGIC
+    // AUTO-SORT FOR LOW STOCK NOTIFICATIONS
     if ($highlightProduct && !$request->has('sort_by') && !$request->has('sort_order')) {
         $sortBy = 'stock';
         $sortOrder = 'asc'; // Show lowest stock first

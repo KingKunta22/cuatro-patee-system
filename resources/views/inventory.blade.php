@@ -120,150 +120,150 @@
         <!-- CONTAINER FOR TABLE DETAILS -->
         <section class="border w-full rounded-md border-solid border-black my-3">
             <table class="w-full table-fixed">
-<thead class="rounded-lg bg-main text-white px-4 py-3">
-    <tr class="rounded-lg">
-        <th class="bg-main px-4 py-3 w-52 relative group">
-            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'product_name', 'sort_order' => request('sort_by') == 'product_name' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
-               class="flex items-center cursor-pointer justify-end hover:opacity-90 transition-opacity">
-                <span>Product Name</span>
-                <div class="ml-2 w-4 h-4 relative">
-                    @if(request('sort_by') == 'product_name')
-                        @if(request('sort_order') == 'asc')
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        @endif
-                    @else
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                        </svg>
-                    @endif
-                </div>
-            </a>
-        </th>
-        <th class="bg-main px-4 py-3 relative group">
-            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'category', 'sort_order' => request('sort_by') == 'category' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
-               class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
-                <span>Category</span>
-                <div class="ml-2 w-4 h-4 relative">
-                    @if(request('sort_by') == 'category')
-                        @if(request('sort_order') == 'asc')
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        @endif
-                    @else
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                        </svg>
-                    @endif
-                </div>
-            </a>
-        </th>
-        <th class="bg-main px-4 py-3 relative group">
-            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'sku', 'sort_order' => request('sort_by') == 'sku' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
-               class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
-                <span>SKU</span>
-                <div class="ml-2 w-4 h-4 relative">
-                    @if(request('sort_by') == 'sku')
-                        @if(request('sort_order') == 'asc')
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        @endif
-                    @else
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                        </svg>
-                    @endif
-                </div>
-            </a>
-        </th>
-        <th class="bg-main px-4 py-3 relative group">
-            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'brand', 'sort_order' => request('sort_by') == 'brand' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
-               class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
-                <span>Brand</span>
-                <div class="ml-2 w-4 h-4 relative">
-                    @if(request('sort_by') == 'brand')
-                        @if(request('sort_order') == 'asc')
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        @endif
-                    @else
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                        </svg>
-                    @endif
-                </div>
-            </a>
-        </th>
-        <th class="bg-main px-4 py-3 relative group">
-            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'price', 'sort_order' => request('sort_by') == 'price' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
-               class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
-                <span>Price</span>
-                <div class="ml-2 w-4 h-4 relative">
-                    @if(request('sort_by') == 'price')
-                        @if(request('sort_order') == 'asc')
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        @endif
-                    @else
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                        </svg>
-                    @endif
-                </div>
-            </a>
-        </th>
-        <th class="bg-main px-4 py-3 relative group">
-            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'stock', 'sort_order' => request('sort_by') == 'stock' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
-               class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
-                <span>Stock</span>
-                <div class="ml-2 w-4 h-4 relative">
-                    @if(request('sort_by') == 'stock')
-                        @if(request('sort_order') == 'asc')
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                            </svg>
-                        @else
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                            </svg>
-                        @endif
-                    @else
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
-                        </svg>
-                    @endif
-                </div>
-            </a>
-        </th>
-        <th class="bg-main px-4 py-3">Status</th>
-        <th class="bg-main px-4 py-3">Action</th>
-    </tr>
-</thead>
+                <thead class="rounded-lg bg-main text-white px-4 py-3">
+                    <tr class="rounded-lg">
+                        <th class="bg-main px-4 py-3 w-52 relative group">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'product_name', 'sort_order' => request('sort_by') == 'product_name' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                            class="flex items-center cursor-pointer justify-end hover:opacity-90 transition-opacity">
+                                <span>Product Name</span>
+                                <div class="ml-2 w-4 h-4 relative">
+                                    @if(request('sort_by') == 'product_name')
+                                        @if(request('sort_order') == 'asc')
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </a>
+                        </th>
+                        <th class="bg-main px-4 py-3 relative group">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'category', 'sort_order' => request('sort_by') == 'category' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                            class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
+                                <span>Category</span>
+                                <div class="ml-2 w-4 h-4 relative">
+                                    @if(request('sort_by') == 'category')
+                                        @if(request('sort_order') == 'asc')
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </a>
+                        </th>
+                        <th class="bg-main px-4 py-3 relative group">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'sku', 'sort_order' => request('sort_by') == 'sku' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                            class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
+                                <span>SKU</span>
+                                <div class="ml-2 w-4 h-4 relative">
+                                    @if(request('sort_by') == 'sku')
+                                        @if(request('sort_order') == 'asc')
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </a>
+                        </th>
+                        <th class="bg-main px-4 py-3 relative group">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'brand', 'sort_order' => request('sort_by') == 'brand' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                            class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
+                                <span>Brand</span>
+                                <div class="ml-2 w-4 h-4 relative">
+                                    @if(request('sort_by') == 'brand')
+                                        @if(request('sort_order') == 'asc')
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </a>
+                        </th>
+                        <th class="bg-main px-4 py-3 relative group">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'price', 'sort_order' => request('sort_by') == 'price' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                            class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
+                                <span>Price</span>
+                                <div class="ml-2 w-4 h-4 relative">
+                                    @if(request('sort_by') == 'price')
+                                        @if(request('sort_order') == 'asc')
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </a>
+                        </th>
+                        <th class="bg-main px-4 py-3 relative group">
+                            <a href="{{ request()->fullUrlWithQuery(['sort_by' => 'stock', 'sort_order' => request('sort_by') == 'stock' && request('sort_order') == 'asc' ? 'desc' : 'asc']) }}" 
+                            class="flex items-center justify-end cursor-pointer hover:opacity-90 transition-opacity">
+                                <span>Stock</span>
+                                <div class="ml-2 w-4 h-4 relative">
+                                    @if(request('sort_by') == 'stock')
+                                        @if(request('sort_order') == 'asc')
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                            </svg>
+                                        @endif
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 absolute opacity-50">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" />
+                                        </svg>
+                                    @endif
+                                </div>
+                            </a>
+                        </th>
+                        <th class="bg-main px-4 py-3">Status</th>
+                        <th class="bg-main px-4 py-3">Action</th>
+                    </tr>
+                </thead>
                 <tbody>
                     {{-- Loops through each product which was assigned from the eager loaded relationship from InventoryController --}}
                     @foreach($products as $product)
@@ -1178,166 +1178,165 @@
         <!-- ======================================================= -->
 
         <!-- EDIT MODAL -->
-<!-- EDIT MODAL - FIXED VERSION -->
-@foreach($products as $product)
-<x-modal.createModal x-ref="editProductDetails{{ $product->id }}">
-    <x-slot:dialogTitle>Edit {{ $product->productName }}</x-slot:dialogTitle>
+        @foreach($products as $product)
+        <x-modal.createModal x-ref="editProductDetails{{ $product->id }}">
+            <x-slot:dialogTitle>Edit {{ $product->productName }}</x-slot:dialogTitle>
 
-    <div>
-        <form id="updateInventoryForm{{ $product->id }}" action="{{ route('inventory.update', $product->id) }}" method="POST" enctype="multipart/form-data"
-            class="px-6 py-4 container grid grid-cols-6 gap-x-8 gap-y-2">
-            @csrf
-            @method('PUT')
+            <div>
+                <form id="updateInventoryForm{{ $product->id }}" action="{{ route('inventory.update', $product->id) }}" method="POST" enctype="multipart/form-data"
+                    class="px-6 py-4 container grid grid-cols-6 gap-x-8 gap-y-2">
+                    @csrf
+                    @method('PUT')
 
-            <!-- Left Side (Image + Upload) -->
-            <div class="col-span-2 flex flex-col items-center gap-3">
-                @if($product->productImage)
-                    <img src="{{ asset('storage/' . $product->productImage) }}" 
-                        alt="{{ $product->productName }}" 
-                        class="w-44 h-56 object-contain border rounded shadow-sm">
-                @endif
-                <div class="w-full">
-                    <x-form.form-input label="Update image (optional)" name="productImage" type="file" :required="false" />
-                </div>
+                    <!-- Left Side (Image + Upload) -->
+                    <div class="col-span-2 flex flex-col items-center gap-3">
+                        @if($product->productImage)
+                            <img src="{{ asset('storage/' . $product->productImage) }}" 
+                                alt="{{ $product->productName }}" 
+                                class="w-44 h-56 object-contain border rounded shadow-sm">
+                        @endif
+                        <div class="w-full">
+                            <x-form.form-input label="Update image (optional)" name="productImage" type="file" :required="false" />
+                        </div>
+                    </div>
+
+                    <!-- Right Side (Main Info) -->
+                    <div class="col-span-4 grid grid-cols-2 gap-4">
+                        <!-- Product Name -->
+                        <x-form.form-input label="Product Name" name="productName" type="text" 
+                            value="{{ $product->productName }}" class="col-span-2" required />
+
+                        <!-- Product Brand -->
+                        <div class="flex flex-col text-start">
+                            <label for="productBrand" class="font-medium">Product Brand</label>
+                            <select name="productBrand" id="productBrand" 
+                                class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0" required>
+                                <option value="" disabled>Select Brand</option>
+                                @foreach($brands as $brand)
+                                    <option value="{{ $brand->productBrand }}" {{ $product->brand->productBrand == $brand->productBrand ? 'selected' : '' }}>
+                                        {{ $brand->productBrand }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Product Category -->
+                        <div class="flex flex-col text-start">
+                            <label for="productCategory" class="font-medium">Product Category</label>
+                            <select name="productCategory" id="productCategory" 
+                                class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0" required>
+                                <option value="" disabled>Select Category</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->productCategory }}" {{ $product->category->productCategory == $category->productCategory ? 'selected' : '' }}>
+                                        {{ $category->productCategory }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Selling Price -->
+                        <x-form.form-input label="Selling Price" name="productSellingPrice" type="number" 
+                            value="{{ $product->productSellingPrice }}" 
+                            step="0.01" min="0" required />
+
+                        <!-- Cost Price -->
+                        <x-form.form-input label="Cost Price" name="productCostPrice" type="number" 
+                            value="{{ $product->productCostPrice }}" 
+                            step="0.01" min="0" readonly disabled/>
+
+                        <!-- Measurement -->
+                        <div class="flex flex-col text-start">
+                            <label for="itemMeasurement">Measurement per item</label>
+                            <select name="productItemMeasurement" 
+                                class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0" required>
+                                <option value="" disabled>Select Measurement</option>
+                                <option value="kilogram" {{ $product->productItemMeasurement == 'kilogram' ? 'selected' : '' }}>kilogram (kg)</option>
+                                <option value="gram" {{ $product->productItemMeasurement == 'gram' ? 'selected' : '' }}>gram (g)</option>
+                                <option value="liter" {{ $product->productItemMeasurement == 'liter' ? 'selected' : '' }}>liter (L)</option>
+                                <option value="milliliter" {{ $product->productItemMeasurement == 'milliliter' ? 'selected' : '' }}>milliliter (mL)</option>
+                                <option value="pcs" {{ $product->productItemMeasurement == 'pcs' ? 'selected' : '' }}>pieces (pcs)</option>
+                                <option value="set" {{ $product->productItemMeasurement == 'set' ? 'selected' : '' }}>set</option>
+                                <option value="pair" {{ $product->productItemMeasurement == 'pair' ? 'selected' : '' }}>pair</option>
+                                <option value="pack" {{ $product->productItemMeasurement == 'pack' ? 'selected' : '' }}>pack</option>
+                            </select>
+                        </div>
+
+                        <!-- Product Stock (Read-only, calculated from batches) -->
+                        <div class="flex flex-col text-start">
+                            <label>Total Stock</label>
+                            <input type="number" 
+                                value="{{ $product->batches->sum('quantity') }}" 
+                                class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
+                                readonly
+                                disabled>
+                        </div>
+                    </div>
+
+                    <!-- EDITABLE BATCHES TABLE - FIXED STRUCTURE -->
+                    <div class="col-span-6">
+                        <h2 class="text-xl font-bold mb-2">Edit Product Batches</h2>
+                        <div class="border rounded-md border-solid border-black h-32 overflow-y-auto">
+                            <table class="w-full table-fixed h-auto max-h-full overflow-y-auto">
+                                <thead class="rounded-lg bg-main text-white">
+                                    <tr class="rounded-lg">
+                                        <th class="bg-main px-2 py-2 text-sm truncate">Batch Number</th>
+                                        <th class="bg-main px-2 py-2 text-sm truncate">Quantity</th>
+                                        <th class="bg-main px-2 py-2 text-sm truncate">Exp Date</th>
+                                        <th class="bg-main px-2 py-2 text-sm truncate">Cost Price</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($product->activeBatches as $batch)
+                                    <tr class="border-b">
+                                        <td class="px-1 py-1 text-xs text-center truncate">
+                                            {{ $batch->batch_number }}
+                                            <input type="hidden" name="batches[{{ $batch->id }}][id]" value="{{ $batch->id }}">
+                                        </td>
+                                        <td class="px-1 py-1 text-xs text-center truncate">
+                                            <input type="number" 
+                                                name="batches[{{ $batch->id }}][quantity]" 
+                                                value="{{ $batch->quantity }}" 
+                                                min="0"
+                                                class="w-20 px-1 py-1 border rounded text-center"
+                                                required>
+                                        </td>
+                                        <td class="px-1 py-1 text-xs text-center truncate">
+                                            @if(!$product->is_perishable)
+                                                Non-perishable
+                                                <input type="hidden" name="batches[{{ $batch->id }}][expiration_date]" value="">
+                                            @else
+                                                <input type="date" 
+                                                    name="batches[{{ $batch->id }}][expiration_date]" 
+                                                    value="{{ $batch->expiration_date ? $batch->expiration_date->format('Y-m-d') : '' }}"
+                                                    class="px-1 py-1 border rounded text-center"
+                                                    min="{{ date('Y-m-d') }}">
+                                            @endif
+                                        </td>
+                                        <td class="px-1 py-1 text-xs text-center truncate">
+                                            ₱{{ number_format($batch->cost_price, 2) }}
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Footer Buttons -->
+                    <div class="container col-span-6 gap-x-4 place-content-end w-full flex items-end content-center mt-2">
+                        <button type="button" 
+                                @click="$refs.editProductDetails{{ $product->id }}.close()" 
+                                class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 w-24 rounded bg-green-500 hover:bg-green-400 text-white duration-200 transition-all ease-in-out">
+                            Edit
+                        </button>
+                    </div>
+                </form>
             </div>
-
-            <!-- Right Side (Main Info) -->
-            <div class="col-span-4 grid grid-cols-2 gap-4">
-                <!-- Product Name -->
-                <x-form.form-input label="Product Name" name="productName" type="text" 
-                    value="{{ $product->productName }}" class="col-span-2" required />
-
-                <!-- Product Brand -->
-                <div class="flex flex-col text-start">
-                    <label for="productBrand" class="font-medium">Product Brand</label>
-                    <select name="productBrand" id="productBrand" 
-                        class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0" required>
-                        <option value="" disabled>Select Brand</option>
-                        @foreach($brands as $brand)
-                            <option value="{{ $brand->productBrand }}" {{ $product->brand->productBrand == $brand->productBrand ? 'selected' : '' }}>
-                                {{ $brand->productBrand }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Product Category -->
-                <div class="flex flex-col text-start">
-                    <label for="productCategory" class="font-medium">Product Category</label>
-                    <select name="productCategory" id="productCategory" 
-                        class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0" required>
-                        <option value="" disabled>Select Category</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->productCategory }}" {{ $product->category->productCategory == $category->productCategory ? 'selected' : '' }}>
-                                {{ $category->productCategory }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Selling Price -->
-                <x-form.form-input label="Selling Price" name="productSellingPrice" type="number" 
-                    value="{{ $product->productSellingPrice }}" 
-                    step="0.01" min="0" required />
-
-                <!-- Cost Price -->
-                <x-form.form-input label="Cost Price" name="productCostPrice" type="number" 
-                    value="{{ $product->productCostPrice }}" 
-                    step="0.01" min="0" readonly disabled/>
-
-                <!-- Measurement -->
-                <div class="flex flex-col text-start">
-                    <label for="itemMeasurement">Measurement per item</label>
-                    <select name="productItemMeasurement" 
-                        class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0" required>
-                        <option value="" disabled>Select Measurement</option>
-                        <option value="kilogram" {{ $product->productItemMeasurement == 'kilogram' ? 'selected' : '' }}>kilogram (kg)</option>
-                        <option value="gram" {{ $product->productItemMeasurement == 'gram' ? 'selected' : '' }}>gram (g)</option>
-                        <option value="liter" {{ $product->productItemMeasurement == 'liter' ? 'selected' : '' }}>liter (L)</option>
-                        <option value="milliliter" {{ $product->productItemMeasurement == 'milliliter' ? 'selected' : '' }}>milliliter (mL)</option>
-                        <option value="pcs" {{ $product->productItemMeasurement == 'pcs' ? 'selected' : '' }}>pieces (pcs)</option>
-                        <option value="set" {{ $product->productItemMeasurement == 'set' ? 'selected' : '' }}>set</option>
-                        <option value="pair" {{ $product->productItemMeasurement == 'pair' ? 'selected' : '' }}>pair</option>
-                        <option value="pack" {{ $product->productItemMeasurement == 'pack' ? 'selected' : '' }}>pack</option>
-                    </select>
-                </div>
-
-                <!-- Product Stock (Read-only, calculated from batches) -->
-                <div class="flex flex-col text-start">
-                    <label>Total Stock</label>
-                    <input type="number" 
-                        value="{{ $product->batches->sum('quantity') }}" 
-                        class="px-3 py-2 border rounded-sm border-black [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0"
-                        readonly
-                        disabled>
-                </div>
-            </div>
-
-            <!-- EDITABLE BATCHES TABLE - FIXED STRUCTURE -->
-            <div class="col-span-6">
-                <h2 class="text-xl font-bold mb-2">Edit Product Batches</h2>
-                <div class="border rounded-md border-solid border-black h-32 overflow-y-auto">
-                    <table class="w-full table-fixed h-auto max-h-full overflow-y-auto">
-                        <thead class="rounded-lg bg-main text-white">
-                            <tr class="rounded-lg">
-                                <th class="bg-main px-2 py-2 text-sm truncate">Batch Number</th>
-                                <th class="bg-main px-2 py-2 text-sm truncate">Quantity</th>
-                                <th class="bg-main px-2 py-2 text-sm truncate">Exp Date</th>
-                                <th class="bg-main px-2 py-2 text-sm truncate">Cost Price</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($product->activeBatches as $batch)
-                            <tr class="border-b">
-                                <td class="px-1 py-1 text-xs text-center truncate">
-                                    {{ $batch->batch_number }}
-                                    <input type="hidden" name="batches[{{ $batch->id }}][id]" value="{{ $batch->id }}">
-                                </td>
-                                <td class="px-1 py-1 text-xs text-center truncate">
-                                    <input type="number" 
-                                           name="batches[{{ $batch->id }}][quantity]" 
-                                           value="{{ $batch->quantity }}" 
-                                           min="0"
-                                           class="w-20 px-1 py-1 border rounded text-center"
-                                           required>
-                                </td>
-                                <td class="px-1 py-1 text-xs text-center truncate">
-                                    @if(!$product->is_perishable)
-                                        Non-perishable
-                                        <input type="hidden" name="batches[{{ $batch->id }}][expiration_date]" value="">
-                                    @else
-                                        <input type="date" 
-                                            name="batches[{{ $batch->id }}][expiration_date]" 
-                                            value="{{ $batch->expiration_date ? $batch->expiration_date->format('Y-m-d') : '' }}"
-                                            class="px-1 py-1 border rounded text-center"
-                                            min="{{ date('Y-m-d') }}">
-                                    @endif
-                                </td>
-                                <td class="px-1 py-1 text-xs text-center truncate">
-                                    ₱{{ number_format($batch->cost_price, 2) }}
-                                </td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Footer Buttons -->
-            <div class="container col-span-6 gap-x-4 place-content-end w-full flex items-end content-center mt-2">
-                <button type="button" 
-                        @click="$refs.editProductDetails{{ $product->id }}.close()" 
-                        class="mr-2 px-4 py-2 rounded bg-gray-400 hover:bg-gray-300 text-white duration-200 transition-all ease-in-out">
-                    Cancel
-                </button>
-                <button type="submit" class="px-4 py-2 w-24 rounded bg-green-500 hover:bg-green-400 text-white duration-200 transition-all ease-in-out">
-                    Edit
-                </button>
-            </div>
-        </form>
-    </div>
-</x-modal.createModal>
-@endforeach
+        </x-modal.createModal>
+        @endforeach
 
 
 
