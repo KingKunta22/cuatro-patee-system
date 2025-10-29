@@ -30,6 +30,11 @@ window.printCurrentReport = function(activeTab) {
 
 import './bootstrap';
 import './alerts';
+import Alpine from 'alpinejs';
+
+// Initialize Alpine
+window.Alpine = Alpine;
+Alpine.start();
 
 // Gets ID and inputted password
 const showValue = document.getElementById('showValue');

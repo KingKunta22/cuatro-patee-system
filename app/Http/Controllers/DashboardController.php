@@ -122,7 +122,7 @@ class DashboardController extends Controller
                     'productName' => $batch->product->productName,
                     'productExpirationDate' => $batch->expiration_date,
                     'batch_number' => $batch->batch_number,
-                    'productSKU' => $batch->product->productSKU
+                    'productSKU' => $batch->product->productSKU,
                 ];
             });
         
@@ -271,3 +271,10 @@ class DashboardController extends Controller
     }
 
 }
+
+
+
+//           npm run serve
+//           ->where('quantity', '>', 0)
+//           'quantity' => $batch->quantity 
+//           <p class="text-xs text-gray-500">{{ $product['quantity'] }} products expiring</p>
